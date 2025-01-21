@@ -12,6 +12,7 @@ mod search;
 mod survey;
 mod update_field;
 mod user;
+pub mod error;
 
 pub use crate::user::{AuthDocument, User};
 pub mod prelude {
@@ -29,4 +30,7 @@ pub mod prelude {
     pub use crate::survey::*;
     pub use crate::update_field::*;
     pub use crate::user::*;
+    pub use crate::error::*;
 }
+
+pub type Result<T> = std::result::Result<T, crate::error::ApiError>;

@@ -1,7 +1,11 @@
-use by_axum::axum::{extract::Query, routing::get, Json, Router};
+use by_axum::axum::{
+    extract::Query, 
+    routing::get, 
+    Json, Router
+};
 use serde::Deserialize;
 
-use crate::{common::CommonQueryResponse, utils::error::ApiError};
+use crate::common::CommonQueryResponse;
 
 use models::prelude::*;
 

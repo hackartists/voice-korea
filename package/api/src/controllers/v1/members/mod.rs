@@ -11,7 +11,7 @@ use easy_dynamodb::error::DynamoException;
 use slog::o;
 
 use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware, utils::error::ApiError,
+    common::CommonQueryResponse, middleware::auth::authorization_middleware,
 };
 
 use models::prelude::*;
@@ -22,7 +22,7 @@ pub struct MemberControllerV1 {
 }
 
 impl MemberControllerV1 {
-    pub fn router(_db: std::sync::Arc<easy_dynamodb::Client>) -> Router {
+    pub fn router() -> Router {
         let log = root().new(o!("api-controller" => "MemberControllerV1"));
         let ctrl = MemberControllerV1 { log };
 
@@ -54,12 +54,12 @@ impl MemberControllerV1 {
 
         match body {
             MemberActionRequest::Create(req) => {
-                let res: CommonQueryResponse<Member> = CommonQueryResponse::query(
+                let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
                     &log,
                     "gsi1-index",
                     None,
                     Some(100),
-                    vec![("gsi1", Member::get_gsi1("".to_string()))],
+                    vec![("gsi1", OrganizationMember::get_gsi1(&""))], // FIXME: fix query
                 )
                 .await?;
 
@@ -242,7 +242,7 @@ impl MemberControllerV1 {
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<MemberControllerV1>,
         Query(params): Query<SearchParams>,
-    ) -> Result<Json<CommonQueryResponse<Member>>, ApiError> {
+    ) -> Result<Json<CommonQueryResponse<OrganizationMember>>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "search_member"));
         slog::debug!(log, "search_member {:?} {:?}", organization_id, params);
@@ -417,7 +417,10 @@ impl MemberControllerV1 {
 }
 
 impl MemberControllerV1 {
-    pub async fn remove_group_member(&self, member_id: String) -> Result<(), ApiError> {
+    pub async fn remove_group_member(
+        &self,
+        member_id: String
+    ) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "update_member"));
         slog::debug!(log, "update_group_member");
         let cli = easy_dynamodb::get_client(&log);
@@ -685,7 +688,7 @@ impl MemberControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
         let now = chrono::Utc::now().timestamp_millis();
 
-        let d: Result<Option<Member>, DynamoException> = match cli.get(member_id).await {
+        let d: Result<Option<OrganizationMember>, DynamoException> = match cli.get(member_id).await {
             Ok(v) => Ok(v),
             Err(e) => {
                 slog::error!(log, "Member Query Failed {e:?}");

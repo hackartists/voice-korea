@@ -15,17 +15,16 @@ use models::prelude::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AxumState {
-    db: Arc<Client>,
     nonce_lab_client: Arc<NonceLabClient>,
 }
-pub fn router(db: Arc<Client>) -> Router {
+
+pub fn router() -> Router {
     let nonce_lab_client = Arc::new(NonceLabClient::new());
     Router::new()
         .route("/", patch(finalize_survey))
         .with_state(AxumState {
-            db,
             nonce_lab_client,
         })
 }
@@ -41,10 +40,10 @@ enum UpdateField {
 }
 
 async fn create_survey_result(
-    db: Arc<Client>,
+    cli: Client,
     nonce_lab_client: Arc<NonceLabClient>,
     survey: Survey,
-) -> Result<String, ApiError> {
+) -> Result<String> {
     // Create Survey Result Docuemnt
     let nonce_lab_id = survey.nonce_lab_id.unwrap();
     let response_count_map = nonce_lab_client
@@ -105,7 +104,7 @@ async fn create_survey_result(
     }
 
     let doc_id = uuid::Uuid::new_v4().to_string();
-    let _ = db
+    let _ = cli
         .create(SurveyResultDocument {
             gsi1: SurveyResultDocument::get_gsi1(&survey.creator, &survey.id),
             id: doc_id.clone(),
@@ -132,6 +131,7 @@ async fn finalize_survey(
 ) -> Result<Json<AdminSurveyCompleteResponse>, ApiError> {
     // Get survey from DB
     slog::debug!(root(), "finalize_survey Date : {}", req.ended_at);
+    let cli = easy_dynamodb::get_client(&root());
     let mut bookmark: Option<String> = None;
     let mut surveys: Vec<Survey> = vec![];
     let gsi2 = Survey::get_gsi2(req.ended_at);
@@ -139,8 +139,7 @@ async fn finalize_survey(
         let result: Result<
             (Option<Vec<Survey>>, Option<String>),
             easy_dynamodb::error::DynamoException,
-        > = state
-            .db
+        > = cli
             .find("gsi2-index", None, Some(10), vec![("gsi2", &gsi2)])
             .await;
         let next_bookmark = match result {
@@ -168,11 +167,10 @@ async fn finalize_survey(
         futures.push(async move {
             let survey_id = survey.id.clone();
             let doc_id =
-                create_survey_result(state.db.clone(), state.nonce_lab_client.clone(), survey)
+                create_survey_result(cli.clone(), state.nonce_lab_client.clone(), survey)
                     .await
                     .map_err(|_| survey_id.clone())?;
-            state
-                .db
+            cli
                 .update(
                     &survey_id,
                     vec![

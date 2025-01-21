@@ -3,7 +3,7 @@ use by_axum::{
         extract::{Query, State},
         middleware,
         routing::get,
-        Extension, Json, Router,
+        Extension, Json, Router
     },
     log::root,
 };
@@ -12,7 +12,7 @@ use slog::o;
 use crate::{
     common::CommonQueryResponse,
     middleware::auth::authorization_middleware,
-    utils::{error::ApiError, jwt::Claims},
+    utils::jwt::Claims,
 };
 
 use models::prelude::*;

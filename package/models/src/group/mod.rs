@@ -1,14 +1,19 @@
 use serde::{Deserialize, Serialize};
-
 use crate::member::GroupInfo;
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct GroupProject {
     pub project_id: String,
     pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct GroupMember {
     pub id: String,
     pub r#type: String,
@@ -65,12 +70,14 @@ impl GroupMember {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Eq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct MemberInfo {
     pub id: String,
     pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct GroupMemberResponse {
     pub id: String,
     pub created_at: i64,
@@ -86,6 +93,7 @@ pub struct GroupMemberResponse {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct GroupResponse {
     pub id: String,
     pub creator: String,
@@ -100,6 +108,7 @@ pub struct GroupResponse {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Group {
     pub id: String,
     pub r#type: String,
@@ -147,6 +156,7 @@ impl Group {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreateGroupMember {
     pub member_id: String,
     pub member_name: String,
@@ -154,6 +164,7 @@ pub struct CreateGroupMember {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreateGroupRequest {
     pub name: String,
     pub members: Vec<CreateGroupMember>,            //그룹 내 팀원
@@ -183,6 +194,7 @@ impl Into<Group> for (CreateGroupRequest, String, String, String) {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Eq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TeamMemberRequest {
     pub member_id: String,
     pub email: String,
@@ -193,12 +205,14 @@ pub struct TeamMemberRequest {
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum GroupActionRequest {
     Create(CreateGroupRequest),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum GroupByIdActionRequest {
     UpdateName(String),
     Delete,

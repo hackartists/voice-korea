@@ -3,8 +3,13 @@ use by_axum::axum::response::{IntoResponse, Response};
 use by_axum::axum::Json;
 use serde_json::json;
 use thiserror::Error;
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Error, Debug)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum ApiError {
     #[error("Not Found")]
     NotFound,

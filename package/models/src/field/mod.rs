@@ -2,9 +2,14 @@ use std::str::FromStr;
 
 use dioxus_translate::Language;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Field {
     #[default]
     Economy,

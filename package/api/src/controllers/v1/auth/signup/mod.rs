@@ -2,12 +2,12 @@ use by_axum::axum::routing::post;
 use by_axum::axum::{Json, Router};
 use by_axum::{axum::extract::State, log::root};
 use models::prelude::{Organization, OrganizationMember, Role};
-use models::User;
+use models::{User, error::ApiError};
 use serde::Deserialize;
 use slog::o;
 
 use super::super::verification::email::{verify_handler, EmailVerifyParams};
-use crate::utils::{error::ApiError, hash::get_hash_string};
+use crate::utils::hash::get_hash_string;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct SignUpParams {
@@ -20,13 +20,12 @@ pub struct SignUpParams {
 #[derive(Clone, Debug)]
 pub struct SignupControllerV1 {
     log: slog::Logger,
-    db: std::sync::Arc<easy_dynamodb::Client>,
 }
 
 impl SignupControllerV1 {
-    pub fn router(db: std::sync::Arc<easy_dynamodb::Client>) -> Router {
+    pub fn router() -> Router {
         let log = root().new(o!("api-controller" => "SignupControllerV1"));
-        let ctrl = SignupControllerV1 { db, log };
+        let ctrl = SignupControllerV1 { log };
 
         Router::new()
             .route("/", post(Self::signup))
@@ -39,14 +38,16 @@ impl SignupControllerV1 {
     ) -> Result<(), ApiError> {
         let log = ctrl.log.new(o!("api" => "signup"));
         slog::debug!(log, "signup {:?}", body);
+        let cli = easy_dynamodb::get_client(&log);
+
         let auth_doc_id = verify_handler(
-            State(ctrl.db.clone()),
             Json(EmailVerifyParams {
                 id: body.auth_id.clone(),
                 value: body.auth_value.clone(),
             }),
         )
         .await?;
+    
         let hashed_pw = get_hash_string(body.password.as_bytes());
         let user = User::new(
             uuid::Uuid::new_v4().to_string(),
@@ -57,8 +58,7 @@ impl SignupControllerV1 {
         let result: Result<
             (Option<Vec<models::User>>, Option<String>),
             easy_dynamodb::error::DynamoException,
-        > = ctrl
-            .db
+        > = cli
             .find(
                 "gsi1-index",
                 None,
@@ -74,9 +74,8 @@ impl SignupControllerV1 {
             }
             _ => (),
         };
-        let _ = ctrl.db.delete(&auth_doc_id);
-        let _ = ctrl
-            .db
+        let _ = cli.delete(&auth_doc_id);
+        let _ = cli
             .create(user.clone())
             .await
             .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;

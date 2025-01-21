@@ -7,11 +7,12 @@ use by_axum::{
     axum::{
         extract::{Path, Query, State},
         middleware,
-        routing::get,
+        // routing::get,
         Extension, Json, Router,
     },
     log::root,
 };
+use axum::routing::get;
 
 use easy_dynamodb::Client;
 use nonce_lab::models::{NonceLabCreateSurveyRequest, NonceLabQuota, NonceLabSurveyQuestion};
@@ -26,21 +27,19 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AxumState {
-    db: Arc<Client>,
     nonce_lab_client: Arc<NonceLabClient>,
 }
-pub fn router(db: Arc<Client>) -> Router {
+pub fn router() -> Result<Router> {
     let nonce_lab_client = Arc::new(NonceLabClient::new());
 
-    Router::new()
+    Ok(Router::new()
         .route("/", get(list_survey).patch(upsert_survey_draft))
         .route("/:id", get(get_survey).post(progress_survey))
         .route("/:id/result", get(get_survey_result))
         .with_state(AxumState {
-            db,
             nonce_lab_client,
         })
-        .layer(middleware::from_fn(authorization_middleware))
+        .layer(middleware::from_fn(authorization_middleware)))
 }
 
 const UPDATE_DELAY_MS: i64 = 300_000; // 300 seconds (5 minutes)
@@ -55,11 +54,12 @@ async fn list_survey(
     State(state): State<AxumState>,
     Query(params): Query<GetParams>,
 ) -> Result<Json<ListSurveyResponse>, ApiError> {
+    let cli = easy_dynamodb::get_client(&root());
+
     let result: Result<
         (Option<Vec<Survey>>, Option<String>),
         easy_dynamodb::error::DynamoException,
-    > = state
-        .db
+    > = cli
         .find(
             "gsi1-index",
             params.bookmark,
@@ -107,9 +107,10 @@ async fn get_survey(
     State(state): State<AxumState>,
     Path(id): Path<String>,
 ) -> Result<Json<Survey>, ApiError> {
+    let cli = easy_dynamodb::get_client(&root());
     let now = chrono::Utc::now().timestamp_millis();
     let result: Result<Option<Survey>, easy_dynamodb::error::DynamoException> =
-        state.db.get(&id).await;
+        cli.get(&id).await;
     let mut survey = match result {
         Ok(Some(v)) => {
             if v.creator != claims.id {
@@ -150,10 +151,11 @@ async fn upsert_survey_draft(
     State(state): State<AxumState>,
     Json(req): Json<UpsertSurveyDraftRequest>,
 ) -> Result<Json<String>, ApiError> {
+    let cli = easy_dynamodb::get_client(&root());
     slog::debug!(root(), "CLAIM: {}", claims.id.clone());
     let mut survey = if let Some(id) = req.id {
         let result: Result<Option<Survey>, easy_dynamodb::error::DynamoException> =
-            state.db.get(&id).await;
+            cli.get(&id).await;
         match result {
             Ok(Some(v)) => {
                 if v.status != SurveyStatus::Draft {
@@ -191,7 +193,7 @@ async fn upsert_survey_draft(
     }
 
     survey.updated_at = chrono::Utc::now().timestamp_millis();
-    state.db.upsert(survey).await.map_err(|e| {
+    cli.upsert(survey).await.map_err(|e| {
         slog::error!(root(), "UPSERT ERROR: {:?}", e);
         ApiError::DynamoCreateException(e.to_string())
     })?;
@@ -220,8 +222,9 @@ async fn progress_survey(
     State(state): State<AxumState>,
     Path(id): Path<String>,
 ) -> Result<Json<ProgressSurveyResponse>, ApiError> {
+    let cli = easy_dynamodb::get_client(&root());
     let result: Result<Option<Survey>, easy_dynamodb::error::DynamoException> =
-        state.db.get(&id).await;
+        cli.get(&id).await;
     let survey = match result {
         Ok(Some(v)) => {
             if v.creator != claims.id {

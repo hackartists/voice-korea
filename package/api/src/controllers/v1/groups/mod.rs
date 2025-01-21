@@ -12,7 +12,7 @@ use slog::o;
 use crate::{
     common::CommonQueryResponse,
     middleware::auth::authorization_middleware,
-    utils::{error::ApiError, jwt::Claims},
+    utils::jwt::Claims,
 };
 
 use models::prelude::*;
@@ -22,20 +22,9 @@ pub struct GroupControllerV1 {
     log: slog::Logger,
 }
 
-#[derive(Debug, serde::Deserialize)]
-pub struct Pagination {
-    pub size: Option<usize>,
-    pub bookmark: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize)]
-pub struct SearchParams {
-    pub _keyword: String,
-}
-
 // TODO: feat create group member
 impl GroupControllerV1 {
-    pub fn router(_db: std::sync::Arc<easy_dynamodb::Client>) -> Router {
+    pub fn router() -> Router {
         let log = root().new(o!("api-controller" => "GroupControllerV1"));
         let ctrl = GroupControllerV1 { log };
 
@@ -715,7 +704,11 @@ impl GroupControllerV1 {
         }
     }
 
-    pub async fn remove_group(&self, user_id: &str, group_id: &str) -> Result<(), ApiError> {
+    pub async fn remove_group(
+        &self, 
+        user_id: &str, 
+        group_id: &str
+    ) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "remove group"));
         slog::debug!(log, "remove group {:?}", group_id);
         let cli = easy_dynamodb::get_client(&log);

@@ -10,7 +10,7 @@ use by_axum::{
 use slog::o;
 
 use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware, utils::error::ApiError,
+    common::CommonQueryResponse, middleware::auth::authorization_middleware,
 };
 
 use models::prelude::*;

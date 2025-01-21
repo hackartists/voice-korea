@@ -5,19 +5,20 @@ use by_axum::{
         http::{
             header::{AUTHORIZATION, COOKIE},
             Response,
+            StatusCode,
         },
         middleware::Next,
     },
     log::root,
 };
-use models::prelude::OrganizationMiddlewareParams;
+use models::prelude::{OrganizationMiddlewareParams, ApiError};
 
-use crate::utils::{error::ApiError, jwt::validate_jwt};
+use crate::utils::jwt::validate_jwt;
 
 pub async fn authorization_middleware(
     mut req: Request,
     next: Next,
-) -> Result<Response<Body>, ApiError> {
+) -> Result<Response<Body>, StatusCode> {
     let mut token: &str = "";
     let mut organization_id: &str = "";
     if let Some(cookie_header) = req.headers().get(COOKIE) {
@@ -43,9 +44,7 @@ pub async fn authorization_middleware(
         Ok(data) => data,
         Err(e) => {
             slog::debug!(root(), "ERR: {:?}", e);
-            return Err(ApiError::InvalidCredentials(
-                "Unable to decode token".to_string(),
-            ));
+            return Err(StatusCode::UNAUTHORIZED);
         }
     };
 
@@ -53,7 +52,7 @@ pub async fn authorization_middleware(
         if let Ok(organization_str) = organization_header.to_str() {
             organization_id = organization_str;
         } else {
-            return Err(ApiError::OrganizationNotFound);
+            return Err(StatusCode::BAD_REQUEST);
         }
     }
 
@@ -73,7 +72,7 @@ pub async fn authorization_middleware(
 pub async fn admin_authorization_middleware(
     req: Request,
     next: Next,
-) -> Result<Response<Body>, ApiError> {
+) -> Result<Response<Body>, StatusCode> {
     let server_key = req.headers().get("SERVER-KEY");
 
     if let Some(api_key) = server_key {
@@ -82,5 +81,5 @@ pub async fn admin_authorization_middleware(
         }
     }
 
-    Err(ApiError::ForbiddenAccessError)
+    Err(StatusCode::UNAUTHORIZED)
 }

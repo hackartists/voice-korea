@@ -2,8 +2,8 @@ use by_axum::{
     axum::{
         extract::{Path, Query, State},
         middleware,
-        routing::post,
-        Extension, Json, Router,
+        routing::{post, get},
+        Extension, Json, Router
     },
     log::root,
 };
@@ -21,11 +21,11 @@ pub struct MetadataControllerV1 {
 }
 
 impl MetadataControllerV1 {
-    pub fn router() -> Router {
+    pub fn router() -> Result<Router> {
         let log = root().new(o!("api-controller" => "MetadataControllerV1"));
         let ctrl = MetadataControllerV1 { log };
 
-        Router::new()
+        Ok(Router::new()
             .route("/", post(Self::act_metadata).get(Self::list_metadatas))
             .route(
                 "/:metadata_id",
@@ -33,7 +33,7 @@ impl MetadataControllerV1 {
             )
             .route("/upload", post(Self::upload_metadata))
             .with_state(ctrl)
-            .layer(middleware::from_fn(authorization_middleware))
+            .layer(middleware::from_fn(authorization_middleware)))
     }
 
     pub async fn act_metadata(

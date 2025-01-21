@@ -1,9 +1,14 @@
 use super::survey::{Age, Gender, ProofId, RegionCode, SalaryTier};
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum SearchQuery {
     SearchPanel {
         // FIXME: it can be modified, because it is a part of noncelab.
@@ -28,11 +33,13 @@ pub enum SearchQuery {
 }
 
 #[derive(Debug, serde::Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SearchParams {
     pub _keyword: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SearchResult {
     // FIXME: it can be modified, because it is a part of noncelab.
     proof_id: ProofId,

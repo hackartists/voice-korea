@@ -4,8 +4,8 @@ use crate::middleware::auth::admin_authorization_middleware;
 
 mod survey;
 
-pub fn router(db: std::sync::Arc<easy_dynamodb::Client>) -> Router {
+pub fn router() -> Router {
     Router::new()
-        .nest("/survey", survey::router(db))
+        .nest("/survey", survey::router())
         .layer(middleware::from_fn(admin_authorization_middleware))
 }

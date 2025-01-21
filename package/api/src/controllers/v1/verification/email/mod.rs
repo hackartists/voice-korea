@@ -9,20 +9,21 @@ use rand::{thread_rng, Rng};
 use serde::Deserialize;
 
 use crate::utils::email::send_email;
-use crate::utils::error::ApiError;
+use models::error::ApiError;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct EmailSendParams {
     pub email: String,
 }
 
 pub async fn send_handler(
-    State(db): State<std::sync::Arc<easy_dynamodb::Client>>,
     Json(body): Json<EmailSendParams>,
 ) -> Result<String, ApiError> {
     //TODO: If Email send failed, remove Document
     //TODO: Add request limit
     let log = root();
+    slog::debug!(log, "send_handler {:?}", body);
+    let cli = easy_dynamodb::get_client(&log);
 
     let random_string: String = thread_rng()
         .sample_iter(&Alphanumeric)
@@ -35,7 +36,7 @@ pub async fn send_handler(
         random_string.clone(),
     );
     let doc_id = doc.id.clone();
-    match db.create(doc).await {
+    match cli.create(doc).await {
         Ok(_) => {
             match send_email(
                 body.email,
@@ -61,18 +62,21 @@ pub async fn send_handler(
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct EmailVerifyParams {
     pub id: String,
     pub value: String,
 }
 
 pub async fn verify_handler(
-    State(db): State<std::sync::Arc<easy_dynamodb::Client>>,
     Json(body): Json<EmailVerifyParams>,
 ) -> Result<String, ApiError> {
+    let log = root();
+    slog::debug!(log, "verify_handler {:?}", body);
+    let cli = easy_dynamodb::get_client(&log);
+
     let result: Result<Option<AuthDocument>, easy_dynamodb::error::DynamoException> =
-        db.get(&body.id).await;
+        cli.get(&body.id).await;
     let auth = match result {
         Ok(Some(v)) => v,
         Ok(None) => return Err(ApiError::AuthKeyNotMatch(body.id)),

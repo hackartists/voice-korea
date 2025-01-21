@@ -1,8 +1,13 @@
 use core::fmt;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Survey {
     pub id: String,
     pub r#type: String,
@@ -51,6 +56,7 @@ impl Survey {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum SurveyStatus {
     #[default]
     #[serde(rename = "draft")]
@@ -62,6 +68,7 @@ pub enum SurveyStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum SurveyDraftStatus {
     #[default]
     Init,
@@ -84,6 +91,7 @@ impl fmt::Display for SurveyStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SurveyQuestion {
     #[serde(rename = "id")]
     pub question_id: Option<u64>,
@@ -95,6 +103,7 @@ pub struct SurveyQuestion {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum SurveyQuestionType {
     #[serde(rename = "MULTIPLE_CHOICE")]
     MultipleChoice,
@@ -107,6 +116,7 @@ pub enum SurveyQuestionType {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum QuestionSequence {
     #[default]
     #[serde(rename = "title")]
@@ -132,6 +142,7 @@ impl fmt::Display for QuestionSequence {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Quota {
     pub attribute: Option<Attribute>,
     pub panel: Option<Panel>,
@@ -140,6 +151,7 @@ pub struct Quota {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Attribute {
     // e.g. 1, 2, 3, 4, 5
     pub salary_tier: Option<SalaryTier>,
@@ -151,6 +163,7 @@ pub struct Attribute {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Panel {
     panel: Vec<ProofId>,
 }
@@ -166,6 +179,7 @@ pub type ProofId = String;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Gender {
     Male,
     Female,
@@ -189,6 +203,7 @@ impl<'de> Deserialize<'de> for Gender {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Age {
     Specific(u8),
     Range {
@@ -200,29 +215,34 @@ pub enum Age {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ProgressSurveyResponse {
     pub id: String,
     pub nonce_lab_id: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CompleteSurveyResponse {
     pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ListSurveyRequest {
     pub size: Option<i32>,
     pub bookmark: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ListSurveyResponse {
     pub bookmark: Option<String>,
     pub survey: Vec<Survey>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreateSurveyDto {
     pub custom_id: String,
     pub status: SurveyStatus,
@@ -235,6 +255,7 @@ pub struct CreateSurveyDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct UpsertSurveyDraftRequest {
     pub id: Option<String>,
     pub status: Option<SurveyDraftStatus>,
@@ -249,6 +270,7 @@ pub type QuotaId = u32;
 pub type QuestionId = u32;
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SurveyResultDocument {
     pub id: String,
     pub user_id: String,
@@ -279,18 +301,21 @@ impl SurveyResultDocument {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SurveyResultQuota {
     pub quota_id: String,
     pub total_num: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SurveyResultQuestion {
     pub quesiton_id: String,
     pub total_num: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum SurveyResultAnswerType {
     Select(Vec<String>),
     Text(String),
@@ -298,6 +323,7 @@ pub enum SurveyResultAnswerType {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SurveyResultAnswer {
     pub responded_at: i64,
     pub quota_id: QuotaId, // 속성 ID
@@ -305,11 +331,13 @@ pub struct SurveyResultAnswer {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AdminSurveyCompleteRequest {
     pub ended_at: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AdminSurveyCompleteResponse {
     pub total: u32,
     pub succeed: u32,

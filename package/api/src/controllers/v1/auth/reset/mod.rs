@@ -2,12 +2,12 @@ use by_axum::axum::routing::put;
 use by_axum::axum::Json;
 use by_axum::axum::{extract::State, Router};
 use by_axum::log::root;
-use models::User;
+use models::{User, error::ApiError};
 use serde::Deserialize;
 use slog::o;
 
 use super::super::verification::email::{verify_handler, EmailVerifyParams};
-use crate::utils::{error::ApiError, hash::get_hash_string};
+use crate::utils::hash::get_hash_string;
 
 #[derive(Deserialize, Debug)]
 pub struct ResetParams {
@@ -19,14 +19,13 @@ pub struct ResetParams {
 
 #[derive(Clone, Debug)]
 pub struct ResetControllerV1 {
-    db: std::sync::Arc<easy_dynamodb::Client>,
     log: slog::Logger,
 }
 
 impl ResetControllerV1 {
-    pub fn router(db: std::sync::Arc<easy_dynamodb::Client>) -> Router {
+    pub fn router() -> Router {
         let log = root().new(o!("api-controller" => "ResetControllerV1"));
-        let ctrl = ResetControllerV1 { db, log };
+        let ctrl = ResetControllerV1 { log };
 
         Router::new()
             .route("/", put(Self::reset))
@@ -39,8 +38,9 @@ impl ResetControllerV1 {
     ) -> Result<(), ApiError> {
         let log = ctrl.log.new(o!("api" => "reset"));
         slog::debug!(log, "reset {:?}", body);
+        let cli = easy_dynamodb::get_client(&log);
+
         verify_handler(
-            State(ctrl.db.clone()),
             Json(EmailVerifyParams {
                 id: body.auth_id,
                 value: body.auth_value,
@@ -52,8 +52,7 @@ impl ResetControllerV1 {
         let result: Result<
             (Option<Vec<User>>, Option<String>),
             easy_dynamodb::error::DynamoException,
-        > = ctrl
-            .db
+        > = cli
             .find(
                 "gsi1-index",
                 None,
@@ -71,8 +70,7 @@ impl ResetControllerV1 {
             None => return Err(ApiError::InvalidCredentials(email)),
         };
         let hashed_password = get_hash_string(body.password.as_bytes());
-        let _ = ctrl
-            .db
+        let _ = cli
             .update(&user.id, vec![("password", hashed_password)])
             .await;
         Ok(())
