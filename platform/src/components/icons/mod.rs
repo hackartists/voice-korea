@@ -988,6 +988,26 @@ pub fn Schedule(width: String, height: String) -> Element {
 }
 
 #[component]
+pub fn Upload(width: String, height: String) -> Element {
+    rsx! {
+        svg {
+            fill: "none",
+            "viewBox": "0 0 25 24",
+            height,
+            xmlns: "http://www.w3.org/2000/svg",
+            width,
+            path {
+                "stroke-width": "1.5",
+                d: "M19.5 15V17C19.5 18.1046 18.6046 19 17.5 19H7.5C6.39543 19 5.5 18.1046 5.5 17V15M12.5 15L12.5 5M12.5 5L14.5 7M12.5 5L10.5 7",
+                "stroke-linejoin": "round",
+                stroke: "#AFC9FF",
+                "stroke-linecap": "round",
+            }
+        }
+    }
+}
+
+#[component]
 pub fn Message(width: String, height: String) -> Element {
     rsx! {
         svg {

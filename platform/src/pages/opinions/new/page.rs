@@ -1,7 +1,14 @@
 #![allow(non_snake_case)]
 use crate::{
     components::{icons::ArrowLeft, stepper::Stepper},
-    pages::opinions::new::controller::{Controller, CurrentStep},
+    pages::opinions::new::{
+        composition_commitee::CompositionCommitee,
+        composition_opinion::CompositionOpinion,
+        composition_panel::CompositionPanel,
+        controller::{Controller, CurrentStep},
+        input_opinion::InputOpinion,
+        setting_discussion::SettingDiscussion,
+    },
     routes::Route,
 };
 
@@ -54,21 +61,19 @@ pub fn OpinionCreatePage(props: OpinionProps) -> Element {
                 }
             }
 
-            Preview { lang: props.lang.clone() }
-
-        // if step == CurrentStep::PublicOpinionComposition {
-        //     CompositionOpinion { lang: props.lang.clone() }
-        // } else if step == CurrentStep::InputInformation {
-        //     InputOpinion { lang: props.lang.clone() }
-        // } else if step == CurrentStep::CommitteeComposition {
-        //     CompositionCommitee { lang: props.lang.clone() }
-        // } else if step == CurrentStep::PanelComposition {
-        //     CompositionPanel { lang: props.lang.clone() }
-        // } else if step == CurrentStep::DiscussionSetting {
-        //     SettingDiscussion { lang: props.lang.clone() }
-        // } else {
-        //     Preview { lang: props.lang.clone() }
-        // }
+            if step == CurrentStep::PublicOpinionComposition {
+                CompositionOpinion { lang: props.lang.clone() }
+            } else if step == CurrentStep::InputInformation {
+                InputOpinion { lang: props.lang.clone() }
+            } else if step == CurrentStep::CommitteeComposition {
+                CompositionCommitee { lang: props.lang.clone() }
+            } else if step == CurrentStep::PanelComposition {
+                CompositionPanel { lang: props.lang.clone() }
+            } else if step == CurrentStep::DiscussionSetting {
+                SettingDiscussion { lang: props.lang.clone() }
+            } else {
+                Preview { lang: props.lang.clone() }
+            }
         }
     }
 }

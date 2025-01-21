@@ -1,3 +1,4 @@
+use dioxus_translate::Language;
 use serde::{Deserialize, Serialize};
 
 use crate::field::Field;
@@ -90,7 +91,25 @@ pub enum MetadataAuthority {
     Restricted,
 }
 
+impl MetadataAuthority {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                MetadataAuthority::Public => "Public Material",
+                MetadataAuthority::Private => "Private Material",
+                MetadataAuthority::Restricted => "Restricted Material",
+            },
+            Language::Ko => match self {
+                MetadataAuthority::Public => "공개 자료",
+                MetadataAuthority::Private => "제한 자료",
+                MetadataAuthority::Restricted => "기밀 자료",
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
 pub enum MetadataSource {
     #[default]
     Internal,
@@ -99,7 +118,27 @@ pub enum MetadataSource {
     Company,
 }
 
+impl MetadataSource {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                MetadataSource::Internal => "Internal Material",
+                MetadataSource::External => "External Material",
+                MetadataSource::Goverment => "Agency",
+                MetadataSource::Company => "Privacy Enterprise",
+            },
+            Language::Ko => match self {
+                MetadataSource::Internal => "내부 자료",
+                MetadataSource::External => "외부 자료",
+                MetadataSource::Goverment => "정부 기관",
+                MetadataSource::Company => "민간 기업",
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
 pub enum MetadataPurpose {
     #[default]
     DevelopmentPolicy,
@@ -108,7 +147,27 @@ pub enum MetadataPurpose {
     Education,
 }
 
+impl MetadataPurpose {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                MetadataPurpose::DevelopmentPolicy => "Policy Development",
+                MetadataPurpose::AcademicResearch => "Academic Research",
+                MetadataPurpose::PublicDiscussion => "Public Discussion Document",
+                MetadataPurpose::Education => "Education Document",
+            },
+            Language::Ko => match self {
+                MetadataPurpose::DevelopmentPolicy => "정책 개발",
+                MetadataPurpose::AcademicResearch => "학술 연구",
+                MetadataPurpose::PublicDiscussion => "공론화 자료",
+                MetadataPurpose::Education => "교육 자료",
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
 pub enum MetadataType {
     #[default]
     Report,
@@ -117,4 +176,27 @@ pub enum MetadataType {
     Thesis,
     Presentation,
     Media,
+}
+
+impl MetadataType {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                MetadataType::Report => "Report",
+                MetadataType::Statistics => "Statistics",
+                MetadataType::Survey => "Survey",
+                MetadataType::Thesis => "Thesis",
+                MetadataType::Presentation => "Presentations",
+                MetadataType::Media => "Media",
+            },
+            Language::Ko => match self {
+                MetadataType::Report => "보고서",
+                MetadataType::Statistics => "통계 자료",
+                MetadataType::Survey => "설문 데이터",
+                MetadataType::Thesis => "연구 논문",
+                MetadataType::Presentation => "발표 자료",
+                MetadataType::Media => "미디어",
+            },
+        }
+    }
 }
