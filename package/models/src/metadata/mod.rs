@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use dioxus_translate::Language;
 use serde::{Deserialize, Serialize};
 
@@ -108,6 +110,19 @@ impl MetadataAuthority {
     }
 }
 
+impl FromStr for MetadataAuthority {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "공개 자료" | "Public Material" => Ok(MetadataAuthority::Public),
+            "제한 자료" | "Private Material" => Ok(MetadataAuthority::Private),
+            "기밀 자료" | "Restricted Material" => Ok(MetadataAuthority::Restricted),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum MetadataSource {
@@ -137,6 +152,20 @@ impl MetadataSource {
     }
 }
 
+impl FromStr for MetadataSource {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "내부 자료" | "Internal Material" => Ok(MetadataSource::Internal),
+            "외부 자료" | "External Material" => Ok(MetadataSource::External),
+            "정부 기관" | "Agency" => Ok(MetadataSource::Goverment),
+            "민간 기업" | "Privacy Enterprise" => Ok(MetadataSource::Company),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum MetadataPurpose {
@@ -164,6 +193,22 @@ impl MetadataPurpose {
             },
         }
     }
+}
+
+impl FromStr for MetadataPurpose {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "정책 개발" | "Policy Development" => Ok(MetadataPurpose::DevelopmentPolicy),
+            "학술 연구" | "Academic Research" => Ok(MetadataPurpose::AcademicResearch),
+            "공론화 자료" | "Public Discussion Document" => {
+                Ok(MetadataPurpose::PublicDiscussion)
+            }
+            "교육 자료" | "Education Document" => Ok(MetadataPurpose::Education),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
@@ -199,4 +244,20 @@ impl MetadataType {
             },
         }
     }
+}
+
+impl FromStr for MetadataType {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "보고서" | "Report" => Ok(MetadataType::Report),
+            "통계 자료" | "Statistics" => Ok(MetadataType::Statistics),
+            "설문 데이터" | "Survey" => Ok(MetadataType::Survey),
+            "연구 논문" | "Thesis" => Ok(MetadataType::Thesis),
+            "발표 자료" | "Presentations" => Ok(MetadataType::Presentation),
+            "미디어" | "Media" => Ok(MetadataType::Media),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
 }

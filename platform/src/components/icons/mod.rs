@@ -1008,6 +1008,33 @@ pub fn Upload(width: String, height: String) -> Element {
 }
 
 #[component]
+pub fn Edit(width: String, height: String) -> Element {
+    rsx! {
+        svg {
+            view_box: "0 0 25 24",
+            height,
+            fill: "none",
+            xmlns: "http://www.w3.org/2000/svg",
+            width,
+            path {
+                stroke: "#AFC9FF",
+                d: "M18.879 8.44975L11.9641 15.3647C11.6849 15.6439 11.3293 15.8342 10.9422 15.9117L8.00042 16.5L8.58877 13.5582C8.66621 13.1711 8.85652 12.8155 9.13571 12.5363L16.0506 5.62132M18.879 8.44975L20.2932 7.03553C20.6837 6.64501 20.6837 6.01184 20.2932 5.62132L18.879 4.20711C18.4885 3.81658 17.8553 3.81658 17.4648 4.20711L16.0506 5.62132M18.879 8.44975L16.0506 5.62132",
+                "stroke-linecap": "round",
+                "stroke-width": "1.5",
+                "stroke-linejoin": "round",
+            }
+            path {
+                d: "M5.5 20H19.5",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                "stroke-width": "1.5",
+                stroke: "#AFC9FF",
+            }
+        }
+    }
+}
+
+#[component]
 pub fn Message(width: String, height: String) -> Element {
     rsx! {
         svg {
