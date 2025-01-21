@@ -4,6 +4,7 @@ use dioxus_logger::tracing;
 use dioxus_translate::Language;
 use models::prelude::{
     Field, MetadataAuthority, MetadataPurpose, MetadataSource, MetadataSummary, MetadataType,
+    PublicOpinion, PublicSurvey,
 };
 
 use crate::service::popup_service::PopupService;
@@ -107,7 +108,7 @@ impl Controller {
                 id: "1".to_string(),
                 name: "공론자료제목명".to_string(),
                 urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
+                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
                         .to_string(),
                 ],
                 metadata_type: Some(MetadataType::Report),
@@ -115,7 +116,20 @@ impl Controller {
                 metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
                 metadata_source: Some(MetadataSource::Internal),
                 metadata_authority: Some(MetadataAuthority::Public),
-                public_opinion_projects: None,
+                public_opinion_projects: Some(vec![
+                    PublicOpinion {
+                        id: "1".to_string(),
+                        name: "공론명".to_string(),
+                    },
+                    PublicOpinion {
+                        id: "2".to_string(),
+                        name: "공론명2".to_string(),
+                    },
+                    PublicOpinion {
+                        id: "3".to_string(),
+                        name: "공론명3".to_string(),
+                    },
+                ]),
                 public_survey_projects: None,
                 updated_at: 1759276800,
             },
@@ -123,7 +137,7 @@ impl Controller {
                 id: "2".to_string(),
                 name: "공론자료제목명".to_string(),
                 urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
+                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
                         .to_string(),
                 ],
                 metadata_type: Some(MetadataType::Statistics),
@@ -132,14 +146,27 @@ impl Controller {
                 metadata_source: Some(MetadataSource::External),
                 metadata_authority: Some(MetadataAuthority::Restricted),
                 public_opinion_projects: None,
-                public_survey_projects: None,
+                public_survey_projects: Some(vec![
+                    PublicSurvey {
+                        id: "1".to_string(),
+                        name: "조사명".to_string(),
+                    },
+                    PublicSurvey {
+                        id: "2".to_string(),
+                        name: "조사명2".to_string(),
+                    },
+                    PublicSurvey {
+                        id: "3".to_string(),
+                        name: "조사명3".to_string(),
+                    },
+                ]),
                 updated_at: 1759276800,
             },
             MetadataSummary {
                 id: "3".to_string(),
                 name: "공론자료제목명".to_string(),
                 urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
+                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
                         .to_string(),
                 ],
                 metadata_type: Some(MetadataType::Statistics),
@@ -155,7 +182,7 @@ impl Controller {
                 id: "4".to_string(),
                 name: "공론자료제목명".to_string(),
                 urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
+                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
                         .to_string(),
                 ],
                 metadata_type: Some(MetadataType::Thesis),
@@ -171,7 +198,7 @@ impl Controller {
                 id: "5".to_string(),
                 name: "공론자료제목명".to_string(),
                 urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
+                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
                         .to_string(),
                 ],
                 metadata_type: Some(MetadataType::Presentation),
@@ -187,7 +214,7 @@ impl Controller {
                 id: "6".to_string(),
                 name: "공론자료제목명".to_string(),
                 urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
+                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
                         .to_string(),
                 ],
                 metadata_type: Some(MetadataType::Media),

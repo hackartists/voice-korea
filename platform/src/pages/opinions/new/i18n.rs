@@ -342,6 +342,10 @@ translate! {
         ko: "공평한 인원수 배정",
         en: "Fair number of people allocated"
     }
+    proportional_people_allocated: {
+        ko: "인원수 비례 배정",
+        en: "Proportional allocation of number of people"
+    }
     participant_panel_composition: {
         ko: "참여자 패널 구성",
         en: "Participant Panel Composition"
@@ -357,6 +361,10 @@ translate! {
     next: {
         ko: "다음으로",
         en: "Next"
+    }
+    create_panel: {
+        ko: "패널 새로 만들기",
+        en: "Create New Panel"
     }
 }
 
@@ -411,6 +419,14 @@ translate! {
     select_panel: {
         ko: "패널 선택",
         en: "Select Panel"
+    }
+    input_panel_count: {
+        ko: "패널 수 입력",
+        en: "Input Panel Count"
+    }
+    sampling: {
+        ko: "샘플링",
+        en: "Sampling"
     }
 }
 

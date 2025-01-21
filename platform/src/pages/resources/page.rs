@@ -19,6 +19,9 @@ use crate::{
 #[cfg(feature = "web")]
 use dioxus::html::HasFileData;
 
+#[cfg(feature = "web")]
+use web_sys::window;
+
 #[derive(Props, Clone, PartialEq)]
 pub struct ResourceProps {
     lang: Language,
@@ -144,7 +147,7 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                         div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center gap-[10px]" }
                     }
 
-                    for (index , resource) in resources.iter().enumerate() {
+                    for (index , resource) in resources.clone().iter().enumerate() {
                         div { class: "flex flex-col w-full justify-start items-start",
                             div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
                             div { class: "flex flex-row w-full h-[55px]",
@@ -194,7 +197,11 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                 }
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
                                     //FIXME: fix to real public opinion name
-                                    MetadataLabel { label: "공론명" }
+                                    if resource.public_opinion_projects.clone().unwrap_or_default().len() > 1 {
+                                        MetadataLabel { label: resource.public_opinion_projects.clone().unwrap()[0].name.clone() }
+                                    } else if resource.public_survey_projects.clone().unwrap_or_default().len() > 1 {
+                                        MetadataLabel { label: resource.public_survey_projects.clone().unwrap()[0].name.clone() }
+                                    }
                                 }
                                 div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
                                     div { class: "text-[#555462] font-semibold text-[14px]",
@@ -230,7 +237,25 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                     }
                                 }
                                 div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                    div { class: "text-[#2a60d3] font-semibold text-[14px]",
+                                    button {
+                                        class: "text-[#2a60d3] font-semibold text-[14px]",
+                                        onclick: {
+                                            let resource = resource.clone();
+                                            move |_| {
+                                                #[cfg(feature = "web")]
+                                                {
+                                                    for link in resource.urls.clone() {
+                                                        if let Some(win) = window() {
+                                                            win.open_with_url_and_target(&link, "_blank").ok();
+                                                        }
+                                                    }
+                                                }
+                                                #[cfg(not(feature = "web"))]
+                                                {
+                                                    let _ = &resource;
+                                                }
+                                            }
+                                        },
                                         "{translate.download}"
                                     }
                                 }
