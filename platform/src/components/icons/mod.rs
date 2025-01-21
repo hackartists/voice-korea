@@ -986,3 +986,62 @@ pub fn Schedule(width: String, height: String) -> Element {
         }
     }
 }
+
+#[component]
+pub fn Message(width: String, height: String) -> Element {
+    rsx! {
+        svg {
+            width,
+            fill: "none",
+            xmlns: "http://www.w3.org/2000/svg",
+            height,
+            view_box: "0 0 101 101",
+            circle {
+                cx: "50.5",
+                cy: "50.75",
+                fill: "#2A60D3",
+                r: "50",
+            }
+            path {
+                d: "M74.3168 33.4302H26.6875V68.0698H74.3168V33.4302Z",
+                fill: "white",
+            }
+            path {
+                fill: "#AFC9FF",
+                d: "M69.554 63.7397H31.4503L26.6875 68.0696H74.3168L69.554 63.7397Z",
+            }
+            path {
+                "stroke-linejoin": "round",
+                "stroke-linecap": "round",
+                stroke: "#182248",
+                "stroke-width": "2.14886",
+                "stroke-miterlimit": "10",
+                d: "M74.3168 33.4302L50.5021 57.8944L26.6875 33.4302",
+            }
+            path {
+                "stroke-width": "2.14886",
+                "stroke-miterlimit": "10",
+                "stroke-linejoin": "round",
+                "stroke-linecap": "round",
+                d: "M26.6875 68.0703L44.2237 51.833",
+                stroke: "#182248",
+            }
+            path {
+                stroke: "#182248",
+                "stroke-linecap": "round",
+                d: "M56.7773 51.833L74.3135 68.0703",
+                "stroke-miterlimit": "10",
+                "stroke-linejoin": "round",
+                "stroke-width": "2.14886",
+            }
+            path {
+                d: "M74.3168 33.4302H26.6875V68.0698H74.3168V33.4302Z",
+                "stroke-linejoin": "round",
+                stroke: "#182248",
+                "stroke-linecap": "round",
+                "stroke-width": "2.14886",
+                "stroke-miterlimit": "10",
+            }
+        }
+    }
+}

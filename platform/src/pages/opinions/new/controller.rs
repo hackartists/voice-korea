@@ -26,7 +26,7 @@ pub enum CurrentStep {
 }
 
 impl Controller {
-    pub fn init(_lang: dioxus_translate::Language, translates: OpinionNewTranslate) -> Self {
+    pub fn new(_lang: dioxus_translate::Language, translates: OpinionNewTranslate) -> Self {
         let ctrl = Self {
             current_step: use_signal(|| CurrentStep::PublicOpinionComposition),
             total_option_types: use_signal(|| {

@@ -7,6 +7,7 @@ use dioxus_translate::translate;
 use dioxus_translate::Language;
 use models::prelude::GroupInfo;
 use models::prelude::InviteMemberRequest;
+use models::prelude::Role;
 
 use crate::{
     components::{
@@ -616,7 +617,21 @@ pub fn AddMemberModal(
                                         name: select_group(),
                                     })
                                 },
-                                role: if select_role().is_empty() { None } else { Some(select_role()) },
+                                role: if select_role().is_empty() {
+                                    None
+                                } else {
+                                    if select_role() == "관리자" {
+                                        Some(Role::Admin)
+                                    } else if select_role() == "공론 관리자" {
+                                        Some(Role::PublicAdmin)
+                                    } else if select_role() == "분석가" {
+                                        Some(Role::Analyst)
+                                    } else if select_role() == "중계자" {
+                                        Some(Role::Mediator)
+                                    } else {
+                                        Some(Role::Speaker)
+                                    }
+                                },
                                 projects: None,
                             });
                     },

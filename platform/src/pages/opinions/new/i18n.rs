@@ -550,3 +550,105 @@ translate! {
         en: "Upload Material"
     }
 }
+
+translate! {
+    PreviewTranslate;
+
+    send_alerm: {
+        ko: "알림 보내기",
+        en: "Send Alerm"
+    }
+    backward: {
+        ko: "뒤로",
+        en: "Backward"
+    }
+    start_public_opinion: {
+        ko: "공론 시작하기",
+        en: "Start Public Opinion"
+    }
+}
+
+translate! {
+    CompositionOpinionSummaryTranslate;
+
+    public_opinion_composition_and_period: {
+        ko: "공론 구성 및 기간",
+        en: "Public Opinion Composition and Period"
+    }
+    total_period: {
+        ko: "전체 기간",
+        en: "Total Period"
+    }
+}
+
+translate! {
+    InputOpinionSummaryTranslate;
+
+    input_necessary_information: {
+        ko: "필수 정보 입력",
+        en: "Input Necessary Information"
+    }
+    introduction: {
+        ko: "소개글",
+        en: "Introduction"
+    }
+    upload_document: {
+        ko: "자료 업로드",
+        en: "Upload Document"
+    }
+    upload_survey_project: {
+        ko: "조사 프로젝트 업로드",
+        en: "Upload Survey Project"
+    }
+}
+
+translate! {
+    CompositionCommitteeSummaryTranslate;
+
+    composition_public_opinion_committee: {
+        ko: "공론 위원회 구성",
+        en: "Composition Public Opinion Committee"
+    }
+    division_of_roles: {
+        ko: "역할 분담",
+        en: "Division of Roles"
+    }
+}
+
+translate! {
+    CompositionPanelSummaryTranslate;
+
+    participant_panel_composition: {
+        ko: "참여자 패널 구성",
+        en: "Participant Panel Composition"
+    }
+    full_panel_settings: {
+        ko: "전체 패널 설정",
+        en: "Full Panel Settings"
+    }
+    select_panel: {
+        ko: "패널 선택",
+        en: "Select Panel"
+    }
+    setting_properties_for_each_panel: {
+        ko: "패널별 속성 설정",
+        en: "Setting Properties for Each Panel"
+    }
+}
+
+translate! {
+    SendAlertTranslate;
+
+    send_alert_description: {
+        ko: "참여자의 메일로 공론 시작을 알리는 메세지를 보냅니다.",
+        en: "A message will be sent to the participant's email notifying them of the start of the public discussion."
+    }
+    send: {
+        ko: "보내기",
+        en: "Send"
+    }
+    cancel: {
+        ko: "취소",
+        en: "Cancel"
+    }
+}
