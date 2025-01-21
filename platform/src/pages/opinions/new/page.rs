@@ -17,7 +17,7 @@ pub struct OpinionProps {
 #[component]
 pub fn OpinionCreatePage(props: OpinionProps) -> Element {
     let translates: OpinionNewTranslate = translate(&props.lang.clone());
-    let ctrl = Controller::init(props.lang, translates.clone());
+    let ctrl = Controller::new(props.lang, translates.clone());
 
     let step = ctrl.get_current_step();
     rsx! {

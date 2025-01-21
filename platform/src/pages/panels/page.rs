@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::prelude::{AttributeSummary, PanelSummary};
 
@@ -13,7 +12,6 @@ use crate::{
             UpdateAttributeNameModalTranslate, UpdatePanelNameModalTranslate,
         },
     },
-    service::popup_service::PopupService,
 };
 
 #[derive(Props, Clone, PartialEq)]
@@ -21,91 +19,13 @@ pub struct PanelProps {
     lang: Language,
 }
 
-#[derive(Clone, PartialEq)]
-pub enum ModalType {
-    None,
-    UpdatePanelName(usize),
-    RemovePanel(usize),
-    UpdateAttributeName(usize),
-    RemoveAttribute(usize),
-}
-
 #[component]
 pub fn PanelPage(props: PanelProps) -> Element {
-    let ctrl = Controller::init(props.lang);
+    let ctrl = Controller::new(props.lang);
     let panels = ctrl.get_panels();
     let attributes = ctrl.get_attributes();
-    let mut modal_type = use_signal(|| ModalType::None);
-
-    let mut popup: PopupService = use_context();
 
     let translate: PanelTranslate = translate(&props.lang);
-
-    if let ModalType::RemoveAttribute(index) = modal_type() {
-        popup
-            .open(rsx! {
-                RemoveAttributeModal {
-                    lang: props.lang,
-                    remove_click: move |_| {
-                        tracing::debug!("remove attribute clicked: {index}");
-                    },
-                    onclose: move |_| {
-                        popup.close();
-                    },
-                }
-            })
-            .with_id("remove_attribute")
-            .with_title(translate.remove_attribute);
-    } else if let ModalType::UpdateAttributeName(index) = modal_type() {
-        popup
-            .open(rsx! {
-                UpdateAttributeNameModal {
-                    lang: props.lang,
-                    update_attribute_click: move |name: String| {
-                        tracing::debug!("update attribute clicked: {index} {name}");
-                    },
-                    initial_value: attributes[index].name.clone(),
-                    onclose: move |_| {
-                        popup.close();
-                    },
-                }
-            })
-            .with_id("update_attribute_name")
-            .with_title(translate.update_attribute_name);
-    } else if let ModalType::RemovePanel(index) = modal_type() {
-        popup
-            .open(rsx! {
-                RemovePanelModal {
-                    lang: props.lang,
-                    remove_click: move |_| {
-                        tracing::debug!("remove panel clicked: {index}");
-                    },
-                    onclose: move |_| {
-                        popup.close();
-                    },
-                }
-            })
-            .with_id("remove_panel")
-            .with_title(translate.remove_panel);
-    } else if let ModalType::UpdatePanelName(index) = modal_type() {
-        popup
-            .open(rsx! {
-                UpdatePanelNameModal {
-                    lang: props.lang,
-                    update_panel_click: move |name: String| {
-                        tracing::debug!("update panel clicked: {index} {name}");
-                    },
-                    initial_value: panels[index].name.clone(),
-                    onclose: move |_| {
-                        popup.close();
-                    },
-                }
-            })
-            .with_id("update_panel_name")
-            .with_title(translate.update_panel_name);
-    } else {
-        popup.close();
-    }
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -119,21 +39,21 @@ pub fn PanelPage(props: PanelProps) -> Element {
             lang: props.lang,
             panels,
             attributes: attributes.clone(),
-            update_panel_name: move |index: usize| {
-                modal_type.set(ModalType::UpdatePanelName(index));
+            onupdate: move |index: usize| {
+                ctrl.open_update_panel_name(props.lang, index);
             },
-            remove_panel: move |index: usize| {
-                modal_type.set(ModalType::RemovePanel(index));
+            onremove: move |index: usize| {
+                ctrl.open_remove_panel(props.lang, index);
             },
         }
         AttributeList {
             lang: props.lang,
             attributes,
-            update_attribute_name: move |index: usize| {
-                modal_type.set(ModalType::UpdateAttributeName(index));
+            onupdate: move |index: usize| {
+                ctrl.open_update_attribute_name(props.lang, index);
             },
-            remove_attribute: move |index: usize| {
-                modal_type.set(ModalType::RemoveAttribute(index));
+            onremove: move |index: usize| {
+                ctrl.open_remove_attribute(props.lang, index);
             },
         }
     }
@@ -143,8 +63,8 @@ pub fn PanelPage(props: PanelProps) -> Element {
 pub fn AttributeList(
     lang: Language,
     attributes: Vec<AttributeSummary>,
-    update_attribute_name: EventHandler<usize>,
-    remove_attribute: EventHandler<usize>,
+    onupdate: EventHandler<usize>,
+    onremove: EventHandler<usize>,
 ) -> Element {
     let mut is_focused = use_signal(|| false);
     let mut attribute_name = use_signal(|| "".to_string());
@@ -238,14 +158,14 @@ pub fn AttributeList(
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                     onclick: move |_| {
-                                                        update_attribute_name.call(ind);
+                                                        onupdate.call(ind);
                                                     },
                                                     "{translate.update_attribute_name}"
                                                 }
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                     onclick: move |_| {
-                                                        remove_attribute.call(ind);
+                                                        onremove.call(ind);
                                                     },
                                                     "{translate.remove_attribute}"
                                                 }
@@ -267,8 +187,8 @@ pub fn PanelList(
     lang: Language,
     panels: Vec<PanelSummary>,
     attributes: Vec<AttributeSummary>,
-    update_panel_name: EventHandler<usize>,
-    remove_panel: EventHandler<usize>,
+    onupdate: EventHandler<usize>,
+    onremove: EventHandler<usize>,
 ) -> Element {
     let mut is_focused = use_signal(|| false);
     let mut panel_name = use_signal(|| "".to_string());
@@ -376,14 +296,14 @@ pub fn PanelList(
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                     onclick: move |_| {
-                                                        update_panel_name.call(index);
+                                                        onupdate.call(index);
                                                     },
                                                     "{translate.update_panel_name}"
                                                 }
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                     onclick: move |_| {
-                                                        remove_panel.call(index);
+                                                        onremove.call(index);
                                                     },
                                                     "{translate.remove_panel}"
                                                 }
@@ -403,7 +323,7 @@ pub fn PanelList(
 #[component]
 pub fn UpdateAttributeNameModal(
     lang: Language,
-    update_attribute_click: EventHandler<String>,
+    onupdate: EventHandler<String>,
     initial_value: String,
     onclose: EventHandler<MouseEvent>,
 ) -> Element {
@@ -436,7 +356,7 @@ pub fn UpdateAttributeNameModal(
                     div {
                         class: "text-white font-bold text-[16px]",
                         onclick: move |_| {
-                            update_attribute_click.call(attribute_name());
+                            onupdate.call(attribute_name());
                         },
                         "{translate.update}"
                     }
@@ -456,7 +376,7 @@ pub fn UpdateAttributeNameModal(
 #[component]
 pub fn UpdatePanelNameModal(
     lang: Language,
-    update_panel_click: EventHandler<String>,
+    onupdate: EventHandler<String>,
     initial_value: String,
     onclose: EventHandler<MouseEvent>,
 ) -> Element {
@@ -487,7 +407,7 @@ pub fn UpdatePanelNameModal(
                     div {
                         class: "text-white font-bold text-[16px]",
                         onclick: move |_| {
-                            update_panel_click.call(panel_name());
+                            onupdate.call(panel_name());
                         },
                         "{translate.update}"
                     }
