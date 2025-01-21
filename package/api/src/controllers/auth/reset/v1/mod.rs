@@ -9,14 +9,6 @@ use slog::o;
 use super::super::verification::email::{verify_handler, EmailVerifyParams};
 use crate::utils::hash::get_hash_string;
 
-#[derive(Deserialize, Debug)]
-pub struct ResetParams {
-    pub auth_id: String,
-    pub auth_value: String,
-    pub email: String,
-    pub password: String,
-}
-
 #[derive(Clone, Debug)]
 pub struct ResetControllerV1 {
     log: slog::Logger,

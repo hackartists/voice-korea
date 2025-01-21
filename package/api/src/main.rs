@@ -4,7 +4,26 @@ use by_axum::logger::root;
 use tokio::net::TcpListener;
 
 mod common;
-mod controllers;
+mod controllers {
+    pub mod auth {
+        pub mod v1;
+    //     pub mod login {
+    //         pub mod v1;
+    //     }
+    //     pub mod reset {
+    //         pub mod v1;
+    //     }
+    //     pub mod signup {
+    //         pub mod v1;
+    //     }
+    }
+    pub mod organizations {
+        pub mod v1;
+    }
+    pub mod groups {
+        pub mod v1;
+    }
+}
 mod middleware;
 mod utils;
 
@@ -32,7 +51,13 @@ async fn main() {
     );
 
     let app = by_axum::new()
-        .nest("/", controllers::router());
+        // .nest("/auth/login/v1", controllers::auth::login::v1::LoginControllerV1::router())
+        // .nest("/auth/signup/v1", controllers::auth::signup::v1::SignupControllerV1::router())
+        // .nest("/auth/reset/v1", controllers::auth::reset::v1::ResetControllerV1::router())
+        .nest("/auth/v1", controllers::auth::v1::AuthControllerV1::router())
+        .nest("/organizations/v1", controllers::organizations::v1::OrganizationControllerV1::router())
+        .nest("/groups/v1", controllers::groups::v1::GroupControllerV1::router()
+    );
 
     #[cfg(feature = "reload")]
     {

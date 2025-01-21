@@ -366,16 +366,6 @@ impl GroupControllerV1 {
         slog::debug!(log, "update_group_member");
         let cli = easy_dynamodb::get_client(&log);
 
-        //check member
-        let res = cli
-            .get::<Member>(&member_id)
-            .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
-
-        if res.is_none() {
-            return Err(ApiError::NotFound);
-        }
-
         // check member in group
         let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
             &log,
