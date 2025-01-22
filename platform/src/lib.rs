@@ -27,6 +27,7 @@ pub mod pages {
     pub mod panels;
     pub mod reset_password;
     pub mod resources;
+    pub mod surveys;
 }
 
 pub mod service {
