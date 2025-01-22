@@ -164,7 +164,7 @@ impl AxumState {
 
     async fn upsert_survey_draft(
         Extension(claims): Extension<Claims>,
-        State(state): State<AxumState>,
+        State(_state): State<AxumState>,
         Json(req): Json<UpsertSurveyDraftRequest>,
     ) -> Result<Json<String>, ApiError> {
         let cli = easy_dynamodb::get_client(&root());
@@ -294,7 +294,7 @@ impl AxumState {
 
     async fn get_survey_result(
         Extension(claims): Extension<Claims>,
-        State(state): State<AxumState>,
+        State(_state): State<AxumState>,
         Path(id): Path<String>,
     ) -> Result<Json<SurveyResultDocument>, ApiError> {
         let cli = easy_dynamodb::get_client(&root());

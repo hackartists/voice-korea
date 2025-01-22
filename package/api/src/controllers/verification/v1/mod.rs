@@ -25,11 +25,6 @@ pub struct VerificationControllerV1 {
 }
 
 impl VerificationControllerV1 {
-    pub fn new() -> Self {
-        let log = root().new(o!("api-controller" => "VerificationControllerV1"));
-        VerificationControllerV1 { log }
-    }
-
     pub fn router() -> Router {
         let log = root().new(o!("api-controller" => "VerificationControllerV1"));
         let ctrl = VerificationControllerV1 { log };

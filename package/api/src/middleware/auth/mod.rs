@@ -11,7 +11,7 @@ use by_axum::{
     },
     log::root,
 };
-use models::prelude::{OrganizationMiddlewareParams, ApiError};
+use models::prelude::OrganizationMiddlewareParams;
 
 use crate::utils::jwt::validate_jwt;
 

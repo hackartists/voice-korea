@@ -1,5 +1,5 @@
 use by_axum::axum::{
-    extract::Query, 
+    extract::{Query, State},
     routing::get, 
     Json, Router
 };
@@ -22,9 +22,10 @@ impl SearchControllerV1 {
     }
 
     async fn search_handler(
+        State(ctrl): State<SearchControllerV1>,
         Query(params): Query<SearchParams>,
     ) -> Result<Json<CommonQueryResponse<SearchResult>>, ApiError> {
-        let log = by_axum::log::new_log_for_api(by_axum::log::root(), "GET", "/v1/search");
+        let log = ctrl.log.new(slog::o!("api" => "search_handler"));
         if params.query.trim().is_empty() {
             slog::error!(log, "Query Required");
             return Err(ApiError::ValidationError("\"Query Required\"".to_string()));

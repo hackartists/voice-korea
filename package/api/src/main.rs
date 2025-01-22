@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use by_axum::logger::root;
 use tokio::net::TcpListener;
 
@@ -40,6 +38,7 @@ mod controllers {
     }
     pub mod survey { // FIXME: deprecated
         pub mod v1;
+        pub mod m1;
     }
 }
 mod middleware;
@@ -70,6 +69,7 @@ async fn main() {
 
     let app = by_axum::new()
         .nest("/auth/v1", controllers::auth::v1::AuthControllerV1::router())
+        .nest("/verification/v1", controllers::verification::v1::VerificationControllerV1::router())
         .nest("/members/v1", controllers::members::v1::MemberControllerV1::router())
         .nest("/organizations/v1", controllers::organizations::v1::OrganizationControllerV1::router())
         .nest("/groups/v1", controllers::groups::v1::GroupControllerV1::router())
@@ -79,7 +79,8 @@ async fn main() {
         .nest("/panels/v1", controllers::panels::v1::PanelControllerV1::router())
         .nest("/public-opinions/v1", controllers::public_opinions::v1::PublicOpinionControllerV1::router())
         .nest("/public-surveys/v1", controllers::public_surveys::v1::PublicSurveyControllerV1::router())
-        .nest("/survey/v1", controllers::survey::v1::AxumState::router()); // FIXME: deprecated
+        .nest("/survey/v1", controllers::survey::v1::AxumState::router()) // FIXME: deprecated
+        .nest("/survey/m1", controllers::survey::m1::AxumState::router()); // FIXME: deprecated
 
     #[cfg(feature = "reload")]
     {
