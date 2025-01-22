@@ -1,3 +1,6 @@
+use std::str::FromStr;
+
+use dioxus_translate::Language;
 use serde::{Deserialize, Serialize};
 use crate::field::Field;
 #[cfg(feature = "server")]
@@ -103,17 +106,82 @@ pub enum MetadataAuthority {
     Restricted,
 }
 
+impl MetadataAuthority {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                MetadataAuthority::Public => "Public Material",
+                MetadataAuthority::Private => "Private Material",
+                MetadataAuthority::Restricted => "Restricted Material",
+            },
+            Language::Ko => match self {
+                MetadataAuthority::Public => "공개 자료",
+                MetadataAuthority::Private => "제한 자료",
+                MetadataAuthority::Restricted => "기밀 자료",
+            },
+        }
+    }
+}
+
+impl FromStr for MetadataAuthority {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "공개 자료" | "Public Material" => Ok(MetadataAuthority::Public),
+            "제한 자료" | "Private Material" => Ok(MetadataAuthority::Private),
+            "기밀 자료" | "Restricted Material" => Ok(MetadataAuthority::Restricted),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum MetadataSource {
     #[default]
     Internal,
     External,
-    Goverment,
+    Government,
     Company,
 }
 
+impl MetadataSource {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                MetadataSource::Internal => "Internal Material",
+                MetadataSource::External => "External Material",
+                MetadataSource::Government => "Agency",
+                MetadataSource::Company => "Privacy Enterprise",
+            },
+            Language::Ko => match self {
+                MetadataSource::Internal => "내부 자료",
+                MetadataSource::External => "외부 자료",
+                MetadataSource::Government => "정부 기관",
+                MetadataSource::Company => "민간 기업",
+            },
+        }
+    }
+}
+
+impl FromStr for MetadataSource {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "내부 자료" | "Internal Material" => Ok(MetadataSource::Internal),
+            "외부 자료" | "External Material" => Ok(MetadataSource::External),
+            "정부 기관" | "Agency" => Ok(MetadataSource::Government),
+            "민간 기업" | "Privacy Enterprise" => Ok(MetadataSource::Company),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum MetadataPurpose {
     #[default]
@@ -123,7 +191,43 @@ pub enum MetadataPurpose {
     Education,
 }
 
+impl MetadataPurpose {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                MetadataPurpose::DevelopmentPolicy => "Policy Development",
+                MetadataPurpose::AcademicResearch => "Academic Research",
+                MetadataPurpose::PublicDiscussion => "Public Discussion Document",
+                MetadataPurpose::Education => "Education Document",
+            },
+            Language::Ko => match self {
+                MetadataPurpose::DevelopmentPolicy => "정책 개발",
+                MetadataPurpose::AcademicResearch => "학술 연구",
+                MetadataPurpose::PublicDiscussion => "공론화 자료",
+                MetadataPurpose::Education => "교육 자료",
+            },
+        }
+    }
+}
+
+impl FromStr for MetadataPurpose {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "정책 개발" | "Policy Development" => Ok(MetadataPurpose::DevelopmentPolicy),
+            "학술 연구" | "Academic Research" => Ok(MetadataPurpose::AcademicResearch),
+            "공론화 자료" | "Public Discussion Document" => {
+                Ok(MetadataPurpose::PublicDiscussion)
+            }
+            "교육 자료" | "Education Document" => Ok(MetadataPurpose::Education),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum MetadataType {
     #[default]
@@ -133,4 +237,43 @@ pub enum MetadataType {
     Thesis,
     Presentation,
     Media,
+}
+
+impl MetadataType {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                MetadataType::Report => "Report",
+                MetadataType::Statistics => "Statistics",
+                MetadataType::Survey => "Survey",
+                MetadataType::Thesis => "Thesis",
+                MetadataType::Presentation => "Presentations",
+                MetadataType::Media => "Media",
+            },
+            Language::Ko => match self {
+                MetadataType::Report => "보고서",
+                MetadataType::Statistics => "통계 자료",
+                MetadataType::Survey => "설문 데이터",
+                MetadataType::Thesis => "연구 논문",
+                MetadataType::Presentation => "발표 자료",
+                MetadataType::Media => "미디어",
+            },
+        }
+    }
+}
+
+impl FromStr for MetadataType {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "보고서" | "Report" => Ok(MetadataType::Report),
+            "통계 자료" | "Statistics" => Ok(MetadataType::Statistics),
+            "설문 데이터" | "Survey" => Ok(MetadataType::Survey),
+            "연구 논문" | "Thesis" => Ok(MetadataType::Thesis),
+            "발표 자료" | "Presentations" => Ok(MetadataType::Presentation),
+            "미디어" | "Media" => Ok(MetadataType::Media),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
 }
