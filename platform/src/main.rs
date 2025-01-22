@@ -4,6 +4,7 @@ use dioxus_logger::tracing::{self, Level};
 
 use dioxus::prelude::*;
 use platform::service::attribute_api::AttributeApi;
+use platform::service::auth_api::AuthApi;
 use platform::service::group_api::GroupApi;
 use platform::service::member_api::MemberApi;
 use platform::service::opinion_api::OpinionApi;
@@ -12,7 +13,9 @@ use platform::service::panel_api::PanelApi;
 use platform::service::popup_service::PopupService;
 
 use platform::service::metadata_api::ResourceApi;
+use platform::service::prev_survey_api::PrevSurveyApi;
 use platform::service::survey_api::SurveyApi;
+use platform::service::user_api::UserApi;
 use platform::{
     routes::Route, service::login_service::LoginService, utils::context::use_iitp_context_provider,
 };
@@ -61,12 +64,15 @@ fn App() -> Element {
 
     OrganizationApi::init();
     MemberApi::init();
+    AuthApi::init();
+    UserApi::init();
     GroupApi::init();
     OpinionApi::init();
     AttributeApi::init();
     PanelApi::init();
     ResourceApi::init();
     SurveyApi::init();
+    PrevSurveyApi::init();
 
     rsx! {
         head {

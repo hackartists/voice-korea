@@ -4,8 +4,7 @@ use by_axum::{
         extract::Request,
         http::{
             header::{AUTHORIZATION, COOKIE},
-            Response,
-            StatusCode,
+            Response, StatusCode,
         },
         middleware::Next,
     },
@@ -43,7 +42,7 @@ pub async fn authorization_middleware(
     let token_data = match validate_jwt(token) {
         Ok(data) => data,
         Err(e) => {
-            slog::debug!(root(), "ERR: {:?}", e);
+            slog::debug!(root(), "ERR: {:?} {:?}", e, token);
             return Err(StatusCode::UNAUTHORIZED);
         }
     };

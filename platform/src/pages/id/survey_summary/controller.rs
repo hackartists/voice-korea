@@ -4,8 +4,7 @@ use dioxus_logger::tracing;
 use models::prelude::{SurveyDraftStatus, UpsertSurveyDraftRequest};
 
 use crate::{
-    api::v2::survey::{create_survey, get_survey, upsert_survey_draft},
-    routes::Route,
+    routes::Route, service::prev_survey_api::PrevSurveyApi,
     utils::time::convert_timestamp_to_separate_string,
 };
 
@@ -13,10 +12,9 @@ use chrono::{Local, NaiveDate, TimeZone, Utc};
 
 use super::Language;
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     pub survey: Resource<models::prelude::Survey>,
-    pub lang: Language,
     summary_clicked: Signal<bool>,
     panel_clicked: Signal<bool>,
     survey_list_clicked: Signal<bool>,
@@ -38,7 +36,7 @@ pub struct Controller {
     pub end_month: Signal<String>,
     pub end_day: Signal<String>,
 
-    pub invalid_date: Signal<bool>,
+    pub prev_survey_api: PrevSurveyApi,
 }
 
 impl Controller {
@@ -53,16 +51,22 @@ impl Controller {
                 navigator.push(Route::LoginPage { lang });
             }
         }
+        let prev_survey_api: PrevSurveyApi = use_context();
 
         let id_copy = id.clone();
 
         let survey_response: Resource<models::prelude::Survey> = use_resource(move || {
             let id_value = id.clone();
-            async move { get_survey(id_value).await.unwrap_or_default() }
+            let prev_survey_api = prev_survey_api.clone();
+            async move {
+                prev_survey_api
+                    .get_survey(id_value)
+                    .await
+                    .unwrap_or_default()
+            }
         });
 
         let mut ctrl = Self {
-            lang,
             survey: survey_response,
             summary_clicked: use_signal(|| false),
             panel_clicked: use_signal(|| false),
@@ -84,7 +88,7 @@ impl Controller {
             end_month: use_signal(|| "".to_string()),
             end_day: use_signal(|| "".to_string()),
 
-            invalid_date: use_signal(|| false),
+            prev_survey_api,
         };
 
         match survey_response.value()() {
@@ -172,17 +176,22 @@ impl Controller {
 
         tracing::debug!("datetime: {} {}", start_timestamp, end_timestamp);
 
-        let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: Some(self.get_survey_id()),
-            status: Some(SurveyDraftStatus::Complete),
-            started_at: Some(start_timestamp),
-            ended_at: Some(end_timestamp),
-            title: None,
-            quotas: None,
-            questions: None,
-        })
-        .await;
-        let _ = create_survey(self.get_survey_id()).await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: Some(self.get_survey_id()),
+                status: Some(SurveyDraftStatus::Complete),
+                started_at: Some(start_timestamp),
+                ended_at: Some(end_timestamp),
+                title: None,
+                quotas: None,
+                questions: None,
+            })
+            .await;
+        let _ = self
+            .prev_survey_api
+            .create_survey(self.get_survey_id())
+            .await;
 
         navigator.push(Route::DashboardPage { lang });
     }
@@ -344,16 +353,18 @@ impl Controller {
     }
 
     pub async fn back_button_clicked(&mut self) {
-        let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: Some(self.get_survey_id()),
-            status: Some(SurveyDraftStatus::Quotas),
-            title: None,
-            quotas: None,
-            questions: None,
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: Some(self.get_survey_id()),
+                status: Some(SurveyDraftStatus::Quotas),
+                title: None,
+                quotas: None,
+                questions: None,
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
     }
 }
 

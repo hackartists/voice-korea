@@ -32,6 +32,7 @@ pub mod pages {
 
 pub mod service {
     pub mod attribute_api;
+    pub mod auth_api;
     pub mod group_api;
     pub mod login_service;
     pub mod member_api;
@@ -40,7 +41,9 @@ pub mod service {
     pub mod organization_api;
     pub mod panel_api;
     pub mod popup_service;
+    pub mod prev_survey_api;
     pub mod survey_api;
+    pub mod user_api;
 }
 
 pub mod models {

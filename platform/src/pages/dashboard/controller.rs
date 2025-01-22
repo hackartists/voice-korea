@@ -6,9 +6,9 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use models::prelude::{ListSurveyResponse, SurveyDraftStatus, UpsertSurveyDraftRequest};
 
-use crate::api::v2::survey::{list_surveys, upsert_survey_draft};
-
 use models::prelude::Survey;
+
+use crate::service::prev_survey_api::PrevSurveyApi;
 
 use super::{Language, Route};
 
@@ -25,13 +25,15 @@ use super::{Language, Route};
 //     pub total_response_count: u64,
 // }
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     pub current_bookmark: Signal<Option<String>>,
     pub surveys: Signal<Vec<Survey>>,
     pub clicked_type: Signal<u64>, //0: type-1, 1: type-2
     pub is_error: Signal<bool>,
     pub text: Signal<String>,
+
+    pub prev_survey_api: PrevSurveyApi,
 }
 
 impl Controller {
@@ -48,20 +50,26 @@ impl Controller {
             }
         }
 
+        let prev_survey_api: PrevSurveyApi = use_context();
+
         let mut ctrl = Self {
             current_bookmark: use_signal(|| None),
             surveys: use_signal(|| vec![]),
             clicked_type: use_signal(|| 0),
             is_error: use_signal(|| false),
             text: use_signal(|| "".to_string()),
+            prev_survey_api,
         };
-        let res = use_resource(|| async move {
-            match list_surveys(Some(100), None).await {
-                Ok(res) => res,
-                _ => ListSurveyResponse {
-                    survey: vec![],
-                    bookmark: None,
-                },
+        let res = use_resource(move || {
+            let prev_survey_api = prev_survey_api.clone();
+            async move {
+                match prev_survey_api.list_surveys(Some(100), None).await {
+                    Ok(res) => res,
+                    _ => ListSurveyResponse {
+                        survey: vec![],
+                        bookmark: None,
+                    },
+                }
             }
         });
         match res.value()() {
@@ -111,16 +119,18 @@ impl Controller {
 
     pub async fn clicked_create_survey(&mut self, lang: Language) {
         let navigator = use_navigator();
-        let res = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: None,
-            status: Some(SurveyDraftStatus::Title),
-            title: Some("".to_string()),
-            quotas: None,
-            questions: None,
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let res = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: None,
+                status: Some(SurveyDraftStatus::Title),
+                title: Some("".to_string()),
+                quotas: None,
+                questions: None,
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
 
         match res {
             Ok(v) => {

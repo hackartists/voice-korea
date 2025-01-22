@@ -42,7 +42,7 @@ impl PanelApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/v1/panels/{panel_id}"))
+            .post(&format!("/panels/v1/{panel_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&PanelByIdActionRequest::Update(req))
@@ -60,7 +60,7 @@ impl PanelApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/v1/panels"))
+            .post(&format!("/panels/v1"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&PanelActionRequest::Create(req))
@@ -79,7 +79,7 @@ impl PanelApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/panels/{panel_id}"))
+            .get(&format!("/panels/v1/{panel_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .send()
@@ -101,7 +101,7 @@ impl PanelApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/panels"))
+            .get(&format!("/panels/v1"))
             .query(&params)
             .header("Authorization", token)
             .header("x-organization", id)
@@ -120,7 +120,7 @@ impl PanelApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(format!("/v1/panels/{}", panel_id).as_str())
+            .post(format!("/panels/v1/{}", panel_id).as_str())
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&PanelByIdActionRequest::Delete)
@@ -151,7 +151,7 @@ impl PanelApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/panels"))
+            .get(&format!("/panels/v1"))
             .query(&params)
             .header("Authorization", token)
             .header("x-organization", id)

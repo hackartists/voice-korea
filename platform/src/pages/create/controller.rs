@@ -3,15 +3,12 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use regex::Regex;
 
-use crate::{
-    api::v1::{
-        auth::{send_notification, SendNotificationParams},
-        users::signup::{signup_user, SignupRequest},
-    },
-    utils::hash::get_hash_string,
-};
+use crate::service::auth_api::{AuthApi, SendNotificationParams};
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+use crate::service::user_api::{SignupRequest, UserApi};
+use crate::utils::hash::get_hash_string;
+
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     authorize_type: Signal<u64>, //0: 개인, 1: 법인
     step: Signal<u64>,
@@ -45,10 +42,14 @@ pub struct Controller {
     // click_send_authentication: Signal<bool>,
     // click_search_address: Signal<bool>,
     // click_complete_join_membership: Signal<bool>,
+    auth_api: AuthApi,
+    user_api: UserApi,
 }
 
 impl Controller {
     pub fn init() -> Self {
+        let auth_api: AuthApi = use_context();
+        let user_api: UserApi = use_context();
         let ctrl = Self {
             authorize_type: use_signal(|| 0),
             step: use_signal(|| 0),
@@ -79,9 +80,8 @@ impl Controller {
             unknown_error: use_signal(|| false),
 
             auth_key: use_signal(|| "".to_string()),
-            // click_send_authentication: use_signal(|| false),
-            // click_search_address: use_signal(|| false),
-            // click_complete_join_membership: use_signal(|| false),
+            auth_api,
+            user_api,
         };
 
         use_context_provider(|| ctrl);
@@ -285,10 +285,12 @@ impl Controller {
         }
 
         self.email_address_error.set(false);
-        let res = send_notification(SendNotificationParams {
-            email: self.get_email_address(),
-        })
-        .await;
+        let res = self
+            .auth_api
+            .send_notification(SendNotificationParams {
+                email: self.get_email_address(),
+            })
+            .await;
 
         match res {
             Ok(s) => {
@@ -336,13 +338,15 @@ impl Controller {
         self.password_error.set(false);
         self.password_check_error.set(false);
         self.password_pattern_error.set(false);
-        let res = signup_user(SignupRequest {
-            auth_id: self.get_auth_key(),
-            auth_value: self.get_authentication_number(),
-            email: self.get_email_address(),
-            password: get_hash_string(self.get_password().as_bytes()),
-        })
-        .await;
+        let res = self
+            .user_api
+            .signup_user(SignupRequest {
+                auth_id: self.get_auth_key(),
+                auth_value: self.get_authentication_number(),
+                email: self.get_email_address(),
+                password: get_hash_string(self.get_password().as_bytes()),
+            })
+            .await;
 
         match res {
             Ok(_) => {

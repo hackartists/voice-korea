@@ -9,9 +9,9 @@ use dioxus_logger::tracing;
 use dioxus_translate::Language;
 use models::prelude::SurveyResultDocument;
 
-use crate::{api::v2::survey::get_survey_result, models::pi::PiChart};
+use crate::{models::pi::PiChart, service::prev_survey_api::PrevSurveyApi};
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     pub select_page: Signal<SelectPage>,
     pub panels: Signal<Vec<Response>>,
@@ -20,6 +20,7 @@ pub struct Controller {
     pub surveys: Signal<Vec<Surveys>>,
 
     pub survey_response: Signal<Resource<models::prelude::SurveyResultDocument>>,
+    pub prev_survey_api: PrevSurveyApi,
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -93,10 +94,13 @@ impl Controller {
             }
         }
 
+        let prev_survey_api: PrevSurveyApi = use_context();
+
         let res = use_resource(move || {
             let value = survey_id.clone();
+            let prev_survey_api = prev_survey_api.clone();
             async move {
-                match get_survey_result(value).await {
+                match prev_survey_api.get_survey_result(value).await {
                     Ok(res) => {
                         tracing::debug!("this line come: {:?}", res);
                         res
@@ -116,6 +120,7 @@ impl Controller {
             surveys: use_signal(|| vec![]),
             panels: use_signal(|| vec![]),
             survey_response: use_signal(|| res),
+            prev_survey_api,
         };
 
         ctrl.survey_response.set(res);

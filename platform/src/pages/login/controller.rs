@@ -2,8 +2,11 @@
 use dioxus::prelude::*;
 
 use crate::{
-    api::v1::users::login::{login_user, LoginRequest},
-    service::{login_service::use_login_service, organization_api::OrganizationApi},
+    service::{
+        login_service::use_login_service,
+        organization_api::OrganizationApi,
+        user_api::{LoginRequest, UserApi},
+    },
     utils::hash::get_hash_string,
 };
 
@@ -62,14 +65,16 @@ impl Controller {
     }
 
     pub async fn login_clicked(&mut self, lang: Language) {
+        let user_api: UserApi = use_context();
         let mut login_service = use_login_service();
         let mut api: OrganizationApi = use_context();
         let navigator = use_navigator();
-        let res = login_user(LoginRequest {
-            email: self.get_email(),
-            password: get_hash_string(self.get_password().as_bytes()),
-        })
-        .await;
+        let res = user_api
+            .login_user(LoginRequest {
+                email: self.get_email(),
+                password: get_hash_string(self.get_password().as_bytes()),
+            })
+            .await;
 
         match res {
             Ok(token) => {

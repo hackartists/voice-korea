@@ -1,23 +1,24 @@
+use crate::utils::email::send_email;
+use aws_sdk_sesv2::types::Content;
 use by_axum::{
     axum::{
         extract::State,
         // middleware,
         routing::post,
-        Json, Router,
+        Json,
+        Router,
     },
     log::root,
 };
-use slog::o;
-use crate::utils::email::send_email;
-use models::{
-    AuthDocument, 
-    error::ApiError,
-    prelude::{EmailSendParams, EmailVerifyParams, VerificationActionRequest},
-};
 use chrono::Utc;
+use models::{
+    error::ApiError,
+    prelude::{EmailSendParams, EmailVerifyParams, StringJson, VerificationActionRequest},
+    AuthDocument,
+};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use aws_sdk_sesv2::types::Content;
+use slog::o;
 
 #[derive(Clone, Debug)]
 pub struct VerificationControllerV1 {
@@ -37,25 +38,23 @@ impl VerificationControllerV1 {
     pub async fn act_verification(
         State(ctrl): State<VerificationControllerV1>,
         Json(body): Json<VerificationActionRequest>,
-    ) -> Result<(), ApiError> { 
+    ) -> Result<Json<StringJson>, ApiError> {
         let log = ctrl.log.new(o!("api" => "act_verification"));
         slog::debug!(log, "act_verification {:?}", body);
 
         match body {
             VerificationActionRequest::SendEmail(params) => {
-                VerificationControllerV1::send_email(params).await?;
-                Ok(())
+                let s = VerificationControllerV1::send_email(params).await?;
+                Ok(Json(StringJson { value: s }))
             }
             VerificationActionRequest::VerifyEmail(params) => {
-                VerificationControllerV1::verify_email(params).await?;
-                Ok(())
+                let s = VerificationControllerV1::verify_email(params).await?;
+                Ok(Json(StringJson { value: s }))
             }
-        }   
+        }
     }
 
-    pub async fn send_email(
-        body: EmailSendParams,
-    ) -> Result<String, ApiError> {
+    pub async fn send_email(body: EmailSendParams) -> Result<String, ApiError> {
         //TODO: If Email send failed, remove Document
         //TODO: Add request limit
         let log = root();
@@ -99,9 +98,7 @@ impl VerificationControllerV1 {
         }
     }
 
-    pub async fn verify_email(
-        body: EmailVerifyParams,
-    ) -> Result<String, ApiError> {
+    pub async fn verify_email(body: EmailVerifyParams) -> Result<String, ApiError> {
         let log = root();
         slog::debug!(log, "verify_email {:?}", body);
         let cli = easy_dynamodb::get_client(&log);

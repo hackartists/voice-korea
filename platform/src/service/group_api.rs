@@ -41,7 +41,7 @@ impl GroupApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/v1/groups"))
+            .post(&format!("/groups/v1"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&GroupActionRequest::Create(req))
@@ -59,7 +59,7 @@ impl GroupApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(format!("/v1/groups/{}", group_id).as_str())
+            .post(format!("/groups/v1/{}", group_id).as_str())
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&GroupByIdActionRequest::UpdateName(group_name))
@@ -75,7 +75,7 @@ impl GroupApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(format!("/v1/groups/{}", group_id).as_str())
+            .post(format!("/groups/v1/{}", group_id).as_str())
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&GroupByIdActionRequest::Delete)
@@ -104,7 +104,7 @@ impl GroupApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/groups"))
+            .get(&format!("/groups/v1"))
             .query(&params)
             .header("Authorization", token)
             .header("x-organization", id)
@@ -124,7 +124,7 @@ impl GroupApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/groups/{group_id}"))
+            .get(&format!("/groups/v1/{group_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .send()

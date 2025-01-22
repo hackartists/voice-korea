@@ -46,7 +46,7 @@ impl OpinionApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/v1/opinions/{project_id}"))
+            .post(&format!("/public-opinions/v1/{project_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&OpinionByIdActionRequest::Update(req))
@@ -64,7 +64,7 @@ impl OpinionApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/v1/opinions"))
+            .post(&format!("/public-opinions/v1"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&OpinionActionRequest::Create(req))
@@ -82,7 +82,7 @@ impl OpinionApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(&format!("/v1/opinions/{project_id}"))
+            .post(&format!("/public-opinions/v1/{project_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&OpinionByIdActionRequest::Delete)
@@ -101,7 +101,7 @@ impl OpinionApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(&format!("/v1/opinions/{project_id}"))
+            .post(&format!("/public-opinions/v1/{project_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&OpinionByIdActionRequest::UpdateStatus(status))
@@ -116,7 +116,7 @@ impl OpinionApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(&format!("/v1/opinions/{project_id}"))
+            .post(&format!("/public-opinions/v1/{project_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&OpinionByIdActionRequest::UpdatePanels(panels))
@@ -131,7 +131,7 @@ impl OpinionApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(&format!("/v1/opinions/{project_id}"))
+            .post(&format!("/public-opinions/v1/{project_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&OpinionByIdActionRequest::UpdateProjectType(project_type))
@@ -151,7 +151,7 @@ impl OpinionApi {
         params.insert("keyword", keyword);
 
         let res = client
-            .get(&format!("/v1/opinions"))
+            .get(&format!("/public-opinions/v1"))
             .header("Authorization", token)
             .header("x-organization", id)
             .query(&params)
@@ -167,7 +167,7 @@ impl OpinionApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/opinions/{project_id}"))
+            .get(&format!("/public-opinions/v1/{project_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .send()
@@ -195,7 +195,7 @@ impl OpinionApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/opinions"))
+            .get(&format!("/public-opinions/v1"))
             .query(&params)
             .header("Authorization", token)
             .header("x-organization", id)

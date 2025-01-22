@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use models::prelude::{
-    CreateMemberRequest, InviteMemberRequest, OrganizationMember, MemberActionRequest, MemberByIdActionRequest,
-    UpdateMemberRequest,
+    CreateMemberRequest, InviteMemberRequest, MemberActionRequest, MemberByIdActionRequest,
+    OrganizationMember, UpdateMemberRequest,
 };
 
 use super::{login_service::LoginService, organization_api::OrganizationApi};
@@ -41,7 +41,7 @@ impl MemberApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/v1/members"))
+            .post(&format!("/members/v1"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&MemberActionRequest::Create(req))
@@ -59,7 +59,7 @@ impl MemberApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(format!("/v1/members/{}", user_id).as_str())
+            .post(format!("/members/v1/{}", user_id).as_str())
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&MemberByIdActionRequest::Update(req))
@@ -76,7 +76,7 @@ impl MemberApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(format!("/v1/members/{}", user_id).as_str())
+            .post(format!("/members/v1/{}", user_id).as_str())
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&MemberByIdActionRequest::Delete)
@@ -105,7 +105,7 @@ impl MemberApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/members"))
+            .get(&format!("/members/v1"))
             .query(&params)
             .header("Authorization", token)
             .header("x-organization", id)
@@ -125,7 +125,7 @@ impl MemberApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(format!("/v1/members/{}", user_id).as_str())
+            .get(format!("/members/v1/{}", user_id).as_str())
             .header("Authorization", token)
             .header("x-organization", id)
             .send()
@@ -144,7 +144,7 @@ impl MemberApi {
         let client = ReqwestClient::new()?;
 
         let _res = client
-            .post(format!("/v1/members/invite").as_str())
+            .post(format!("/members/v1/invite").as_str())
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&req)

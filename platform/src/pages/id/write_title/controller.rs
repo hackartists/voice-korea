@@ -3,19 +3,17 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use models::prelude::{Survey, SurveyDraftStatus, UpsertSurveyDraftRequest};
 
-use crate::{
-    api::v2::survey::{get_survey, upsert_survey_draft},
-    models::survey::StatusType,
-    routes::Route,
-};
+use crate::{models::survey::StatusType, routes::Route, service::prev_survey_api::PrevSurveyApi};
 
 use super::Language;
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     survey: Signal<Survey>,
     pub survey_title: Signal<String>,
     pub survey_id: Signal<String>,
+
+    pub prev_survey_api: PrevSurveyApi,
 }
 
 impl Controller {
@@ -32,19 +30,23 @@ impl Controller {
             }
         }
 
+        let prev_survey_api: PrevSurveyApi = use_context();
+
         let mut ctrl = Self {
             survey: use_signal(|| Survey::default()),
             survey_title: use_signal(|| "".to_string()),
             survey_id: use_signal(|| "".to_string()),
+            prev_survey_api,
         };
 
         ctrl.survey_id.set(id.clone());
 
         let _ = use_effect(move || {
             let id_value = id.clone();
+            let prev_survey_api = prev_survey_api.clone();
             spawn(async move {
                 let _ = async move {
-                    match get_survey(id_value).await {
+                    match prev_survey_api.get_survey(id_value).await {
                         Ok(res) => {
                             tracing::debug!("survey title: {}", res.clone().title.clone());
 
@@ -94,27 +96,31 @@ impl Controller {
         tracing::info!("write survey title button clicked {title}");
 
         if status == StatusType::TemporarySave {
-            let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-                id: Some(self.get_survey_id()),
-                status: Some(SurveyDraftStatus::Title),
-                title: Some(title.clone()),
-                quotas: None,
-                questions: None,
-                started_at: None,
-                ended_at: None,
-            })
-            .await;
+            let _ = self
+                .prev_survey_api
+                .upsert_survey_draft(UpsertSurveyDraftRequest {
+                    id: Some(self.get_survey_id()),
+                    status: Some(SurveyDraftStatus::Title),
+                    title: Some(title.clone()),
+                    quotas: None,
+                    questions: None,
+                    started_at: None,
+                    ended_at: None,
+                })
+                .await;
         } else {
-            let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-                id: Some(self.get_survey_id()),
-                status: Some(SurveyDraftStatus::Question),
-                title: Some(title.clone()),
-                quotas: None,
-                questions: None,
-                started_at: None,
-                ended_at: None,
-            })
-            .await;
+            let _ = self
+                .prev_survey_api
+                .upsert_survey_draft(UpsertSurveyDraftRequest {
+                    id: Some(self.get_survey_id()),
+                    status: Some(SurveyDraftStatus::Question),
+                    title: Some(title.clone()),
+                    quotas: None,
+                    questions: None,
+                    started_at: None,
+                    ended_at: None,
+                })
+                .await;
         }
     }
 }

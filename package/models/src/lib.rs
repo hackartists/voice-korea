@@ -1,4 +1,6 @@
 mod attribute;
+mod auth;
+pub mod error;
 mod field;
 mod group;
 mod member;
@@ -9,15 +11,16 @@ mod panel;
 mod public_opinion;
 mod public_survey;
 mod search;
+mod strings;
 mod survey;
 mod update_field;
 mod user;
-pub mod error;
-mod auth;
 
 pub use crate::user::{AuthDocument, User};
 pub mod prelude {
     pub use crate::attribute::*;
+    pub use crate::auth::*;
+    pub use crate::error::*;
     pub use crate::field::*;
     pub use crate::group::*;
     pub use crate::member::*;
@@ -28,11 +31,10 @@ pub mod prelude {
     pub use crate::public_opinion::*;
     pub use crate::public_survey::*;
     pub use crate::search::*;
+    pub use crate::strings::*;
     pub use crate::survey::*;
     pub use crate::update_field::*;
     pub use crate::user::*;
-    pub use crate::error::*;
-    pub use crate::auth::*;
 }
 
 pub type Result<T> = std::result::Result<T, crate::error::ApiError>;

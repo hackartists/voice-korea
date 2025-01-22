@@ -87,8 +87,13 @@ impl Controller {
                         email: d.email.clone(),
                         profile_image: None,
                         profile_name: d.name,
-                        group: d.group.unwrap_or("".to_string()),
-                        role: d.role.unwrap_or("".to_string()),
+                        //FIXME: fix to group
+                        group: "".to_string(),
+                        role: if d.role.is_none() {
+                            "none".to_string()
+                        } else {
+                            d.role.unwrap().to_string()
+                        },
                         register_date: formatted_date,
                         project_history: vec![],
                     };
