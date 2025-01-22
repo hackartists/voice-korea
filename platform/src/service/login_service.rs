@@ -10,8 +10,10 @@ impl LoginService {
     pub fn init() {
         let srv = LoginService {
             email: use_signal(|| None),
-            // token: use_signal(|| "".to_string()),
+            // token: use_signal(|| "&".to_string()),
         };
+
+        rest_api::add_hook(srv);
 
         use_context_provider(|| srv);
     }
@@ -87,6 +89,24 @@ impl LoginService {
 
         #[cfg(feature = "web")]
         self.set_cookie(token.as_str());
+    }
+}
+
+impl rest_api::RequestHooker for LoginService {
+    fn before_request(&self, req: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        let cookie = if cfg!(feature = "web") {
+            self.get_cookie_value().unwrap_or_else(|| "".to_string())
+        } else {
+            "".to_string()
+        };
+
+        if cookie.is_empty() {
+            return req;
+        }
+
+        let token = cookie.trim_matches('"');
+
+        req.header("Authorization", format!("Bearer {token}"))
     }
 }
 

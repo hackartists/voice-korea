@@ -39,8 +39,6 @@ impl OrganizationApi {
         size: Option<i64>,
         bookmark: Option<String>,
     ) -> Result<CommonQueryResponse<OrganizationMemberResponse>> {
-        let token = self.get_token();
-
         let mut params = HashMap::new();
         if let Some(size) = size {
             params.insert("size", size.to_string());
@@ -49,19 +47,7 @@ impl OrganizationApi {
             params.insert("bookmark", bookmark);
         }
 
-        let client = ReqwestClient::new()?;
-
-        let res = client
-            .get("/v1/organizations")
-            .query(&params)
-            .header("Authorization", token)
-            .send()
-            .await?;
-
-        let res = res.error_for_status()?;
-
-        let organizations = res.json().await?;
-        Ok(organizations)
+        rest_api::get_with_query("/v1/organizations", &params).await?
     }
 
     pub fn set_organization(&mut self, organizations: Vec<OrganizationMemberResponse>) {
@@ -83,21 +69,5 @@ impl OrganizationApi {
 
     pub fn get_selected_organization_id(&self) -> String {
         (self.selected_organization_id)()
-    }
-
-    pub fn get_token(&self) -> String {
-        let cookie = if cfg!(feature = "web") {
-            self.login_service
-                .get_cookie_value()
-                .unwrap_or_else(|| "".to_string())
-        } else {
-            "".to_string()
-        };
-
-        let token = cookie.replace('"', "");
-        let format_cookie = format!("token={token}");
-        let token = format_cookie.replace("token=", "Bearer ").replace("\"", "");
-
-        token
     }
 }
