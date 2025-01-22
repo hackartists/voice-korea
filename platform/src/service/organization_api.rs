@@ -38,7 +38,8 @@ impl OrganizationApi {
         &self,
         size: Option<i64>,
         bookmark: Option<String>,
-    ) -> Result<CommonQueryResponse<OrganizationMemberResponse>> {
+        // FIXME: Add temporary return type for deserializable error
+    ) -> std::result::Result<CommonQueryResponse<OrganizationMemberResponse>, String> {
         let mut params = HashMap::new();
         if let Some(size) = size {
             params.insert("size", size.to_string());
