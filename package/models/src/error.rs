@@ -33,6 +33,9 @@ pub enum ApiError {
     #[error("DynamoDB Update Failed. Reason({0})")]
     DynamoUpdateException(String),
 
+    #[error("DynamoDB Delete Failed. Reason({0})")]
+    DynamoDeleteException(String),
+
     #[error("Wrong User Login info ({0})")]
     InvalidCredentials(String),
 
@@ -87,6 +90,7 @@ impl IntoResponse for ApiError {
             ApiError::DynamoCreateException(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::DynamoQueryException(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::DynamoUpdateException(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::DynamoDeleteException(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::InvalidCredentials(_) => StatusCode::UNAUTHORIZED,
             ApiError::JWTGenerationFail(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::SESServiceError(_) => StatusCode::INTERNAL_SERVER_ERROR,

@@ -47,13 +47,13 @@ pub struct Controller {
     pub member: Signal<MemberDetail>,
     pub groups: Signal<Vec<String>>,
     pub roles: Signal<Vec<String>>,
-    pub member_resource: Resource<Result<models::prelude::Member, ServerFnError>>,
+    pub member_resource: Resource<Result<models::prelude::OrganizationMember, ServerFnError>>,
 }
 
 impl Controller {
     pub fn init(_lang: dioxus_translate::Language, member_id: String) -> Self {
         let api: MemberApi = use_context();
-        let member_resource: Resource<Result<models::prelude::Member, ServerFnError>> =
+        let member_resource: Resource<Result<models::prelude::OrganizationMember, ServerFnError>> =
             use_resource(move || {
                 let api = api.clone();
                 let member_id = member_id.clone();

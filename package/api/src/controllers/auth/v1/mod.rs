@@ -137,7 +137,8 @@ impl AuthControllerV1 {
         let hashed_password = get_hash_string(body.password.as_bytes());
         let _ = cli
             .update(&user.id, vec![("password", hashed_password)])
-            .await;
+            .await
+            .map_err(|e| ApiError::DynamoUpdateException(e.to_string()))?;
         Ok(())
     }
 
@@ -183,7 +184,9 @@ impl AuthControllerV1 {
             }
             _ => (),
         };
-        let _ = cli.delete(&auth_doc_id);
+        cli.delete(&auth_doc_id)
+            .await
+            .map_err(|e| ApiError::DynamoDeleteException(e.to_string()))?;
         let _ = cli
             .create(user.clone())
             .await
@@ -221,11 +224,6 @@ impl AuthControllerV1 {
         let organization_member_id = uuid::Uuid::new_v4().to_string();
         let organization_member: OrganizationMember =
             OrganizationMember::new(organization_member_id, user_id.clone(), org_id.clone(), Some(Role::Admin));
-        let _ = cli
-            .upsert(organization_member.clone())
-            .await
-            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
-
 
         match cli.upsert(organization_member.clone()).await {
             Ok(()) => Ok(()),

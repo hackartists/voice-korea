@@ -310,7 +310,7 @@ pub struct SurveyResultQuota {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SurveyResultQuestion {
-    pub quesiton_id: String,
+    pub question_id: String,
     pub total_num: u64,
 }
 

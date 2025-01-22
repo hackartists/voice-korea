@@ -714,7 +714,7 @@ impl GroupControllerV1 {
                 ],
             )
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()));
+            .map_err(|e| ApiError::DynamoUpdateException(e.to_string()));
 
         let mut bookmark = None;
         loop {

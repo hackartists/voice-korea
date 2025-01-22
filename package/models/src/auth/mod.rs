@@ -4,10 +4,14 @@ use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
+// TODO: need to feat validation process
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+// #[derive(Validate)]
 pub struct LoginParams {
+    // #[validate(email)]
     pub email: String,
+    // #[validate(length(min = 8))]
     pub password: String,
 }
 

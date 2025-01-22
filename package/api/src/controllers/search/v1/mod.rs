@@ -27,8 +27,8 @@ impl SearchControllerV1 {
     ) -> Result<Json<CommonQueryResponse<SearchResult>>, ApiError> {
         let log = ctrl.log.new(slog::o!("api" => "search_handler"));
         if params.query.trim().is_empty() {
-            slog::error!(log, "Query Required");
-            return Err(ApiError::ValidationError("\"Query Required\"".to_string()));
+            slog::error!(log, "Search query validation failed"; "reason" => "empty query");
+            return Err(ApiError::ValidationError("Search query cannot be empty".to_string()));
         }
         Ok(Json(CommonQueryResponse {
             items: vec![SearchResult::new(

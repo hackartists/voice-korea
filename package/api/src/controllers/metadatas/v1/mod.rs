@@ -174,7 +174,7 @@ impl MetadataControllerV1 {
                     metadata_type: Some(MetadataType::Statistics),
                     metadata_field: Some(Field::Environment),
                     metadata_purpose: Some(MetadataPurpose::DevelopmentPolicy),
-                    metadata_source: Some(MetadataSource::Goverment),
+                    metadata_source: Some(MetadataSource::Government),
                     metadata_authority: Some(MetadataAuthority::Private),
                     public_opinion_projects: None,
                     public_survey_projects: None,
