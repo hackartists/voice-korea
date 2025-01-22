@@ -50,7 +50,7 @@ impl Controller {
                         group_id: group.id.clone(),
                         group_name: group.name.clone(),
                         member_count: group.members.len() as u64,
-                        member_list: group.members.iter().map(|v| v.user_name.clone()).collect(), //FIXME: fix to real member list
+                        member_list: group.members.iter().map(|v| v.user_name.clone()).collect(), // FIXME: fix to real member list
                     })
                     .collect(),
                 Err(e) => {
