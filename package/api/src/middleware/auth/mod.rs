@@ -42,7 +42,7 @@ pub async fn authorization_middleware(
     let token_data = match validate_jwt(token) {
         Ok(data) => data,
         Err(e) => {
-            slog::debug!(root(), "ERR: {:?} {:?}", e, token);
+            slog::debug!(root(), "ERR: {:?}", e);
             return Err(StatusCode::UNAUTHORIZED);
         }
     };
