@@ -215,7 +215,7 @@ translate! {
 translate! {
     UploadMaterialModalTranslate;
     upload_material_modal_description: {
-        ko: "공론과 조사에 관련된 모든 파일을 업로드합니다. 업로드 전에 내용와 형식을 다시 한 번 확인해 주세요.",
+        ko: "공론과 조사에 관련된 모든 파일을 업로드합니다. 업로드 전에 내용과 형식을 다시 한 번 확인해 주세요.",
         en: "Upload all files related to public opinion and investigation. Please check the content and format again before uploading."
     }
     input_title: {

@@ -12,6 +12,7 @@ use crate::{
             UpdateAttributeNameModalTranslate, UpdatePanelNameModalTranslate,
         },
     },
+    service::popup_service::PopupService,
 };
 
 #[derive(Props, Clone, PartialEq)]
@@ -21,7 +22,8 @@ pub struct PanelProps {
 
 #[component]
 pub fn PanelPage(props: PanelProps) -> Element {
-    let ctrl = Controller::new(props.lang);
+    let popup_service: PopupService = use_context();
+    let ctrl = Controller::new(props.lang, popup_service);
     let panels = ctrl.get_panels();
     let attributes = ctrl.get_attributes();
 

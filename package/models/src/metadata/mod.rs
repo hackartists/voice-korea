@@ -129,7 +129,7 @@ pub enum MetadataSource {
     #[default]
     Internal,
     External,
-    Goverment,
+    Government,
     Company,
 }
 
@@ -139,13 +139,13 @@ impl MetadataSource {
             Language::En => match self {
                 MetadataSource::Internal => "Internal Material",
                 MetadataSource::External => "External Material",
-                MetadataSource::Goverment => "Agency",
+                MetadataSource::Government => "Agency",
                 MetadataSource::Company => "Privacy Enterprise",
             },
             Language::Ko => match self {
                 MetadataSource::Internal => "내부 자료",
                 MetadataSource::External => "외부 자료",
-                MetadataSource::Goverment => "정부 기관",
+                MetadataSource::Government => "정부 기관",
                 MetadataSource::Company => "민간 기업",
             },
         }
@@ -157,7 +157,7 @@ impl FromStr for MetadataSource {
         match s {
             "내부 자료" | "Internal Material" => Ok(MetadataSource::Internal),
             "외부 자료" | "External Material" => Ok(MetadataSource::External),
-            "정부 기관" | "Agency" => Ok(MetadataSource::Goverment),
+            "정부 기관" | "Agency" => Ok(MetadataSource::Government),
             "민간 기업" | "Privacy Enterprise" => Ok(MetadataSource::Company),
             _ => Err(format!("invalid field")),
         }

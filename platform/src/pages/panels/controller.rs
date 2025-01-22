@@ -29,7 +29,7 @@ pub struct Controller {
 }
 
 impl Controller {
-    pub fn new(lang: dioxus_translate::Language) -> Self {
+    pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
         let attribute_api: AttributeApi = use_context();
         let panel_api: PanelApi = use_context();
 
@@ -49,7 +49,6 @@ impl Controller {
             async move { api.list_panels(Some(100), None).await }
         });
 
-        let popup_service: PopupService = use_context();
         let translate: PanelTranslate = translate(&lang);
         let attributes = if let Some(v) = attribute_resource.value()() {
             match v {

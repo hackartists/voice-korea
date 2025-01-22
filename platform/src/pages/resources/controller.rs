@@ -59,8 +59,7 @@ pub struct Controller {
 }
 
 impl Controller {
-    pub fn new(lang: dioxus_translate::Language) -> Self {
-        let popup_service: PopupService = use_context();
+    pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
         let translate: ResourceTranslate = translate(&lang);
         let total_authorities = vec![
             translate.public_material.to_string(),
@@ -172,7 +171,7 @@ impl Controller {
                 metadata_type: Some(MetadataType::Statistics),
                 metadata_field: Some(Field::Environment),
                 metadata_purpose: Some(MetadataPurpose::DevelopmentPolicy),
-                metadata_source: Some(MetadataSource::Goverment),
+                metadata_source: Some(MetadataSource::Government),
                 metadata_authority: Some(MetadataAuthority::Private),
                 public_opinion_projects: None,
                 public_survey_projects: None,

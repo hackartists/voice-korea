@@ -14,6 +14,7 @@ use crate::{
             ResourceTranslate, UploadMaterialModalTranslate,
         },
     },
+    service::popup_service::PopupService,
 };
 
 #[cfg(feature = "web")]
@@ -29,7 +30,8 @@ pub struct ResourceProps {
 
 #[component]
 pub fn ResourcePage(props: ResourceProps) -> Element {
-    let ctrl = Controller::new(props.lang);
+    let popup_service: PopupService = use_context();
+    let ctrl = Controller::new(props.lang, popup_service);
     let translate: ResourceTranslate = translate(&props.lang);
     let mut is_focused = use_signal(|| false);
     let mut resource_name = use_signal(|| "".to_string());
