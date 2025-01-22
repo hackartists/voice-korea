@@ -10,7 +10,7 @@ impl LoginService {
     pub fn init() {
         let srv = LoginService {
             email: use_signal(|| None),
-            // token: use_signal(|| "&".to_string()),
+            // token: use_signal(|| "".to_string()),
         };
 
         rest_api::add_hook(srv);
