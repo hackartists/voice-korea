@@ -1,13 +1,16 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::PanelAttribute;
+use models::prelude::{AttributeSummary, PanelAttribute};
 
 use crate::{
     components::icons::{Checked, Clear, Remove, UnChecked},
     pages::opinions::new::{
         controller::Controller,
-        i18n::{CompositionPanelTranslate, SettingTotalPanelTranslate},
+        i18n::{
+            AddAttributeModalTranslate, CompositionPanelTranslate, CreateNewPanelModalTranslate,
+            SettingTotalPanelTranslate,
+        },
     },
 };
 
@@ -33,7 +36,14 @@ pub fn CompositionPanel(props: CompositionPanelProps) -> Element {
                 div { class: "font-medium text-[16px] text-[#222222] mb-[10px]",
                     "{translates.participant_panel_composition}"
                 }
-                button { class: "flex flex-row px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] font-semibold text-white text-[16px]",
+                button {
+                    class: "flex flex-row px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] font-semibold text-white text-[16px]",
+                    onclick: {
+                        let translates = translates.clone();
+                        move |_| {
+                            ctrl.open_create_panel_modal(props.lang, translates.clone());
+                        }
+                    },
                     "{translates.create_panel}"
                 }
             }
@@ -63,6 +73,152 @@ pub fn CompositionPanel(props: CompositionPanelProps) -> Element {
                         ctrl.change_step(CurrentStep::DiscussionSetting);
                     },
                     "{translates.next}"
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn AddAttributeModal(lang: Language, onclose: EventHandler<MouseEvent>) -> Element {
+    let translate: AddAttributeModalTranslate = translate(&lang);
+    rsx! {
+        div { class: "flex flex-col w-full justify-start items-start",
+            div { class: "flex flex-col w-full justify-start items-start font-normal text-[14px] text-[#222222] mb-[40px]",
+                div { class: "mb-[5px]", "{translate.add_attribute_modal_title}" }
+                div { "{translate.add_attribute_modal_description}" }
+            }
+
+            div { class: "flex flex-row w-full justify-start items-start gap-[20px]",
+                div { class: "flex flex-row px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] font-semibold text-white text-[16px]",
+                    "{translate.temporary_save}"
+                }
+                button {
+                    class: "flex flex-row px-[14px] py-[8px] bg-white font-semibold text-[#222222] text-[16px]",
+                    onclick: move |e| {
+                        onclose.call(e);
+                    },
+                    "{translate.cancel}"
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn CreateNewPanelModal(
+    attributes: Signal<Vec<AttributeSummary>>,
+    lang: Language,
+    onclick: EventHandler<String>,
+    onsave: EventHandler<String>,
+    onclose: EventHandler<MouseEvent>,
+) -> Element {
+    let translates: CreateNewPanelModalTranslate = translate(&lang);
+    let mut panel_name: Signal<String> = use_signal(|| "".to_string());
+
+    rsx! {
+        div { class: "flex flex-col w-[540px] min-w-[540px] justify-start items-start mt-[40px]",
+            div { class: "flex flex-col w-full justify-start items-start mb-[40px]",
+                div { class: "font-semibold text-[#222222] text-[14px] mb-[16px]",
+                    "{translates.panel_name}"
+                }
+                div { class: "flex flex-row w-full focus:outline-none h-[45px] justify-start items-center bg-[#f7f7f7] rounded-[4px] px-[15px] mb-[5px]",
+                    input {
+                        class: "flex flex-row w-full justify-start items-center bg-transparent focus:outline-none",
+                        r#type: "text",
+                        placeholder: "{translates.panel_name_hint}",
+                        value: panel_name(),
+                        oninput: move |event| {
+                            panel_name.set(event.value());
+                        },
+                    }
+                }
+                div { class: "font-normal text-[#222222] text-[13px]", "{translates.panel_name_info}" }
+            }
+
+            div { class: "flex flex-col w-full justify-start items-start p-[24px] bg-white border border-[#bfc8d9] rounded-[8px] mb-[10px]",
+                for (i , attribute) in attributes().iter().enumerate() {
+                    div { class: "flex flex-row w-full justify-start items-center h-[45px] mb-[10px]",
+                        div { class: "flex flex-row w-[50px] justify-start items-center font-medium text-[#222222] text-[15px]",
+                            "{attribute.name}"
+                        }
+                        div { class: "flex flex-row w-full h-[45px] justify-between items-center bg-[#f7f7f7] rounded-[4px]",
+                            div { class: "flex flex-between w-full h-[55px] justify-start items-center p-[15px]",
+                                if attributes.len() != 0 {
+                                    div { class: "flex flex-wrap w-full justify-start items-center gap-[5px]",
+                                        for (j , attr) in attribute.attribute.iter().enumerate() {
+                                            div {
+                                                Label {
+                                                    label: attr.name.clone(),
+                                                    clicked_label: move |_e: MouseEvent| {
+                                                        let mut ats = attributes().clone();
+                                                        ats[i].attribute.remove(j);
+                                                        attributes.set(ats);
+                                                    },
+                                                }
+                                            }
+                                        }
+                                    }
+                                    button {
+                                        onclick: move |_| {
+                                            let mut ats = attributes().clone();
+                                            ats[i].attribute = vec![];
+                                            attributes.set(ats);
+                                        },
+                                        Remove {
+                                            width: "15",
+                                            height: "15",
+                                            fill: "#555462",
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            div { class: "flex flex-row w-full justify-end items-end mb-[40px]",
+                button {
+                    onclick: move |_| {
+                        onclick.call(panel_name());
+                    },
+                    class: "font-normal text-[#222222] text-[14px] underline",
+                    "{translates.add_attribute}"
+                }
+            }
+
+            div { class: "flex flex-row w-full justify-start items-start mb-[20px]",
+                //FIXME: fix to real data
+                div { class: "font-normal text-[#6d6d6d] text-[14px]",
+                    {
+                        format!(
+                            "({}) {} 120명",
+                            if panel_name() == "" {
+                                translates.panel_name.to_string()
+                            } else {
+                                panel_name()
+                            },
+                            translates.total_member,
+                        )
+                    }
+                }
+            }
+
+            div { class: "flex flex-row w-full justify-start items-start gap-[20px]",
+                button {
+                    class: "flex flex-row px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] font-semibold text-white text-[16px]",
+                    onclick: move |_| {
+                        onsave.call(panel_name());
+                    },
+                    "{translates.save}"
+                }
+                button {
+                    class: "flex flex-row px-[14px] py-[8px] bg-white font-semibold text-[#222222] text-[16px]",
+                    onclick: move |e| {
+                        onclose.call(e);
+                    },
+                    "{translates.cancel}"
                 }
             }
         }

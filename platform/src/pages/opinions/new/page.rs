@@ -1,18 +1,13 @@
 #![allow(non_snake_case)]
+use crate::pages::opinions::new::composition_panel::CompositionPanel;
 use crate::{
     components::{icons::ArrowLeft, stepper::Stepper},
-    pages::opinions::new::{
-        composition_commitee::CompositionCommitee,
-        composition_opinion::CompositionOpinion,
-        composition_panel::CompositionPanel,
-        controller::{Controller, CurrentStep},
-        input_opinion::InputOpinion,
-        setting_discussion::SettingDiscussion,
-    },
+    pages::opinions::new::controller::{Controller, CurrentStep},
     routes::Route,
+    service::popup_service::PopupService,
 };
 
-use super::{i18n::OpinionNewTranslate, preview::Preview};
+use super::i18n::OpinionNewTranslate;
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
 
@@ -23,8 +18,9 @@ pub struct OpinionProps {
 
 #[component]
 pub fn OpinionCreatePage(props: OpinionProps) -> Element {
+    let popup_service: PopupService = use_context();
     let translates: OpinionNewTranslate = translate(&props.lang.clone());
-    let ctrl = Controller::new(props.lang, translates.clone());
+    let ctrl = Controller::new(props.lang, translates.clone(), popup_service);
 
     let step = ctrl.get_current_step();
     rsx! {
@@ -61,19 +57,21 @@ pub fn OpinionCreatePage(props: OpinionProps) -> Element {
                 }
             }
 
-            if step == CurrentStep::PublicOpinionComposition {
-                CompositionOpinion { lang: props.lang.clone() }
-            } else if step == CurrentStep::InputInformation {
-                InputOpinion { lang: props.lang.clone() }
-            } else if step == CurrentStep::CommitteeComposition {
-                CompositionCommitee { lang: props.lang.clone() }
-            } else if step == CurrentStep::PanelComposition {
-                CompositionPanel { lang: props.lang.clone() }
-            } else if step == CurrentStep::DiscussionSetting {
-                SettingDiscussion { lang: props.lang.clone() }
-            } else {
-                Preview { lang: props.lang.clone() }
-            }
+            CompositionPanel { lang: props.lang.clone() }
+
+        // if step == CurrentStep::PublicOpinionComposition {
+        //     CompositionOpinion { lang: props.lang.clone() }
+        // } else if step == CurrentStep::InputInformation {
+        //     InputOpinion { lang: props.lang.clone() }
+        // } else if step == CurrentStep::CommitteeComposition {
+        //     CompositionCommitee { lang: props.lang.clone() }
+        // } else if step == CurrentStep::PanelComposition {
+        //     CompositionPanel { lang: props.lang.clone() }
+        // } else if step == CurrentStep::DiscussionSetting {
+        //     SettingDiscussion { lang: props.lang.clone() }
+        // } else {
+        //     Preview { lang: props.lang.clone() }
+        // }
         }
     }
 }
