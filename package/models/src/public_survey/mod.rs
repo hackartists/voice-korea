@@ -1,8 +1,12 @@
 use serde::{Deserialize, Serialize};
-
 use crate::{field::Field, prelude::PanelInfo};
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreatePublicSurveyRequest {
     pub introductions: Option<PublicSurveyIntroduction>,
     pub questions: Option<Vec<PublicSurveyQuestion>>,
@@ -10,6 +14,7 @@ pub struct CreatePublicSurveyRequest {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct UpdatePublicSurveyRequest {
     pub introductions: Option<PublicSurveyIntroduction>,
     pub questions: Option<Vec<PublicSurveyQuestion>>,
@@ -18,18 +23,21 @@ pub struct UpdatePublicSurveyRequest {
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum SurveyActionRequest {
     Create(CreatePublicSurveyRequest),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum SurveyByIdActionRequest {
     Delete,
     Update(UpdatePublicSurveyRequest),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveySummary {
     pub id: String,
     pub survey_type: SurveyType,
@@ -44,6 +52,7 @@ pub struct PublicSurveySummary {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyResponse {
     pub id: String,
     pub statistics: PublicSurveyStatistics,
@@ -56,12 +65,14 @@ pub struct PublicSurveyResponse {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OptionalStatistics {
     pub totals: OptionalInfo,
     pub panels: Vec<OptionalPanelInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OptionalPanelInfo {
     pub panel_id: String,
     pub panel_name: String,
@@ -69,18 +80,21 @@ pub struct OptionalPanelInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OptionalInfo {
     pub responses: Vec<i64>,
     pub response_rates: Vec<f64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TextStatistics {
     pub totals: TextInfo,
     pub panels: Vec<TextPanelInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TextPanelInfo {
     pub panel_id: String,
     pub panel_name: String,
@@ -88,18 +102,21 @@ pub struct TextPanelInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TextInfo {
     pub most_used_keyword: Vec<String>,
     pub include_keyword_answer: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct MultipleChoiceStatistics {
     pub totals: Vec<MultipleChoiceInfo>,
     pub panels: Vec<MultipleChoicePanelInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct MultipleChoicePanelInfo {
     pub panel_id: String,
     pub panel_name: String,
@@ -107,6 +124,7 @@ pub struct MultipleChoicePanelInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct MultipleChoiceInfo {
     pub answer_name: String,
     pub response_count: u64,
@@ -114,12 +132,14 @@ pub struct MultipleChoiceInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SingleChoiceStatistics {
     pub totals: Vec<SingleChoiceInfo>,
     pub panels: Vec<SingleChoicePanelInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SingleChoicePanelInfo {
     pub panel_id: String,
     pub panel_name: String,
@@ -127,6 +147,7 @@ pub struct SingleChoicePanelInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SingleChoiceInfo {
     pub answer_name: String,
     pub response_count: u64,
@@ -134,11 +155,13 @@ pub struct SingleChoiceInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyResponseParticipantRateTotals {
     pub panels: Vec<PublicSurveyResponsePanelInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyResponseParticipantRates {
     pub question_id: String,
     pub question_name: String,
@@ -146,6 +169,7 @@ pub struct PublicSurveyResponseParticipantRates {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyResponsePanelInfo {
     pub id: String,
     pub name: String,
@@ -154,6 +178,7 @@ pub struct PublicSurveyResponsePanelInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyStatistics {
     pub total_members: i64,
     pub response_members: i64,
@@ -165,12 +190,14 @@ pub struct PublicSurveyStatistics {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyMemberInfo {
     pub total_members: u64,
     pub members: Vec<PublicSurveyMember>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyMember {
     pub member_id: String,
     pub panel_ids: Vec<String>,
@@ -178,6 +205,7 @@ pub struct PublicSurveyMember {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyIntroduction {
     pub field: Field,
     pub title: String,
@@ -187,6 +215,7 @@ pub struct PublicSurveyIntroduction {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PublicSurveyQuestion {
     #[serde(rename = "id")]
     pub id: Option<String>,
@@ -202,6 +231,7 @@ pub struct PublicSurveyQuestion {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PublicSurveyQuestionType {
     #[default]
@@ -213,6 +243,7 @@ pub enum PublicSurveyQuestionType {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "snake_case")]
 pub enum PublicSurveyStatus {
     #[default]
@@ -222,6 +253,7 @@ pub enum PublicSurveyStatus {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "snake_case")]
 pub enum SurveyType {
     #[default]

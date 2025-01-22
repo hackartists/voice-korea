@@ -4,7 +4,7 @@ use reqwest::{
     Client, RequestBuilder,
 };
 
-use crate::utils::error::ApiError;
+use ::models::error::ApiError;
 pub mod models;
 
 use models as nonce_lab_models;

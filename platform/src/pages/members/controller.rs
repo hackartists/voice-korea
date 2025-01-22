@@ -25,14 +25,14 @@ pub struct Controller {
     pub groups: Signal<Vec<String>>,
     pub roles: Signal<Vec<String>>,
     pub member_resource:
-        Resource<Result<CommonQueryResponse<models::prelude::Member>, ServerFnError>>,
+        Resource<Result<CommonQueryResponse<models::prelude::OrganizationMember>, ServerFnError>>,
 }
 
 impl Controller {
     pub fn init(_lang: dioxus_translate::Language) -> Self {
         let api: MemberApi = use_context();
         let member_resource: Resource<
-            Result<CommonQueryResponse<models::prelude::Member>, ServerFnError>,
+            Result<CommonQueryResponse<models::prelude::OrganizationMember>, ServerFnError>,
         > = use_resource(move || {
             let api = api.clone();
             async move { api.list_members(Some(100), None).await }
@@ -63,7 +63,7 @@ impl Controller {
                         profile_name: member.name.clone(),
                         email: member.email.clone(),
                         group: member.group.clone().unwrap_or("".to_string()).clone(),
-                        role: member.role.clone().unwrap_or("".to_string()).clone(),
+                        role: member.role.map(|r| r.to_string()).unwrap_or_else(|| "none".to_string()),
                         projects: vec![],
                     })
                     .collect(),

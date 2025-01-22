@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use by_axum::aide;
+use schemars::JsonSchema;
+use models::error::ApiError;
 
-use crate::utils::error::ApiError;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, aide::OperationIo)]
 pub struct CommonQueryResponse<T> {
     pub items: Vec<T>,
     pub bookmark: Option<String>,

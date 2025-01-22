@@ -1,4 +1,10 @@
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
+
 #[derive(Debug, serde::Deserialize)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Pagination {
     pub size: Option<usize>,
     pub bookmark: Option<String>,

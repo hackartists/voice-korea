@@ -1,12 +1,18 @@
 use serde::{Deserialize, Serialize};
 use crate::member::CreateMemberRequest;
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OrganizationMiddlewareParams {
     pub id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OrganizationMemberResponse {
     pub id: String,
     pub created_at: i64,
@@ -20,6 +26,7 @@ pub struct OrganizationMemberResponse {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OrganizationMember {
     pub id: String,
     pub r#type: String,
@@ -113,6 +120,7 @@ impl Into<OrganizationMember> for (CreateMemberRequest, String) {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Organization {
     pub id: String,
     pub r#type: String,
@@ -159,6 +167,7 @@ impl Organization {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Role {
     #[serde(rename = "super_admin")]
     Admin,

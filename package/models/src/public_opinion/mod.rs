@@ -1,8 +1,12 @@
 use serde::{Deserialize, Serialize};
-
 use crate::{field::Field, group::MemberInfo};
+#[cfg(feature = "server")]
+use by_axum::aide;
+#[cfg(feature = "server")]
+use schemars::JsonSchema;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreateOpinionRequest {
     pub status: Option<OpinionDraftStatus>,
     pub opinions: Option<Vec<OpinionInfo>>,
@@ -13,6 +17,7 @@ pub struct CreateOpinionRequest {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct UpdateOpinionRequest {
     pub status: Option<OpinionDraftStatus>,
     pub opinions: Option<Vec<OpinionInfo>>,
@@ -23,6 +28,7 @@ pub struct UpdateOpinionRequest {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct DiscussionInfo {
     pub groups: DiscussionGroupInfo,
     pub meetings: Vec<MeetingInfo>,
@@ -32,12 +38,14 @@ pub struct DiscussionInfo {
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum OpinionActionRequest {
     Create(CreateOpinionRequest),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum OpinionByIdActionRequest {
     Delete,
     Update(UpdateOpinionRequest),
@@ -47,6 +55,7 @@ pub enum OpinionByIdActionRequest {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ScheduleInfo {
     pub title: String,
     pub schedules: Vec<ScheduleDetailInfo>,
@@ -54,6 +63,7 @@ pub struct ScheduleInfo {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ScheduleDetailInfo {
     pub start_date: u64,
     pub end_date: u64,
@@ -62,12 +72,14 @@ pub struct ScheduleDetailInfo {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ScheduleOption {
     pub title: String,
     pub contents: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct MeetingInfo {
     pub meeting_type: MeetingType,
     pub title: String,
@@ -77,6 +89,7 @@ pub struct MeetingInfo {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum MeetingType {
     #[default]
     Offline,
@@ -84,18 +97,21 @@ pub enum MeetingType {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct DiscussionGroupInfo {
     pub total_groups: u64,
     pub groups: Vec<DiscussionGroupDetailInfo>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct DiscussionGroupDetailInfo {
     pub name: String,
     pub discussion_count: u64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct UpsertPanelInfo {
     pub totals: u64,
     pub allocation_method: AllocationMethod,
@@ -103,6 +119,7 @@ pub struct UpsertPanelInfo {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PanelAttribute {
     pub panel: CompositionPanelInfo,
     pub panel_count: u64,
@@ -110,18 +127,21 @@ pub struct PanelAttribute {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CompositionPanelInfo {
     pub panel_id: Option<String>, //panel id가 none일 경우 id 생성 후 패널 및 속성 관리 페이지 추가
     pub name: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AttributeInfo {
     pub id: String,
     pub name: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum AllocationMethod {
     #[default]
     FairAllocated,
@@ -129,6 +149,7 @@ pub enum AllocationMethod {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OpinionInformation {
     pub opinion_type: Option<Field>,
     pub title: Option<String>,
@@ -137,6 +158,7 @@ pub struct OpinionInformation {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Document {
     pub url: String,
     pub name: String,
@@ -145,12 +167,14 @@ pub struct Document {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ProjectInfo {
     pub id: String,
     pub name: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OpinionInfo {
     pub name: String,
     pub start_date: Option<u64>,
@@ -159,6 +183,7 @@ pub struct OpinionInfo {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum PublicOpinionType {
     #[default]
     General,
@@ -169,6 +194,7 @@ pub enum PublicOpinionType {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum OpinionDraftStatus {
     #[default]
     Init,
@@ -181,6 +207,7 @@ pub enum OpinionDraftStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OpinionResponse {
     pub project_id: String,
     pub opinion_type: Field,
@@ -194,6 +221,7 @@ pub struct OpinionResponse {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PanelInfo {
     pub id: String,
     pub name: String,
@@ -201,6 +229,7 @@ pub struct PanelInfo {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum ProjectStatus {
     #[default]
     Ready,
