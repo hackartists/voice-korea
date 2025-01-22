@@ -1,5 +1,11 @@
 #![allow(non_snake_case)]
+use crate::pages::opinions::new::composition_commitee::CompositionCommitee;
+use crate::pages::opinions::new::composition_opinion::CompositionOpinion;
 use crate::pages::opinions::new::composition_panel::CompositionPanel;
+use crate::pages::opinions::new::input_opinion::InputOpinion;
+use crate::pages::opinions::new::preview::Preview;
+use crate::pages::opinions::new::setting_discussion::SettingDiscussion;
+
 use crate::{
     components::{icons::ArrowLeft, stepper::Stepper},
     pages::opinions::new::controller::{Controller, CurrentStep},
@@ -57,21 +63,19 @@ pub fn OpinionCreatePage(props: OpinionProps) -> Element {
                 }
             }
 
-            CompositionPanel { lang: props.lang.clone() }
-
-        // if step == CurrentStep::PublicOpinionComposition {
-        //     CompositionOpinion { lang: props.lang.clone() }
-        // } else if step == CurrentStep::InputInformation {
-        //     InputOpinion { lang: props.lang.clone() }
-        // } else if step == CurrentStep::CommitteeComposition {
-        //     CompositionCommitee { lang: props.lang.clone() }
-        // } else if step == CurrentStep::PanelComposition {
-        //     CompositionPanel { lang: props.lang.clone() }
-        // } else if step == CurrentStep::DiscussionSetting {
-        //     SettingDiscussion { lang: props.lang.clone() }
-        // } else {
-        //     Preview { lang: props.lang.clone() }
-        // }
+            if step == CurrentStep::PublicOpinionComposition {
+                CompositionOpinion { lang: props.lang.clone() }
+            } else if step == CurrentStep::InputInformation {
+                InputOpinion { lang: props.lang.clone() }
+            } else if step == CurrentStep::CommitteeComposition {
+                CompositionCommitee { lang: props.lang.clone() }
+            } else if step == CurrentStep::PanelComposition {
+                CompositionPanel { lang: props.lang.clone() }
+            } else if step == CurrentStep::DiscussionSetting {
+                SettingDiscussion { lang: props.lang.clone() }
+            } else {
+                Preview { lang: props.lang.clone() }
+            }
         }
     }
 }
