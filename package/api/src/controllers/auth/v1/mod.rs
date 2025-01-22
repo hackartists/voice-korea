@@ -1,16 +1,18 @@
 use by_axum::{
     axum::{
-        extract::{Path, Query, State},
-        middleware,
-        routing::{get, post},
-        Extension, Json, Router,
+        extract::State,
+        // middleware,
+        routing::post,
+        Json, Router,
         http::header::SET_COOKIE,
         response::Response,
     },
     log::root,
 };
 use slog::o;
-use models::prelude::{LoginParams, ResetParams, ApiError};
+use models::prelude::{LoginParams, ResetParams, ApiError, AuthActionRequest, EmailVerifyParams,
+    Organization, OrganizationMember, Role, SignUpParams, User};
+
 use crate::{
     utils::{
         hash::get_hash_string,
@@ -18,6 +20,7 @@ use crate::{
     },
     common::CommonQueryResponse,
 };
+use crate::controllers::verification::v1::VerificationControllerV1;
 
 #[derive(Clone, Debug)]
 pub struct AuthControllerV1 {
@@ -30,10 +33,22 @@ impl AuthControllerV1 {
         let ctrl = AuthControllerV1 { log };
 
         Router::new()
+            .route("/", post(Self::auth_action))
             .route("/login", post(Self::login))
-            // .route("/signup", post(Self::signup))
-            // .route("/reset", post(Self::reset))
             .with_state(ctrl.clone())
+    }
+
+    pub async fn auth_action(
+        State(ctrl): State<AuthControllerV1>,
+        Json(body): Json<AuthActionRequest>,
+    ) -> Result<(), ApiError> {
+        let log = ctrl.log.new(o!("api" => "auth_action"));
+        slog::debug!(log, "auth_action {:?}", body);
+
+        match body {
+            AuthActionRequest::Reset(params) => Self::reset(State(ctrl), Json(params)).await,
+            AuthActionRequest::SignUp(params) => Self::signup(State(ctrl), Json(params)).await,
+        }
     }
 
     pub async fn login(
@@ -82,47 +97,142 @@ impl AuthControllerV1 {
             .map_err(|e| ApiError::ValidationError(e.to_string()))?)
     }
 
-    // pub async fn reset(
-    //     State(ctrl): State<AuthControllerV1>,
-    //     Json(body): Json<ResetParams>,
-    // ) -> Result<(), ApiError> {
-    //     let log = ctrl.log.new(o!("api" => "reset"));
-    //     slog::debug!(log, "reset {:?}", body);
-    //     let cli = easy_dynamodb::get_client(&log);
+    pub async fn reset(
+        State(ctrl): State<AuthControllerV1>,
+        Json(body): Json<ResetParams>,
+    ) -> Result<(), ApiError> {
+        let log = ctrl.log.new(o!("api" => "reset"));
+        slog::debug!(log, "reset {:?}", body);
+        let cli = easy_dynamodb::get_client(&log);
 
-    //     verify_handler(
-    //         Json(EmailVerifyParams {
-    //             id: body.auth_id,
-    //             value: body.auth_value,
-    //         }),
-    //     )
-    //     .await?;
-    //     let email = body.email.clone();
+        VerificationControllerV1::verify_email(
+            EmailVerifyParams {
+                id: body.auth_id,
+                value: body.auth_value,
+            },
+        )
+        .await?;
+        let email = body.email.clone();
 
-    //     let result: Result<
-    //         (Option<Vec<User>>, Option<String>),
-    //         easy_dynamodb::error::DynamoException,
-    //     > = cli
-    //         .find(
-    //             "gsi1-index",
-    //             None,
-    //             Some(1),
-    //             vec![("gsi1", User::gsi1(body.email))],
-    //         )
-    //         .await;
+        let result: Result<
+            (Option<Vec<User>>, Option<String>),
+            easy_dynamodb::error::DynamoException,
+        > = cli
+            .find(
+                "gsi1-index",
+                None,
+                Some(1),
+                vec![("gsi1", User::gsi1(body.email))],
+            )
+            .await;
 
-    //     let (docs, _) = match result {
-    //         Ok((Some(docs), Some(_))) => (docs, ()),
-    //         _ => return Err(ApiError::InvalidCredentials(email)),
-    //     };
-    //     let user = match docs.first() {
-    //         Some(user) => user,
-    //         None => return Err(ApiError::InvalidCredentials(email)),
-    //     };
-    //     let hashed_password = get_hash_string(body.password.as_bytes());
-    //     let _ = cli
-    //         .update(&user.id, vec![("password", hashed_password)])
-    //         .await;
-    //     Ok(())
-    // }
+        let (docs, _) = match result {
+            Ok((Some(docs), Some(_))) => (docs, ()),
+            _ => return Err(ApiError::InvalidCredentials(email)),
+        };
+        let user = match docs.first() {
+            Some(user) => user,
+            None => return Err(ApiError::InvalidCredentials(email)),
+        };
+        let hashed_password = get_hash_string(body.password.as_bytes());
+        let _ = cli
+            .update(&user.id, vec![("password", hashed_password)])
+            .await;
+        Ok(())
+    }
+
+    pub async fn signup(
+        State(ctrl): State<AuthControllerV1>,
+        Json(body): Json<SignUpParams>,
+    ) -> Result<(), ApiError> {
+        let log = ctrl.log.new(o!("api" => "signup"));
+        slog::debug!(log, "signup {:?}", body);
+        let cli = easy_dynamodb::get_client(&log);
+
+        let auth_doc_id = VerificationControllerV1::verify_email(
+            EmailVerifyParams {
+                id: body.auth_id.clone(),
+                value: body.auth_value.clone(),
+            },
+        )
+        .await?;
+    
+        let hashed_pw = get_hash_string(body.password.as_bytes());
+        let user = User::new(
+            uuid::Uuid::new_v4().to_string(),
+            body.email.clone(),
+            hashed_pw,
+        );
+
+        let result: Result<
+            (Option<Vec<models::User>>, Option<String>),
+            easy_dynamodb::error::DynamoException,
+        > = cli
+            .find(
+                "gsi1-index",
+                None,
+                Some(1),
+                vec![("gsi1", User::gsi1(user.email.clone()))],
+            )
+            .await;
+        match result {
+            Ok((Some(docs), _)) => {
+                if docs.len() > 0 {
+                    return Err(ApiError::DuplicateUser);
+                }
+            }
+            _ => (),
+        };
+        let _ = cli.delete(&auth_doc_id);
+        let _ = cli
+            .create(user.clone())
+            .await
+            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+
+        let org_id = AuthControllerV1::create_organization(user.id.clone(), body.clone()).await?;
+
+        let _ = AuthControllerV1::create_member(org_id, user.id).await?; //FIXME: add to organization
+
+        Ok(())
+    }
+
+    // FIXME: move to organization controller
+    async fn create_organization(user_id: String, body: SignUpParams) -> Result<String, ApiError> {
+        let log = root();
+        let cli = easy_dynamodb::get_client(&log);
+
+        let id: String = uuid::Uuid::new_v4().to_string();
+
+        let organization: Organization =
+            Organization::new(id.clone(), user_id.clone(), body.email.clone());
+        let _ = cli
+            .upsert(organization)
+            .await
+            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+
+        Ok(id)
+    }
+
+    // FIXME: move to member controller
+    async fn create_member(org_id:String, user_id: String) -> Result<(), ApiError> {
+        let log = root();
+        let cli = easy_dynamodb::get_client(&log);
+
+        let organization_member_id = uuid::Uuid::new_v4().to_string();
+        let organization_member: OrganizationMember =
+            OrganizationMember::new(organization_member_id, user_id.clone(), org_id.clone(), Some(Role::Admin));
+        let _ = cli
+            .upsert(organization_member.clone())
+            .await
+            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+
+
+        match cli.upsert(organization_member.clone()).await {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                slog::error!(log, "Create Organization Member Failed {e:?}");
+                Err(ApiError::DynamoCreateException(e.to_string()))
+            }
+        }
+    }
 }

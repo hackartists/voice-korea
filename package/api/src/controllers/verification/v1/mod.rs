@@ -1,11 +1,9 @@
 use by_axum::{
     axum::{
-        extract::{Path, Query, State},
-        middleware,
-        routing::{get, post},
-        Extension, Json, Router,
-        http::header::SET_COOKIE,
-        response::Response,
+        extract::State,
+        // middleware,
+        routing::post,
+        Json, Router,
     },
     log::root,
 };
@@ -14,8 +12,12 @@ use crate::utils::email::send_email;
 use models::{
     AuthDocument, 
     error::ApiError,
-    EmailSendParams,
+    prelude::{EmailSendParams, EmailVerifyParams, VerificationActionRequest},
 };
+use chrono::Utc;
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
+use aws_sdk_sesv2::types::Content;
 
 #[derive(Clone, Debug)]
 pub struct VerificationControllerV1 {
@@ -23,6 +25,11 @@ pub struct VerificationControllerV1 {
 }
 
 impl VerificationControllerV1 {
+    pub fn new() -> Self {
+        let log = root().new(o!("api-controller" => "VerificationControllerV1"));
+        VerificationControllerV1 { log }
+    }
+
     pub fn router() -> Router {
         let log = root().new(o!("api-controller" => "VerificationControllerV1"));
         let ctrl = VerificationControllerV1 { log };
@@ -34,15 +41,25 @@ impl VerificationControllerV1 {
 
     pub async fn act_verification(
         State(ctrl): State<VerificationControllerV1>,
-        Json(body): Path<VerificationActionRequest>,
-    ) -> Result<(), ApiError> {
+        Json(body): Json<VerificationActionRequest>,
+    ) -> Result<(), ApiError> { 
         let log = ctrl.log.new(o!("api" => "act_verification"));
-        slog::debug!(log, "act_verification {:?}", params);
-        
+        slog::debug!(log, "act_verification {:?}", body);
+
+        match body {
+            VerificationActionRequest::SendEmail(params) => {
+                VerificationControllerV1::send_email(params).await?;
+                Ok(())
+            }
+            VerificationActionRequest::VerifyEmail(params) => {
+                VerificationControllerV1::verify_email(params).await?;
+                Ok(())
+            }
+        }   
     }
 
-    pub async fn email_send(
-        Json(body): Json<EmailSendParams>,
+    pub async fn send_email(
+        body: EmailSendParams,
     ) -> Result<String, ApiError> {
         //TODO: If Email send failed, remove Document
         //TODO: Add request limit
@@ -88,7 +105,7 @@ impl VerificationControllerV1 {
     }
 
     pub async fn verify_email(
-        Json(body): Json<EmailVerifyParams>,
+        body: EmailVerifyParams,
     ) -> Result<String, ApiError> {
         let log = root();
         slog::debug!(log, "verify_email {:?}", body);

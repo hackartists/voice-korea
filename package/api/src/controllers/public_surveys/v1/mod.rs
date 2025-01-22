@@ -2,17 +2,16 @@ use by_axum::{
     axum::{
         extract::{Path, Query, State},
         middleware,
-        // routing::post,
+        routing::post,
         Extension, Json, Router,
     },
     log::root,
 };
 use slog::o;
 use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware, utils::error::ApiError,
+    common::CommonQueryResponse, middleware::auth::authorization_middleware,
 };
 use models::prelude::*;
-use axum::routing::post;
 
 #[derive(Clone, Debug)]
 pub struct PublicSurveyControllerV1 {
@@ -20,19 +19,19 @@ pub struct PublicSurveyControllerV1 {
 }
 
 impl PublicSurveyControllerV1 {
-    pub fn router() -> Result<Router> {
+    pub fn router() -> Router {
         let log = root().new(o!("api-controller" => "PublicSurveyControllerV1"));
         let ctrl = PublicSurveyControllerV1 { log };
 
         //TODO: implement metadata uri
-        Ok(Router::new()
+        Router::new()
             .route("/", post(Self::act_survey).get(Self::list_surveys))
             .route(
                 "/:survey_id",
                 post(Self::act_survey_by_id).get(Self::get_survey),
             )
             .with_state(ctrl)
-            .layer(middleware::from_fn(authorization_middleware)))
+            .layer(middleware::from_fn(authorization_middleware))
     }
 
     pub async fn act_survey(

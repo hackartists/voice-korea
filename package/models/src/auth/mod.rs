@@ -1,17 +1,17 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct LoginParams {
     pub email: String,
     pub password: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ResetParams {
     pub auth_id: String,
@@ -20,7 +20,7 @@ pub struct ResetParams {
     pub password: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SignUpParams {
     pub auth_id: String,
@@ -29,15 +29,32 @@ pub struct SignUpParams {
     pub password: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub enum AuthActionRequest {
+    // Login(LoginParams),
+    Reset(ResetParams),
+    SignUp(SignUpParams),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct EmailSendParams {
     pub email: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct EmailVerifyParams {
     pub id: String,
     pub value: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub enum VerificationActionRequest {
+    SendEmail(EmailSendParams),
+    VerifyEmail(EmailVerifyParams),
 }

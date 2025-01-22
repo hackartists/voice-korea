@@ -69,7 +69,7 @@ impl MemberControllerV1 {
                     let item = res.items.first().unwrap();
 
                     if item.deleted_at.is_some() {
-                        let mem: Member = (
+                        let mem: OrganizationMember = (
                             CreateMemberRequest {
                                 name: None,
                                 group: None,
@@ -88,7 +88,7 @@ impl MemberControllerV1 {
                     }
                 } else {
                     let id = uuid::Uuid::new_v4().to_string();
-                    let mem: Member = (req.clone(), id).into();
+                    let mem: OrganizationMember = (req.clone(), id).into();
 
                     mem
                 };
@@ -427,7 +427,7 @@ impl MemberControllerV1 {
 
         //check member
         let res = cli
-            .get::<Member>(&member_id)
+            .get::<GroupMember>(&member_id)
             .await
             .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
 
@@ -705,10 +705,10 @@ impl MemberControllerV1 {
                 member_id,
                 vec![
                     ("deleted_at", UpdateField::I64(now)),
-                    ("type", UpdateField::String(Member::get_deleted_type())),
+                    ("type", UpdateField::String(OrganizationMember::get_deleted_type())),
                     (
                         "gsi1",
-                        UpdateField::String(Member::get_gsi_deleted(&d.unwrap().unwrap().email)),
+                        UpdateField::String(OrganizationMember::get_gsi1_deleted(&d.unwrap().unwrap().email)),
                     ),
                 ],
             )

@@ -35,7 +35,7 @@ pub enum SearchQuery {
 #[derive(Debug, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct SearchParams {
-    pub _keyword: String,
+    pub query: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
