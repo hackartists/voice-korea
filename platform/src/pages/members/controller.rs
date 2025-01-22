@@ -63,7 +63,7 @@ impl Controller {
                         profile_name: member.name.clone(),
                         email: member.email.clone(),
                         group: member.group.clone().unwrap_or("".to_string()).clone(),
-                        role: member.role.clone().unwrap_or("".to_string()).clone(),
+                        role: member.role.map(|r| r.to_string()).unwrap_or_else(|| "none".to_string()),
                         projects: vec![],
                     })
                     .collect(),

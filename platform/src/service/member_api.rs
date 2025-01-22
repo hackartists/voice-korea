@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use models::prelude::{
-    CreateMemberRequest, InviteMemberRequest, Member, MemberActionRequest, MemberByIdActionRequest,
+    CreateMemberRequest, InviteMemberRequest, OrganizationMember, MemberActionRequest, MemberByIdActionRequest,
     UpdateMemberRequest,
 };
 
@@ -90,7 +90,7 @@ impl MemberApi {
         &self,
         size: Option<i64>,
         bookmark: Option<String>,
-    ) -> Result<CommonQueryResponse<Member>> {
+    ) -> Result<CommonQueryResponse<OrganizationMember>> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -118,7 +118,7 @@ impl MemberApi {
         Ok(members)
     }
 
-    pub async fn get_member(&self, user_id: String) -> Result<Member> {
+    pub async fn get_member(&self, user_id: String) -> Result<OrganizationMember> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
