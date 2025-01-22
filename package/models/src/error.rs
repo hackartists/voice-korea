@@ -1,10 +1,15 @@
-use by_axum::axum::http::StatusCode;
-use by_axum::axum::response::{IntoResponse, Response};
-use by_axum::axum::Json;
+#[cfg(feature = "server")]
+use by_axum::{
+    aide,
+    axum::{
+        http::StatusCode,
+        response::{IntoResponse, Response},
+        Json,
+    },
+};
+#[cfg(feature = "server")]
 use serde_json::json;
 use thiserror::Error;
-#[cfg(feature = "server")]
-use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 
@@ -73,6 +78,7 @@ pub enum ApiError {
     OrganizationNotFound,
 }
 
+#[cfg(feature = "server")]
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let status_code = match &self {
