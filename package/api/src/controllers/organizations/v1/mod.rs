@@ -85,4 +85,23 @@ impl OrganizationControllerV1 {
             bookmark: res.bookmark,
         }))
     }
+
+    pub async fn create_organization(
+        user_id: String, 
+        body: SignUpParams
+    ) -> Result<String, ApiError> {
+        let log = root();
+        let cli = easy_dynamodb::get_client(&log);
+
+        let id: String = uuid::Uuid::new_v4().to_string();
+
+        let organization: Organization =
+            Organization::new(id.clone(), user_id.clone(), body.email.clone());
+        let _ = cli
+            .upsert(organization)
+            .await
+            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+
+        Ok(id)
+    }
 }

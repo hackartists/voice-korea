@@ -37,33 +37,38 @@ pub struct OrganizationMember {
     pub updated_at: i64,
     pub deleted_at: Option<i64>,
 
-    pub user_id: String,
+    pub user_id: String, // FIXME: change this field to user_email if postgre is implemented (Foreign Key)
     pub organization_id: String,
     pub name: Option<String>,
     pub role: Option<Role>,
+    pub contact : Option<String>,
 }
 
 impl OrganizationMember {
-    pub fn new(id: String, user_id: String, organization_id: String, role: Option<Role>) -> Self {
-        //uuid, user_id, organization_id
-        let mut organization_member = OrganizationMember::default();
-        let now = chrono::Utc::now().timestamp_millis();
-        organization_member.id = id;
-        organization_member.r#type = OrganizationMember::get_type();
-        organization_member.gsi1 = OrganizationMember::get_gsi1(&user_id);
-        organization_member.gsi2 = OrganizationMember::get_gsi2(&user_id, &organization_id);
-        organization_member.created_at = now;
-        organization_member.updated_at = now;
-        organization_member.deleted_at = None;
+    pub fn new(
+        user_id: String, 
+        organization_id: String,
+        email: String,
+        name: Option<String>,
+        role: Option<Role>
+    ) -> Self {
+        let now = chrono::Utc::now().timestamp_millis();    
 
-        organization_member.user_id = user_id;
-        organization_member.organization_id = organization_id;
-    
-        if let Some(r) = role {
-            organization_member.role = Some(r);
-        };
-
-        organization_member
+        OrganizationMember {
+            id: uuid::Uuid::new_v4().to_string(),
+            r#type: OrganizationMember::get_type(),
+            gsi1: OrganizationMember::get_gsi1(&user_id),
+            gsi2: OrganizationMember::get_gsi2(&user_id, &organization_id),
+            user_id,
+            organization_id,
+            created_at: now,
+            updated_at: now,
+            deleted_at: None,
+            name,
+            role,
+            email,
+            contact: None,
+        }
     }
 
     pub fn get_gsi1(user_id: &str) -> String {
@@ -114,7 +119,7 @@ impl Into<OrganizationMember> for (CreateMemberRequest, String) {
             name: req.name,
             role: req.role,
             email: req.email,
-            // projects: req.projects,
+            contact: None,
         }
     }
 }

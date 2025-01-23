@@ -725,4 +725,34 @@ impl MemberControllerV1 {
             }
         }
     }
+
+    pub async fn create_member(
+        user_id: String,
+        org_id:String, 
+        email: String,
+        name: Option<String>,
+        role: Option<Role>,
+    ) -> Result<(), ApiError> {
+        let log = root();
+        let cli = easy_dynamodb::get_client(&log);
+
+        let organization_member: OrganizationMember =
+            OrganizationMember::new(
+                user_id.clone(), 
+                org_id.clone(), 
+                email.clone(),
+                name.clone(),
+                role,
+            );
+
+        match cli.upsert(organization_member.clone()).await {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                slog::error!(log, "Create Organization Member Failed {e:?}");
+                Err(ApiError::DynamoCreateException(e.to_string()))
+            }
+        }
+    }
 }
+
+    

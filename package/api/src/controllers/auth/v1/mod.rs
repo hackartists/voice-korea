@@ -11,7 +11,7 @@ use by_axum::{
 };
 use slog::o;
 use models::prelude::{LoginParams, ResetParams, ApiError, AuthActionRequest, EmailVerifyParams,
-    Organization, OrganizationMember, Role, SignUpParams, User};
+    Role, SignUpParams, User};
 
 use crate::{
     utils::{
@@ -20,7 +20,11 @@ use crate::{
     },
     common::CommonQueryResponse,
 };
-use crate::controllers::verification::v1::VerificationControllerV1;
+use crate::controllers::{
+    verification::v1::VerificationControllerV1,
+    members::v1::MemberControllerV1,
+    organizations::v1::OrganizationControllerV1,
+};
 
 #[derive(Clone, Debug)]
 pub struct AuthControllerV1 {
@@ -192,45 +196,19 @@ impl AuthControllerV1 {
             .await
             .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
 
-        let org_id = AuthControllerV1::create_organization(user.id.clone(), body.clone()).await?;
+        let org_id = OrganizationControllerV1::create_organization(user.id.clone(), body.clone()).await?;
 
-        let _ = AuthControllerV1::create_member(org_id, user.id).await?; //FIXME: add to organization
+        let _ = MemberControllerV1::create_member(
+            user.id, 
+            org_id,
+            body.email.clone(),
+            None,
+            Some(Role::Admin),
+        ).await?; //FIXME: add to organization
 
         Ok(())
     }
 
     // FIXME: move to organization controller
-    async fn create_organization(user_id: String, body: SignUpParams) -> Result<String, ApiError> {
-        let log = root();
-        let cli = easy_dynamodb::get_client(&log);
-
-        let id: String = uuid::Uuid::new_v4().to_string();
-
-        let organization: Organization =
-            Organization::new(id.clone(), user_id.clone(), body.email.clone());
-        let _ = cli
-            .upsert(organization)
-            .await
-            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
-
-        Ok(id)
-    }
-
-    // FIXME: move to member controller
-    async fn create_member(org_id:String, user_id: String) -> Result<(), ApiError> {
-        let log = root();
-        let cli = easy_dynamodb::get_client(&log);
-
-        let organization_member_id = uuid::Uuid::new_v4().to_string();
-        let organization_member: OrganizationMember =
-            OrganizationMember::new(organization_member_id, user_id.clone(), org_id.clone(), Some(Role::Admin));
-
-        match cli.upsert(organization_member.clone()).await {
-            Ok(()) => Ok(()),
-            Err(e) => {
-                slog::error!(log, "Create Organization Member Failed {e:?}");
-                Err(ApiError::DynamoCreateException(e.to_string()))
-            }
-        }
-    }
+    
 }
