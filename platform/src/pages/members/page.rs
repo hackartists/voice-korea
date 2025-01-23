@@ -9,6 +9,9 @@ use models::prelude::GroupInfo;
 use models::prelude::InviteMemberRequest;
 use models::prelude::Role;
 
+use crate::models::role_field::RoleField;
+use crate::pages::members::i18n::AddMemberModalTranslate;
+use crate::pages::members::i18n::RemoveMemberModalTranslate;
 use crate::{
     components::{
         icons::{AddUser, ArrowLeft, ArrowRight, Expand, RowOption, Search, Switch},
@@ -23,46 +26,12 @@ pub struct MemberPageProps {
     lang: Language,
 }
 
-#[derive(Props, Clone, PartialEq)]
-pub struct RemoveMemberModalTranslate {
-    remove_info: String,
-    remove_warning: String,
-    remove: String,
-    cancel: String,
-}
-
-#[derive(Props, Clone, PartialEq)]
-pub struct AddMemberModalTranslate {
-    necessary: String,
-    enter_email_address: String,
-    enter_email_address_hint: String,
-    email_format_info: String,
-    privacy: String,
-    name: String,
-    role: String,
-    group: String,
-    necessary_input: String,
-    select_role: String,
-    select_group: String,
-    public_opinion: String,
-    investigation: String,
-    invite: String,
-    cancel: String,
-}
-
-#[derive(Clone, PartialEq)]
-pub enum ModalType {
-    None,
-    AddMember,
-    RemoveMember(String),
-}
-
 #[component]
 pub fn MemberPage(props: MemberPageProps) -> Element {
-    let mut ctrl = Controller::init(props.lang);
+    let popup: PopupService = use_context();
+    let mut ctrl = Controller::init(props.lang, popup);
     let mut name = use_signal(|| "".to_string());
     let mut is_focused = use_signal(|| false);
-    let mut modal_type = use_signal(|| ModalType::None);
     let translates: MemberTranslate = translate(&props.lang.clone());
 
     let member_summary = ctrl.get_members();
@@ -71,78 +40,11 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
 
     let mut clicked_member_id = use_signal(|| "".to_string());
 
-    let mut popup: PopupService = use_context();
-
     let members = member_summary.clone().members;
     let member_len = members.len();
 
     let mut projects_clicked = use_signal(|| vec![false; member_len]);
     let mut projects_extended = use_signal(|| vec![false; member_len]);
-
-    if let ModalType::RemoveMember(_member_id) = modal_type() {
-        popup
-            .open(rsx! {
-                RemoveMemberModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                        clicked_member_id.set("".to_string());
-                    },
-                    remove_member: move |_e: MouseEvent| {
-                        spawn(async move {
-                            ctrl.remove_member(clicked_member_id()).await;
-                            modal_type.set(ModalType::None);
-                            clicked_member_id.set("".to_string());
-                        });
-                    },
-                    i18n: RemoveMemberModalTranslate {
-                        remove_info: translates.remove_info.to_string(),
-                        remove_warning: translates.remove_warning.to_string(),
-                        remove: translates.remove.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                }
-            })
-            .with_id("remove_team_member")
-            .with_title(translates.remove_team_member);
-    } else if modal_type() == ModalType::AddMember {
-        popup
-            .open(rsx! {
-                AddMemberModal {
-                    groups: groups.clone(),
-                    roles: roles.clone(),
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                    },
-                    invite_member: move |req: InviteMemberRequest| {
-                        spawn(async move {
-                            ctrl.invite_member(req).await;
-                            modal_type.set(ModalType::None);
-                        });
-                    },
-                    i18n: AddMemberModalTranslate {
-                        necessary: translates.necessary.to_string(),
-                        enter_email_address: translates.enter_email_address.to_string(),
-                        enter_email_address_hint: translates.enter_email_address_hint.to_string(),
-                        email_format_info: translates.email_format_info.to_string(),
-                        privacy: translates.privacy.to_string(),
-                        name: translates.name.to_string(),
-                        role: translates.role.to_string(),
-                        group: translates.group.to_string(),
-                        necessary_input: translates.necessary_input.to_string(),
-                        select_role: translates.select_role.to_string(),
-                        select_group: translates.select_group.to_string(),
-                        public_opinion: translates.public_opinion.to_string(),
-                        investigation: translates.investigation.to_string(),
-                        invite: translates.invite.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                }
-            })
-            .with_id("add_team_member")
-            .with_title(translates.add_team_member);
-    } else {
-        popup.close();
-    }
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -200,9 +102,6 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                             placeholder: "Enter public name or email address".to_string(),
                             value: (name)(),
                             onfocus: move |_| {
-                                if !popup.is_opened() {
-                                    modal_type.set(ModalType::None);
-                                }
                                 is_focused.set(true);
                             },
                             onblur: move |_| {
@@ -217,8 +116,8 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                     div { class: "flex flex-row gap-[10px]",
                         div {
                             class: "flex flex-row w-[150px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px] cursor-pointer",
-                            onclick: move |_| {
-                                modal_type.set(ModalType::AddMember);
+                            onclick: move |_| async move {
+                                ctrl.open_add_member_modal(props.lang).await;
                             },
                             AddUser { width: "24", height: "24" }
                             div { class: "text-white font-bold text-[16px] ",
@@ -321,9 +220,9 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                             }
                                             for role in roles.clone() {
                                                 option {
-                                                    value: role.clone(),
-                                                    selected: role == members[index].role,
-                                                    "{role}"
+                                                    value: role.clone().db_name,
+                                                    selected: role.db_name == members[index].role,
+                                                    "{role.field}"
                                                 }
                                             }
                                         }
@@ -409,8 +308,8 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                                 ul { class: "py-1",
                                                     li {
                                                         class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                        onclick: move |_| {
-                                                            modal_type.set(ModalType::RemoveMember(clicked_member_id()));
+                                                        onclick: move |_| async move {
+                                                            ctrl.open_remove_member_modal(props.lang, clicked_member_id).await;
                                                         },
                                                         {translates.remove_team_member_li}
                                                     }
@@ -451,10 +350,11 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
 
 #[component]
 pub fn RemoveMemberModal(
+    lang: Language,
     onclose: EventHandler<MouseEvent>,
     remove_member: EventHandler<MouseEvent>,
-    i18n: RemoveMemberModalTranslate,
 ) -> Element {
+    let i18n: RemoveMemberModalTranslate = translate(&lang);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "flex flex-col text-[#222222] font-normal text-[14px] gap-[5px]",
@@ -483,12 +383,13 @@ pub fn RemoveMemberModal(
 
 #[component]
 pub fn AddMemberModal(
+    lang: Language,
     groups: Vec<String>,
-    roles: Vec<String>,
+    roles: Vec<RoleField>,
     onclose: EventHandler<MouseEvent>,
     invite_member: EventHandler<InviteMemberRequest>,
-    i18n: AddMemberModalTranslate,
 ) -> Element {
+    let i18n: AddMemberModalTranslate = translate(&lang);
     let mut email = use_signal(|| "".to_string());
 
     let mut name = use_signal(|| "".to_string());
@@ -549,9 +450,9 @@ pub fn AddMemberModal(
                             option { value: "", selected: select_role() == "", {i18n.select_role} }
                             for role in roles.clone() {
                                 option {
-                                    value: role.clone(),
-                                    selected: role == select_role(),
-                                    "{role}"
+                                    value: role.db_name.clone(),
+                                    selected: role.db_name == select_role(),
+                                    "{role.field}"
                                 }
                             }
                         }

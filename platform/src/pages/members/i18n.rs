@@ -141,3 +141,89 @@ translate! {
         en: "Invite",
     },
 }
+
+translate! {
+    RemoveMemberModalTranslate;
+
+    remove_info: {
+        ko: "정말 삭제하시겠습니까?",
+        en: "Are you sure you want to delete it?",
+    },
+    remove_warning: {
+        ko: "삭제된 팀원은 복원할 수 없습니다. 삭제 전에 다시 한번 확인해주세요.",
+        en: "Deleted team members cannot be restored. Please check again before deleting.",
+    },
+    remove: {
+        ko: "삭제하기",
+        en: "Remove",
+    },
+    cancel: {
+        ko: "취소하기",
+        en: "Cancel",
+    },
+}
+
+translate! {
+    AddMemberModalTranslate;
+
+    necessary: {
+        ko: "*[필수]",
+        en: "*[Essential]",
+    },
+    enter_email_address: {
+        ko: "이메일 주소 입력하기",
+        en: "Enter your email address",
+    },
+    enter_email_address_hint: {
+        ko: "이메일 주소 입력",
+        en: "Enter your email address",
+    },
+    email_format_info: {
+        ko: "이메일 형식은 e.g voicekorea@company.com 으로 입력해주세요.",
+        en: "Please enter the email format e.g voicekorea@company.com.",
+    },
+    privacy: {
+        ko: "개인정보",
+        en: "Privacy",
+    },
+    name: {
+        ko: "이름",
+        en: "Name",
+    },
+    group: {
+        ko: "그룹",
+        en: "Group",
+    },
+    role: {
+        ko: "역할",
+        en: "Role",
+    },
+    necessary_input: {
+        ko: "필수 입력",
+        en: "Required input",
+    },
+    select_role: {
+        ko: "선택 없음",
+        en: "No Selection",
+    },
+    select_group: {
+        ko: "선택 없음",
+        en: "No Selection",
+    },
+    public_opinion: {
+        ko: "공론",
+        en: "Public Opinion",
+    },
+    investigation: {
+        ko: "조사",
+        en: "Investigation",
+    },
+    invite: {
+        ko: "초대하기",
+        en: "Invite",
+    },
+    cancel: {
+        ko: "취소하기",
+        en: "Cancel",
+    },
+}

@@ -6,6 +6,10 @@ use dioxus_translate::translate;
 use dioxus_translate::Language;
 use models::prelude::UpdateMemberRequest;
 
+use crate::models::role_field::RoleField;
+use crate::pages::members::_id::i18n::{
+    RemoveMemberDetailModalTranslate, RemoveProjectModalTranslate,
+};
 use crate::{
     components::{
         icons::{ArrowLeft, ArrowRight, ColOption, Expand, RowOption, Search, Switch},
@@ -76,16 +80,10 @@ pub struct RemoveMemberModalTitle {
     remove: String,
 }
 
-#[derive(Clone, PartialEq)]
-pub enum ModalType {
-    None,
-    RemoveMember,
-    RemoveProject(String),
-}
-
 #[component]
 pub fn MemberDetailPage(props: MemberDetailPageProps) -> Element {
-    let mut ctrl = Controller::init(props.lang, props.member_id.clone());
+    let popup: PopupService = use_context();
+    let mut ctrl = Controller::init(props.lang, popup, props.member_id.clone());
     let translates: MemberDetailTranslate = translate(&props.lang.clone());
 
     let member = ctrl.get_member();
@@ -93,62 +91,9 @@ pub fn MemberDetailPage(props: MemberDetailPageProps) -> Element {
     let roles = ctrl.get_roles();
 
     let profile_name = member.profile_name.unwrap_or_default();
-    let mut modal_type = use_signal(|| ModalType::None);
-    let mut popup: PopupService = use_context();
 
     let member_id_copy = props.member_id.clone();
-    let member_id_copy1 = props.member_id.clone();
-
-    let navigator = use_navigator();
-
-    if ModalType::RemoveMember == modal_type() {
-        popup
-            .open(rsx! {
-                RemoveMemberModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                    },
-                    remove_member: move |_onclick: Event<MouseData>| {
-                        let member_id = member_id_copy1.clone();
-                        spawn(async move {
-                            ctrl.remove_member(member_id.clone()).await;
-                            modal_type.set(ModalType::None);
-                            navigator
-                                .push(Route::MemberPage {
-                                    lang: props.lang,
-                                });
-                        });
-                    },
-                    i18n: RemoveMemberModalTranslate {
-                        remove_info: translates.remove_member_info.to_string(),
-                        remove_warning: translates.remove_member_warning.to_string(),
-                        remove: translates.remove.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                }
-            })
-            .with_id("remove_team_member_title")
-            .with_title(translates.remove_team_member_title);
-    } else if let ModalType::RemoveProject(_history_id) = modal_type() {
-        popup
-            .open(rsx! {
-                RemoveProjectModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                    },
-                    i18n: RemoveProjectModalTitle {
-                        remove_project_info: translates.remove_project_info.to_string(),
-                        remove_project_warning: translates.remove_project_warning.to_string(),
-                        cancel: translates.cancel.to_string(),
-                        remove: translates.remove.to_string(),
-                    },
-                }
-            })
-            .with_id("remove_project_title")
-            .with_title(translates.remove_project_title);
-    } else {
-        popup.close();
-    }
+    let member_id_copy_1 = props.member_id.clone();
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -177,7 +122,10 @@ pub fn MemberDetailPage(props: MemberDetailPageProps) -> Element {
                             li {
                                 class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                 onclick: move |_| {
-                                    modal_type.set(ModalType::RemoveMember);
+                                    let id = member_id_copy_1.clone();
+                                    async move {
+                                        ctrl.open_remove_member_modal(props.lang, id.clone()).await;
+                                    }
                                 },
                                 "{translates.remove_team_member}"
                             }
@@ -204,7 +152,6 @@ pub fn MemberDetailPage(props: MemberDetailPageProps) -> Element {
                             let member_id = member_id_copy.clone();
                             spawn(async move {
                                 ctrl.update_member(member_id.clone(), req).await;
-                                modal_type.set(ModalType::None);
                             });
                         },
 
@@ -240,7 +187,12 @@ pub fn MemberDetailPage(props: MemberDetailPageProps) -> Element {
                         exclude_from_project: translates.exclude_from_project.to_string(),
                     },
                     change_popup_state: move |history_id: String| {
-                        modal_type.set(ModalType::RemoveProject(history_id));
+                        let id = props.member_id.clone();
+                        let history_id = history_id.clone();
+                        async move {
+                            ctrl.open_remove_project_modal(props.lang, id.clone(), history_id.clone())
+                                .await;
+                        }
                     },
                 }
             }
@@ -423,21 +375,19 @@ pub fn ProfileInfo(
     email_address: String,
 
     total_groups: Vec<String>,
-    total_roles: Vec<String>,
+    total_roles: Vec<RoleField>,
 
     update_member: EventHandler<UpdateMemberRequest>,
 
     i18n: ProfileInfoTranslate,
 ) -> Element {
     let mut name = use_signal(|| "".to_string());
-    let mut email = use_signal(|| "".to_string());
     let mut select_group = use_signal(|| "".to_string());
     let mut select_role = use_signal(|| "".to_string());
 
     use_effect(use_reactive(
-        (&email_address, &profile_name, &group, &role),
-        move |(email_address, profile_name, group, role)| {
-            email.set(email_address);
+        (&profile_name, &group, &role),
+        move |(profile_name, group, role)| {
             name.set(profile_name.unwrap_or_default());
             select_group.set(group);
             select_role.set(role);
@@ -495,23 +445,17 @@ pub fn ProfileInfo(
                             option { value: "", selected: select_role() == "", {i18n.no_role} }
                             for role in total_roles {
                                 option {
-                                    value: role.clone(),
-                                    selected: role == select_role(),
-                                    "{role}"
+                                    value: role.db_name.clone(),
+                                    selected: role.db_name == select_role(),
+                                    "{role.field}"
                                 }
                             }
                         }
                     }
                     div { class: "flex flex-col w-full justify-start items-start mb-[20px]",
                         div { class: "mb-[8px]", "{i18n.email}" }
-                        input {
-                            class: "flex flex-row w-[214px] h-[40px] bg-[#f7f7f7] rounded-lg focus:outline-none px-[16px] py-[8px]  text-[#3a3a3a]",
-                            r#type: "text",
-                            placeholder: "Enter public name or email address".to_string(),
-                            value: (email)(),
-                            oninput: move |event| {
-                                email.set(event.value());
-                            },
+                        div { class: "flex flex-row w-[215px] h-[40px] bg-[#f7f7f7] rounded-lg px-[16px] py-[8px] text-[#3a3a3a]",
+                            "{email_address}"
                         }
                     }
                     div { class: "flex flex-row w-full justify-between items-end mt-[10px]",
@@ -536,9 +480,11 @@ pub fn ProfileInfo(
 
 #[component]
 pub fn RemoveProjectModal(
+    lang: Language,
+    remove_project: EventHandler<MouseEvent>,
     onclose: EventHandler<MouseEvent>,
-    i18n: RemoveProjectModalTitle,
 ) -> Element {
+    let i18n: RemoveProjectModalTranslate = translate(&lang);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "flex flex-col text-[#222222] font-normal text-[14px] gap-[5px]",
@@ -548,7 +494,9 @@ pub fn RemoveProjectModal(
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
                 div {
                     class: "flex flex-row w-[85px] h-[40px] justify-center items-center bg-[#2a60d3] rounded-md cursor-pointer",
-                    onclick: move |_| {},
+                    onclick: move |e: MouseEvent| {
+                        remove_project.call(e);
+                    },
                     div { class: "text-white font-bold text-[16px]", {i18n.remove} }
                 }
                 div {
@@ -565,15 +513,16 @@ pub fn RemoveProjectModal(
 
 #[component]
 pub fn RemoveMemberModal(
+    lang: Language,
     onclose: EventHandler<MouseEvent>,
     remove_member: EventHandler<MouseEvent>,
-    i18n: RemoveMemberModalTranslate,
 ) -> Element {
+    let i18n: RemoveMemberDetailModalTranslate = translate(&lang);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "flex flex-col text-[#222222] font-normal text-[14px] gap-[5px]",
-                div { {i18n.remove_info} }
-                div { {i18n.remove_warning} }
+                div { {i18n.remove_member_info} }
+                div { {i18n.remove_member_warning} }
             }
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
                 div {

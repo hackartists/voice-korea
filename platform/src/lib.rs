@@ -49,6 +49,7 @@ pub mod service {
 pub mod models {
     pub mod pi;
     pub mod question;
+    pub mod role_field;
     pub mod survey;
     pub mod user;
 }

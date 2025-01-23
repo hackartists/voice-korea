@@ -1,8 +1,21 @@
 use chrono::{Local, TimeZone};
 use dioxus::prelude::*;
-use models::prelude::GroupMemberResponse;
+use dioxus_logger::tracing;
+use dioxus_translate::{translate, Language};
+use models::prelude::{GroupMemberResponse, TeamMemberRequest};
 
-use crate::service::group_api::GroupApi;
+use crate::{
+    routes::Route,
+    service::{group_api::GroupApi, popup_service::PopupService},
+};
+
+use super::{
+    i18n::GroupDetailTranslate,
+    page::{
+        AddMemberModal, RemoveGroupModal, RemoveMemberModal, RemoveProjectModal,
+        UpdateGroupNameModal,
+    },
+};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum ProjectType {
@@ -47,16 +60,23 @@ pub struct GroupMember {
     pub projects: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     pub group: Signal<GroupDetail>,
     pub groups: Signal<Vec<String>>,
     pub roles: Signal<Vec<String>>,
     pub group_resource: Resource<Result<models::prelude::GroupResponse, ServerFnError>>,
+
+    popup_service: Signal<PopupService>,
+    group_api: GroupApi,
 }
 
 impl Controller {
-    pub fn init(_lang: dioxus_translate::Language, group_id: String) -> Self {
+    pub fn init(
+        _lang: dioxus_translate::Language,
+        popup_service: PopupService,
+        group_id: String,
+    ) -> Self {
         let api: GroupApi = use_context();
         let group_resource: Resource<Result<models::prelude::GroupResponse, ServerFnError>> =
             use_resource(move || {
@@ -77,6 +97,9 @@ impl Controller {
                 ]
             }),
             group_resource,
+
+            popup_service: use_signal(|| popup_service),
+            group_api: api,
         };
         ctrl.groups.set(vec![
             "보이스코리아".to_string(),
@@ -136,5 +159,176 @@ impl Controller {
         let api: GroupApi = use_context();
         let _ = api.update_group_name(group_id, group_name).await;
         self.group_resource.restart();
+    }
+
+    pub async fn open_update_group_name_modal(
+        &self,
+        lang: Language,
+        group_id: String,
+        initialize_group_name: String,
+    ) {
+        let mut popup_service = (self.popup_service)().clone();
+        let translates: GroupDetailTranslate = translate(&lang);
+        let api: GroupApi = self.group_api;
+
+        let mut group_resource = self.group_resource;
+
+        popup_service
+            .open(rsx! {
+                UpdateGroupNameModal {
+                    lang,
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                    initialize_group_name,
+                    update_group_name: move |group_name: String| {
+                        let group_id = group_id.clone();
+                        let group_name = group_name.clone();
+                        async move {
+                            match api.update_group_name(group_id, group_name).await {
+                                Ok(_) => group_resource.restart(),
+                                Err(e) => {
+                                    tracing::error!("failed to update group name: {e}");
+                                }
+                            };
+                            popup_service.close();
+                        }
+                    },
+                }
+            })
+            .with_id("update_group_name")
+            .with_title(translates.update_group_name);
+    }
+
+    pub async fn open_remove_group_modal(&self, lang: Language, group_id: String) {
+        let navigator = use_navigator();
+        let mut popup_service = (self.popup_service)().clone();
+        let translates: GroupDetailTranslate = translate(&lang);
+        let api: GroupApi = self.group_api;
+
+        popup_service
+            .open(rsx! {
+                RemoveGroupModal {
+                    lang,
+                    remove_group: move |_e: MouseEvent| {
+                        let group_id = group_id.clone();
+                        async move {
+                            match api.remove_group(group_id).await {
+                                Ok(_) => {
+                                    popup_service.close();
+                                    navigator
+                                        .push(Route::GroupPage {
+                                            lang: lang.clone(),
+                                        });
+                                }
+                                Err(e) => {
+                                    tracing::error!("failed to update group name: {e}");
+                                }
+                            };
+                        }
+                    },
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("remove_group")
+            .with_title(translates.remove_group);
+    }
+
+    pub async fn open_remove_member_modal(
+        &self,
+        lang: Language,
+        group_id: String,
+        member_id: String,
+    ) {
+        let mut popup_service = (self.popup_service)().clone();
+        let translates: GroupDetailTranslate = translate(&lang);
+        let _api: GroupApi = self.group_api;
+
+        let _group_resource = self.group_resource;
+
+        popup_service
+            .open(rsx! {
+                RemoveMemberModal {
+                    lang,
+                    onremove: move |_e: MouseEvent| {
+                        let group_id = group_id.clone();
+                        let member_id = member_id.clone();
+                        async move {
+                            tracing::debug!("on remove clicked: {} {}", group_id, member_id);
+                            popup_service.close();
+                        }
+                    },
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("remove_team_member")
+            .with_title(translates.remove_team_member);
+    }
+
+    pub async fn open_add_member_modal(&self, lang: Language, group_id: String) {
+        let mut popup_service = (self.popup_service)().clone();
+        let translates: GroupDetailTranslate = translate(&lang);
+        let _api: GroupApi = self.group_api;
+
+        let _group_resource = self.group_resource;
+        let roles = self.get_roles();
+
+        popup_service
+            .open(rsx! {
+                AddMemberModal {
+                    lang,
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                    onadd: move |req: TeamMemberRequest| {
+                        let group_id = group_id.clone();
+                        let req = req.clone();
+                        async move {
+                            tracing::debug!("on onadd clicked: {} {:?}", group_id, req);
+                            popup_service.close();
+                        }
+                    },
+                    roles,
+                }
+            })
+            .with_id("add_team_member")
+            .with_title(translates.add_team_member);
+    }
+
+    pub async fn open_remove_project_modal(
+        &self,
+        lang: Language,
+        group_id: String,
+        project_id: String,
+    ) {
+        let mut popup_service = (self.popup_service)().clone();
+        let translates: GroupDetailTranslate = translate(&lang);
+        let _api: GroupApi = self.group_api;
+
+        let _group_resource = self.group_resource;
+
+        popup_service
+            .open(rsx! {
+                RemoveProjectModal {
+                    lang,
+                    onremove: move |_e: MouseEvent| {
+                        let group_id = group_id.clone();
+                        let project_id = project_id.clone();
+                        async move {
+                            tracing::debug!("on remove clicked: {} {}", group_id, project_id);
+                            popup_service.close();
+                        }
+                    },
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("remove_project")
+            .with_title(translates.remove_project);
     }
 }

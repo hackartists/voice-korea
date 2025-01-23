@@ -161,6 +161,7 @@ impl PanelApi {
         let res = res.error_for_status()?;
 
         let panels = res.json().await?;
+
         Ok(panels)
     }
 

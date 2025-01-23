@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::prelude::{AttributeSummary, PanelSummary};
 
@@ -198,9 +199,12 @@ pub fn PanelList(
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
 ) -> Element {
+    let mut ctrl: Controller = use_context();
     let mut is_focused = use_signal(|| false);
     let mut panel_name = use_signal(|| "".to_string());
     let translate: PanelListTranslate = translate(&lang);
+
+    tracing::debug!("panel list: {:?}", panels);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start mb-[40px]",
             div { class: "font-bold text-[#222222] text-[16px] mb-[10px]", "{translate.panel_list}" }
@@ -238,7 +242,11 @@ pub fn PanelList(
                         div { class: "w-[25px] h-[25px]",
                             ArrowLeft { width: "25", height: "25", color: "#555462" }
                         }
-                        div { class: "w-[25px] h-[25px]",
+                        button {
+                            class: "w-[25px] h-[25px]",
+                            onclick: move |_| async move {
+                                let _ = ctrl.next_panel_clicked().await;
+                            },
                             ArrowRight { width: "25", height: "25", color: "#555462" }
                         }
                     }
