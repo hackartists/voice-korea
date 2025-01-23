@@ -133,13 +133,32 @@ impl Controller {
 
     pub async fn clicked_start_survey(&mut self, lang: Language) {
         let navigator = use_navigator();
-        let start_year: i32 = (self.start_year)().parse().unwrap();
-        let start_month: u32 = (self.start_month)().parse().unwrap();
-        let start_day: u32 = (self.start_day)().parse().unwrap();
 
-        let end_year: i32 = (self.end_year)().parse().unwrap();
-        let end_month: u32 = (self.end_month)().parse().unwrap();
-        let end_day: u32 = (self.end_day)().parse().unwrap();
+        let start_year: i32 = match (self.start_year)().parse() {
+            Ok(year) => year,
+            Err(_) => return,
+        };
+        let start_month: u32 = match (self.start_month)().parse() {
+            Ok(month) => month,
+            Err(_) => return,
+        };
+        let start_day: u32 = match (self.start_day)().parse() {
+            Ok(day) => day,
+            Err(_) => return,
+        };
+        let end_year: i32 = match (self.end_year)().parse() {
+            Ok(year) => year,
+            Err(_) => return,
+        };
+        let end_month: u32 = match (self.end_month)().parse() {
+            Ok(month) => month,
+            Err(_) => return,
+        };
+        let end_day: u32 = match (self.end_day)().parse() {
+            Ok(day) => day,
+            Err(_) => return,
+        };
+
         tracing::debug!(
             "{} {} {} / {} {} {}",
             start_year,
