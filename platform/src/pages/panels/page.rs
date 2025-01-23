@@ -31,32 +31,38 @@ pub fn PanelPage(props: PanelProps) -> Element {
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
-            div { class: "text-[#9b9b9b] font-medium text-[14px] mb-[10px]", "{translate.panel_title}" }
-        }
-        div { class: "text-[#3a3a3a] font-semibold text-[28px] mb-[25px]", "{translate.panel_title}" }
-        div { class: "text-[#35343f] font-normal text-[14px] mb-[40px]",
-            "{translate.panel_description}"
-        }
-        PanelList {
-            lang: props.lang,
-            panels,
-            attributes: attributes.clone(),
-            onupdate: move |index: usize| {
-                ctrl.open_update_panel_name(props.lang, index);
-            },
-            onremove: move |index: usize| {
-                ctrl.open_remove_panel(props.lang, index);
-            },
-        }
-        AttributeList {
-            lang: props.lang,
-            attributes,
-            onupdate: move |index: usize| {
-                ctrl.open_update_attribute_name(props.lang, index);
-            },
-            onremove: move |index: usize| {
-                ctrl.open_remove_attribute(props.lang, index);
-            },
+            div { class: "flex flex-col w-full justify-start items-start",
+                div { class: "text-[#9b9b9b] font-medium text-[14px] mb-[10px]",
+                    "{translate.panel_title}"
+                }
+            }
+            div { class: "text-[#3a3a3a] font-semibold text-[28px] mb-[25px]",
+                "{translate.panel_title}"
+            }
+            div { class: "text-[#35343f] font-normal text-[14px] mb-[40px]",
+                "{translate.panel_description}"
+            }
+            PanelList {
+                lang: props.lang,
+                panels,
+                attributes: attributes.clone(),
+                onupdate: move |index: usize| {
+                    ctrl.open_update_panel_name(props.lang, index);
+                },
+                onremove: move |index: usize| {
+                    ctrl.open_remove_panel(props.lang, index);
+                },
+            }
+            AttributeList {
+                lang: props.lang,
+                attributes,
+                onupdate: move |index: usize| {
+                    ctrl.open_update_attribute_name(props.lang, index);
+                },
+                onremove: move |index: usize| {
+                    ctrl.open_remove_attribute(props.lang, index);
+                },
+            }
         }
     }
 }

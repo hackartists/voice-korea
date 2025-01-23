@@ -5,10 +5,7 @@ use models::prelude::{
     SurveyDraftStatus, SurveyQuestion, SurveyQuestionType, UpsertSurveyDraftRequest,
 };
 
-use crate::{
-    api::v2::survey::{get_survey, upsert_survey_draft},
-    models::survey::StatusType,
-};
+use crate::{models::survey::StatusType, service::prev_survey_api::PrevSurveyApi};
 
 use super::{Language, Route};
 
@@ -18,7 +15,7 @@ pub enum QuestionStep {
     Input,
 }
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     step: Signal<QuestionStep>,
     pub survey_response: Resource<models::prelude::Survey>,
@@ -31,6 +28,7 @@ pub struct Controller {
     update_button_clicked: Signal<bool>,
 
     survey_id: Signal<String>,
+    pub prev_survey_api: PrevSurveyApi,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -59,11 +57,14 @@ impl Controller {
             }
         }
 
+        let prev_survey_api: PrevSurveyApi = use_context();
+
         let id_copy = id.clone();
         let survey_response: Resource<models::prelude::Survey> = use_resource(move || {
             let id_value = id.clone();
+            let prev_survey_api = prev_survey_api.clone();
             async move {
-                let survey = get_survey(id_value).await;
+                let survey = prev_survey_api.get_survey(id_value).await;
                 survey.unwrap_or_default()
             }
         });
@@ -105,6 +106,7 @@ impl Controller {
             update_key: use_signal(|| 0),
             update_button_clicked: use_signal(|| false),
             survey_id: use_signal(|| "".to_string()),
+            prev_survey_api,
         };
 
         let draft_status = ctrl.get_survey().draft_status;
@@ -117,6 +119,7 @@ impl Controller {
         };
 
         ctrl.survey_id.set(id_copy);
+        use_context_provider(|| ctrl);
 
         ctrl
     }
@@ -148,10 +151,6 @@ impl Controller {
 
     pub fn get_question_title(&mut self) -> String {
         (self.question_title)()
-    }
-
-    pub fn get_update_key(&mut self) -> usize {
-        (self.update_key)()
     }
 
     pub fn get_question_types(&mut self) -> Vec<QuestionOption> {
@@ -304,16 +303,18 @@ impl Controller {
             questions.push(survey_question);
         };
 
-        let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: Some(self.get_survey_id()),
-            status: Some(SurveyDraftStatus::Question),
-            title: None,
-            quotas: None,
-            questions: Some(questions),
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: Some(self.get_survey_id()),
+                status: Some(SurveyDraftStatus::Question),
+                title: None,
+                quotas: None,
+                questions: Some(questions),
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
     }
 
     pub async fn remove_question(&mut self, index: usize) {
@@ -368,16 +369,18 @@ impl Controller {
             unremoved_questions.push(d.clone());
         }
 
-        let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: Some(self.get_survey_id()),
-            status: Some(SurveyDraftStatus::Question),
-            title: None,
-            quotas: None,
-            questions: Some(unremoved_questions),
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: Some(self.get_survey_id()),
+                status: Some(SurveyDraftStatus::Question),
+                title: None,
+                quotas: None,
+                questions: Some(unremoved_questions),
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
 
         self.deleted_key_list.set(vec![]);
     }
@@ -396,28 +399,32 @@ impl Controller {
             unremoved_questions.push(d.clone());
         }
 
-        let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: Some(self.get_survey_id()),
-            status: Some(SurveyDraftStatus::Quotas),
-            title: None,
-            quotas: None,
-            questions: Some(unremoved_questions),
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: Some(self.get_survey_id()),
+                status: Some(SurveyDraftStatus::Quotas),
+                title: None,
+                quotas: None,
+                questions: Some(unremoved_questions),
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
     }
 
     pub async fn clicked_back(&mut self) {
-        let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: Some(self.get_survey_id()),
-            status: Some(SurveyDraftStatus::Title),
-            title: None,
-            quotas: None,
-            questions: None,
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: Some(self.get_survey_id()),
+                status: Some(SurveyDraftStatus::Title),
+                title: None,
+                quotas: None,
+                questions: None,
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
     }
 }

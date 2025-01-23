@@ -34,7 +34,6 @@ pub fn WriteQuestionPage(props: WriteQuestionProps) -> Element {
                     QuestionList {
                         survey_id: props.survey_id,
                         lang: props.lang,
-                        ctrl,
                         delete: translates.delete,
                         update: translates.update,
                         temporary_save: translates.temporary_save,
@@ -46,7 +45,6 @@ pub fn WriteQuestionPage(props: WriteQuestionProps) -> Element {
             } else {
                 div { class: "flex flex-col max-w-7xl min-w-md w-full justify-start items-start mt-4 px-12",
                     QuestionInput {
-                        ctrl,
                         lang: props.lang,
                         temporary_save: translates.temporary_save,
                         input_question: translates.input_question,

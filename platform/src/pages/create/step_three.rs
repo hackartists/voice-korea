@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
-use crate::components::{input::Input, table_row::Row};
+use crate::{
+    components::{input::Input, table_row::Row},
+    pages::create::controller::Controller,
+};
 use dioxus::prelude::*;
 use dioxus_translate::Language;
 
-use super::controller;
-
 #[derive(PartialEq, Props, Clone)]
 pub struct StepThreeProps {
-    ctrl: controller::Controller,
     lang: Language,
     join_the_membership: String,
     email_address: String,
@@ -39,7 +39,7 @@ pub struct StepThreeProps {
 
 #[component]
 pub fn StepThreePage(props: StepThreeProps) -> Element {
-    let mut ctrl = props.ctrl;
+    let mut ctrl: Controller = use_context();
     rsx! {
         div { class: "flex flex-col w-full h-full items-start justify-center px-[70px] py-[40px]",
             div { class: "text-[32px] font-bold text-black pb-[30px]", "{props.join_the_membership}" }

@@ -127,13 +127,11 @@ impl Into<InviteMember> for (InviteMemberRequest, String) {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreateMemberRequest {
-    pub user_id: String,
-    pub org_id: String,
     pub name: Option<String>,
     pub group: Option<GroupInfo>,
     pub role: Option<Role>,
     pub email: String,
-    // pub projects: Option<Vec<MemberProject>>,
+    pub projects: Option<Vec<MemberProject>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Eq)]

@@ -46,7 +46,7 @@ impl SurveyApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/v1/surveys/{survey_id}"))
+            .post(&format!("/public-surveys/v1/{survey_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&SurveyByIdActionRequest::Update(req))
@@ -64,7 +64,7 @@ impl SurveyApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/v1/surveys"))
+            .post(&format!("/public-surveys/v1"))
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&SurveyActionRequest::Create(req))
@@ -83,7 +83,7 @@ impl SurveyApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/surveys/{survey_id}"))
+            .get(&format!("/public-surveys/v1/{survey_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .send()
@@ -101,7 +101,7 @@ impl SurveyApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(format!("/v1/surveys/{}", survey_id).as_str())
+            .post(format!("/public-surveys/v1/{}", survey_id).as_str())
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&SurveyByIdActionRequest::Delete)
@@ -126,7 +126,7 @@ impl SurveyApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/surveys"))
+            .get(&format!("/public-surveys/v1"))
             .query(&params)
             .header("Authorization", token)
             .header("x-organization", id)
@@ -158,7 +158,7 @@ impl SurveyApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/v1/surveys"))
+            .get(&format!("/public-surveys/v1"))
             .query(&params)
             .header("Authorization", token)
             .header("x-organization", id)

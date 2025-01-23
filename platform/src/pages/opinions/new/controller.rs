@@ -1,11 +1,22 @@
 use dioxus::prelude::*;
-use dioxus_translate::Language;
-use models::prelude::{Field, OpinionInfo, OpinionInformation, PublicOpinionType};
+use dioxus_logger::tracing;
+use dioxus_translate::{translate, Language};
+use models::prelude::{
+    AttributeSummary, Field, OpinionInfo, OpinionInformation, PanelAttributeDetailInfo,
+    PublicOpinionType,
+};
 
-use super::i18n::OpinionNewTranslate;
+use crate::service::popup_service::PopupService;
+
+use super::{
+    composition_panel::{AddAttributeModal, CreateNewPanelModal},
+    i18n::{CompositionPanelTranslate, OpinionNewTranslate, PreviewTranslate},
+    preview::SendAlertModal,
+};
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Controller {
+    popup_service: Signal<PopupService>,
     current_step: Signal<CurrentStep>,
     public_opinion_sequences: Signal<Vec<OpinionInfo>>,
     total_option_types: Signal<Vec<String>>,
@@ -13,6 +24,9 @@ pub struct Controller {
     //step 2
     total_fields: Signal<Vec<String>>,
     opinion_informations: Signal<OpinionInformation>,
+
+    //step 4
+    total_attributes: Signal<Vec<AttributeSummary>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -26,8 +40,11 @@ pub enum CurrentStep {
 }
 
 impl Controller {
-    pub fn new(_lang: dioxus_translate::Language, translates: OpinionNewTranslate) -> Self {
+    pub fn new(lang: dioxus_translate::Language) -> Self {
+        let popup_service: PopupService = use_context();
+        let translates: OpinionNewTranslate = translate(&lang.clone());
         let ctrl = Self {
+            popup_service: use_signal(|| popup_service),
             current_step: use_signal(|| CurrentStep::PublicOpinionComposition),
             total_option_types: use_signal(|| {
                 vec![
@@ -94,9 +111,84 @@ impl Controller {
                 description: None,
                 documents: vec![],
             }),
+            //FIXME: fix to connect api
+            total_attributes: use_signal(|| {
+                vec![
+                    AttributeSummary {
+                        id: "1".to_string(),
+                        name: "직업".to_string(),
+                        attribute: vec![PanelAttributeDetailInfo {
+                            id: None,
+                            name: "개발자".to_string(),
+                        }],
+                    },
+                    AttributeSummary {
+                        id: "2".to_string(),
+                        name: "성별".to_string(),
+                        attribute: vec![PanelAttributeDetailInfo {
+                            id: None,
+                            name: "여성".to_string(),
+                        }],
+                    },
+                    AttributeSummary {
+                        id: "3".to_string(),
+                        name: "나이".to_string(),
+                        attribute: vec![
+                            PanelAttributeDetailInfo {
+                                id: None,
+                                name: "20대".to_string(),
+                            },
+                            PanelAttributeDetailInfo {
+                                id: None,
+                                name: "30대".to_string(),
+                            },
+                            PanelAttributeDetailInfo {
+                                id: None,
+                                name: "40대".to_string(),
+                            },
+                            PanelAttributeDetailInfo {
+                                id: None,
+                                name: "50대".to_string(),
+                            },
+                            PanelAttributeDetailInfo {
+                                id: None,
+                                name: "60대".to_string(),
+                            },
+                        ],
+                    },
+                    AttributeSummary {
+                        id: "4".to_string(),
+                        name: "학력".to_string(),
+                        attribute: vec![PanelAttributeDetailInfo {
+                            id: None,
+                            name: "대학원".to_string(),
+                        }],
+                    },
+                    AttributeSummary {
+                        id: "5".to_string(),
+                        name: "거주지".to_string(),
+                        attribute: vec![PanelAttributeDetailInfo {
+                            id: None,
+                            name: "서울".to_string(),
+                        }],
+                    },
+                    AttributeSummary {
+                        id: "6".to_string(),
+                        name: "국적".to_string(),
+                        attribute: vec![PanelAttributeDetailInfo {
+                            id: None,
+                            name: "국내".to_string(),
+                        }],
+                    },
+                ]
+            }),
         };
         use_context_provider(|| ctrl);
         ctrl
+    }
+
+    pub fn get_total_attributes(&self) -> Vec<AttributeSummary> {
+        (self.total_attributes)()
     }
 
     pub fn update_opinion_info(&mut self, index: usize, opinion: OpinionInfo) {
@@ -209,5 +301,73 @@ impl Controller {
 
     pub fn update_opinion_information(&mut self, information: OpinionInformation) {
         self.opinion_informations.set(information);
+    }
+
+    pub fn open_create_panel_modal(&self, lang: Language, translates: CompositionPanelTranslate) {
+        let mut popup_service = (self.popup_service)().clone();
+        let attributes = self.total_attributes;
+        popup_service
+            .open(rsx! {
+                CreateNewPanelModal {
+                    attributes: attributes.clone(),
+                    lang: lang.clone(),
+                    onsave: move |panel_name: String| {
+                        tracing::debug!("panel name: {panel_name}");
+                    },
+                    onclick: {
+                        move |panel_name: String| {
+                            tracing::debug!("panel name: {panel_name}");
+                            popup_service
+                                .open(rsx! {
+                                    AddAttributeModal {
+                                        lang,
+                                        onclose: move |_e: MouseEvent| {
+                                            popup_service.close();
+                                        },
+                                    }
+                                })
+                                .with_id("add_attribute")
+                                .with_title(translates.add_attribute);
+                        }
+                    },
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("create_panel")
+            .with_title(translates.create_panel);
+    }
+
+    pub fn open_add_attribute_modal(&self, lang: Language) {
+        let translates: CompositionPanelTranslate = translate(&lang);
+        let mut popup_service = (self.popup_service)().clone();
+        popup_service
+            .open(rsx! {
+                AddAttributeModal {
+                    lang,
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("add_attribute")
+            .with_title(translates.add_attribute);
+    }
+
+    pub fn open_send_alerm_modal(&self, lang: Language) {
+        let translates: PreviewTranslate = translate(&lang);
+        let mut popup_service = (self.popup_service)().clone();
+        popup_service
+            .open(rsx! {
+                SendAlertModal {
+                    lang,
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("send_alert")
+            .with_title(translates.send_alerm);
     }
 }

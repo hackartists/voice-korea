@@ -380,7 +380,7 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                         }
                     }
                 }
-                //페이지네이션
+                //pagenation
                 div { class: "flex flex-row w-full justify-center items-center mt-[20px]",
                     div { class: "mr-[20px] w-[24px] h-[24px]",
                         ArrowLeft { width: "24", height: "24" }

@@ -52,7 +52,7 @@ impl OrganizationApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get("/v1/organizations")
+            .get("/organizations/v1")
             .query(&params)
             .header("Authorization", token)
             .send()

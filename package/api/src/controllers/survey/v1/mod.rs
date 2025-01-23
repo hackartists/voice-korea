@@ -4,13 +4,13 @@ use crate::{
 };
 
 use by_axum::{
+    aide,
     axum::{
         extract::{Path, Query, State},
         middleware,
         routing::get,
         Extension, Json, Router,
     },
-    aide,
     log::root,
 };
 
@@ -18,14 +18,15 @@ use nonce_lab::models::{NonceLabCreateSurveyRequest, NonceLabQuota, NonceLabSurv
 use nonce_lab::NonceLabClient;
 
 use models::prelude::{
-    ListSurveyResponse, ProgressSurveyResponse, Survey, SurveyDraftStatus, SurveyResultDocument,
-    SurveyStatus, UpsertSurveyDraftRequest, ApiError,
+    ApiError, ListSurveyResponse, ProgressSurveyResponse, Survey, SurveyDraftStatus,
+    SurveyResultDocument, SurveyStatus, UpsertSurveyDraftRequest,
 };
 use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct AxumState { // FIXME: deprecated
+pub struct AxumState {
+    // FIXME: deprecated
     nonce_lab_client: Arc<NonceLabClient>,
 }
 
@@ -58,12 +59,10 @@ impl AxumState {
         let nonce_lab_client = Arc::new(NonceLabClient::new());
 
         Router::new()
-            .route("/", get(Self::list_survey).patch(Self::upsert_survey_draft))
+            .route("/", get(Self::list_survey).post(Self::upsert_survey_draft))
             .route("/:id", get(Self::get_survey).post(Self::progress_survey))
             .route("/:id/result", get(Self::get_survey_result))
-            .with_state(AxumState {
-                nonce_lab_client,
-            })
+            .with_state(AxumState { nonce_lab_client })
             .layer(middleware::from_fn(authorization_middleware))
     }
 
@@ -315,4 +314,3 @@ impl AxumState {
         Ok(Json(docs.into_iter().next().unwrap()))
     }
 }
-

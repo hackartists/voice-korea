@@ -4,8 +4,7 @@ use by_axum::{
         extract::Request,
         http::{
             header::{AUTHORIZATION, COOKIE},
-            Response,
-            StatusCode,
+            Response, StatusCode,
         },
         middleware::Next,
     },

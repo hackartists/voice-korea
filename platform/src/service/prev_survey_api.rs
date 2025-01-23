@@ -3,23 +3,20 @@ pub type Result<T> = std::result::Result<T, ServerFnError>;
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
-use models::prelude::{
-    AttributeActionRequest, AttributeByIdActionRequest, AttributeSummary, CreateAttributeRequest,
-    UpdateAttributeRequest,
-};
+use models::prelude::SurveyResultDocument;
 
-use crate::{api::common::CommonQueryResponse, utils::api::ReqwestClient};
+use crate::utils::api::ReqwestClient;
 
 use super::{login_service::LoginService, organization_api::OrganizationApi};
 
 #[derive(Debug, Clone, Copy)]
-pub struct AttributeApi {
+pub struct PrevSurveyApi {
     pub endpoint: Signal<String>,
     pub login_service: LoginService,
     pub organization_service: OrganizationApi,
 }
 
-impl AttributeApi {
+impl PrevSurveyApi {
     pub fn init() {
         let login_service: LoginService = use_context();
         let organization_service: OrganizationApi = use_context();
@@ -36,61 +33,13 @@ impl AttributeApi {
         use_context_provider(|| srv);
     }
 
-    pub async fn update_attribute(
-        &self,
-        attribute_id: String,
-        req: UpdateAttributeRequest,
-    ) -> Result<()> {
+    pub async fn get_survey_result(&self, survey_id: String) -> Result<SurveyResultDocument> {
         let token = self.get_token();
         let id = self.get_organization_id();
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(&format!("/attributes/v1/{attribute_id}"))
-            .header("Authorization", token)
-            .header("x-organization", id)
-            .json(&AttributeByIdActionRequest::Update(req))
-            .send()
-            .await?;
-
-        let _res = res.error_for_status()?;
-
-        Ok(())
-    }
-
-    pub async fn create_attribute(&self, req: CreateAttributeRequest) -> Result<()> {
-        let token = self.get_token();
-        let id = self.get_organization_id();
-        let client = ReqwestClient::new()?;
-
-        let res = client
-            .post(&format!("/attributes/v1"))
-            .header("Authorization", token)
-            .header("x-organization", id)
-            .json(&AttributeActionRequest::Create(req))
-            .send()
-            .await?;
-
-        let _res = res.error_for_status()?;
-
-        Ok(())
-    }
-
-    pub async fn search_attributes(
-        &self,
-        keyword: String,
-    ) -> Result<CommonQueryResponse<AttributeSummary>> {
-        let token = self.get_token();
-        let id = self.get_organization_id();
-
-        let mut params = HashMap::new();
-        params.insert("keyword", keyword.to_string());
-
-        let client = ReqwestClient::new()?;
-
-        let res = client
-            .get(&format!("/attributes/v1"))
-            .query(&params)
+            .post(&format!("/survey/v1/{survey_id}/result"))
             .header("Authorization", token)
             .header("x-organization", id)
             .send()
@@ -98,15 +47,37 @@ impl AttributeApi {
 
         let res = res.error_for_status()?;
 
-        let attributes = res.json().await?;
-        Ok(attributes)
+        let survey = res.json().await?;
+
+        Ok(survey)
     }
 
-    pub async fn list_attributes(
+    pub async fn create_survey(
         &self,
-        size: Option<i64>,
+        survey_id: String,
+    ) -> Result<models::prelude::ProgressSurveyResponse> {
+        let token = self.get_token();
+        let id = self.get_organization_id();
+        let client = ReqwestClient::new()?;
+
+        let res = client
+            .post(&format!("/survey/v1/{survey_id}"))
+            .header("Authorization", token)
+            .header("x-organization", id)
+            .send()
+            .await?;
+
+        let res = res.error_for_status()?;
+
+        let survey = res.json().await?;
+        Ok(survey)
+    }
+
+    pub async fn list_surveys(
+        &self,
+        size: Option<i32>,
         bookmark: Option<String>,
-    ) -> Result<CommonQueryResponse<AttributeSummary>> {
+    ) -> Result<models::prelude::ListSurveyResponse> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -121,7 +92,7 @@ impl AttributeApi {
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/attributes/v1"))
+            .get(&format!("/survey/v1"))
             .query(&params)
             .header("Authorization", token)
             .header("x-organization", id)
@@ -130,36 +101,39 @@ impl AttributeApi {
 
         let res = res.error_for_status()?;
 
-        let attributes = res.json().await?;
-        Ok(attributes)
+        let surveys = res.json().await?;
+        Ok(surveys)
     }
 
-    pub async fn remove_attribute(&self, attribute_id: String) -> Result<()> {
+    pub async fn upsert_survey_draft(
+        &self,
+        req: models::prelude::UpsertSurveyDraftRequest,
+    ) -> Result<String> {
         let token = self.get_token();
         let id = self.get_organization_id();
         let client = ReqwestClient::new()?;
 
         let res = client
-            .post(format!("/attributes/v1/{}", attribute_id).as_str())
+            .post(&format!("/survey/v1"))
             .header("Authorization", token)
             .header("x-organization", id)
-            .json(&AttributeByIdActionRequest::Delete)
+            .json(&req)
             .send()
             .await?;
 
-        let _res = res.error_for_status()?;
+        let res = res.error_for_status()?;
 
-        Ok(())
+        let survey_id = res.json().await?;
+        Ok(survey_id)
     }
 
-    pub async fn get_attribute(&self, attribute_id: String) -> Result<AttributeSummary> {
+    pub async fn get_survey(&self, survey_id: String) -> Result<models::prelude::Survey> {
         let token = self.get_token();
         let id = self.get_organization_id();
-
         let client = ReqwestClient::new()?;
 
         let res = client
-            .get(&format!("/attributes/v1/{attribute_id}"))
+            .get(&format!("/survey/v1/{survey_id}"))
             .header("Authorization", token)
             .header("x-organization", id)
             .send()
@@ -167,8 +141,9 @@ impl AttributeApi {
 
         let res = res.error_for_status()?;
 
-        let attribute = res.json().await?;
-        Ok(attribute)
+        let survey = res.json().await?;
+
+        Ok(survey)
     }
 
     pub fn get_organization_id(&self) -> String {

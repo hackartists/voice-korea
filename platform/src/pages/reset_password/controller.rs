@@ -3,18 +3,12 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use regex::Regex;
 
-use crate::{
-    api::v1::{
-        auth::{
-            send_notification, verify_authentication, SendNotificationParams,
-            VerifyAuthenticationParams,
-        },
-        users::reset::{reset_password, ResetRequest},
-    },
-    utils::hash::get_hash_string,
-};
+use crate::service::auth_api::{SendNotificationParams, VerifyAuthenticationParams};
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+use crate::service::user_api::{ResetRequest, UserApi};
+use crate::{service::auth_api::AuthApi, utils::hash::get_hash_string};
+
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     email: Signal<String>,
     name: Signal<String>,
@@ -33,10 +27,16 @@ pub struct Controller {
     password_check_error: Signal<bool>,
     password_pattern_error: Signal<bool>,
     password_unknown_error: Signal<bool>,
+
+    user_api: UserApi,
+    auth_api: AuthApi,
 }
 
 impl Controller {
     pub fn init() -> Self {
+        let user_api: UserApi = use_context();
+        let auth_api: AuthApi = use_context();
+
         let ctrl = Self {
             email: use_signal(|| "".to_string()),
             name: use_signal(|| "".to_string()),
@@ -54,6 +54,9 @@ impl Controller {
             password_check_error: use_signal(|| false),
             password_pattern_error: use_signal(|| false),
             password_unknown_error: use_signal(|| false),
+
+            user_api,
+            auth_api,
         };
 
         use_context_provider(|| ctrl);
@@ -162,13 +165,16 @@ impl Controller {
         }
 
         self.email_address_error.set(false);
-        let res = send_notification(SendNotificationParams {
-            email: self.get_email(),
-        })
-        .await;
+        let res = self
+            .auth_api
+            .send_notification(SendNotificationParams {
+                email: self.get_email(),
+            })
+            .await;
 
         match res {
             Ok(s) => {
+                tracing::debug!("auth key: {s}");
                 self.auth_key.set(s);
             }
             Err(e) => {
@@ -178,11 +184,13 @@ impl Controller {
     }
 
     pub async fn clicked_email_authentication(&mut self) {
-        let res = verify_authentication(VerifyAuthenticationParams {
-            id: self.get_auth_key(),
-            value: self.get_authentication_number(),
-        })
-        .await;
+        let res = self
+            .auth_api
+            .verify_authentication(VerifyAuthenticationParams {
+                id: self.get_auth_key(),
+                value: self.get_authentication_number(),
+            })
+            .await;
 
         match res {
             Ok(_) => {
@@ -228,13 +236,15 @@ impl Controller {
             return;
         }
 
-        let res = reset_password(ResetRequest {
-            auth_id: self.get_auth_key(),
-            auth_value: self.get_authentication_number(),
-            email: self.get_email(),
-            password: get_hash_string(self.get_new_password().as_bytes()),
-        })
-        .await;
+        let res = self
+            .user_api
+            .reset_password(ResetRequest {
+                auth_id: self.get_auth_key(),
+                auth_value: self.get_authentication_number(),
+                email: self.get_email(),
+                password: get_hash_string(self.get_new_password().as_bytes()),
+            })
+            .await;
 
         match res {
             Ok(_) => {

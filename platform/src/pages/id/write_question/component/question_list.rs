@@ -12,7 +12,6 @@ use crate::{
 pub struct QuestionProps {
     survey_id: String,
     lang: Language,
-    ctrl: Controller,
     delete: String,
     update: String,
     add_question: String,
@@ -22,7 +21,7 @@ pub struct QuestionProps {
 }
 
 pub fn QuestionList(props: QuestionProps) -> Element {
-    let mut ctrl = props.ctrl;
+    let mut ctrl: Controller = use_context();
     let survey = ctrl.get_survey();
     let survey_height = 170 + survey.questions.len() * 90;
     let navigator = use_navigator();

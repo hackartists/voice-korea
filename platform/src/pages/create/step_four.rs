@@ -1,13 +1,11 @@
 #![allow(non_snake_case)]
-use crate::{components::table_row::Row, prelude::*};
+use crate::{components::table_row::Row, pages::create::controller::Controller, prelude::*};
 use dioxus::prelude::*;
 
-use super::controller;
 use dioxus_translate::Language;
 
 #[derive(PartialEq, Props, Clone)]
 pub struct StepFourProps {
-    ctrl: controller::Controller,
     lang: Language,
     complete_join_membership_info: String,
     email_address: String,
@@ -20,7 +18,7 @@ pub struct StepFourProps {
 
 #[component]
 pub fn StepFourPage(props: StepFourProps) -> Element {
-    let ctrl = props.ctrl;
+    let ctrl: Controller = use_context();
     let navigator = use_navigator();
     rsx! {
         div { class: "flex flex-col w-full h-full items-start justify-center px-[70px] py-[40px]",
