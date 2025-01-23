@@ -10,7 +10,6 @@ use crate::{
     components::{icons::ArrowLeft, stepper::Stepper},
     pages::opinions::new::controller::{Controller, CurrentStep},
     routes::Route,
-    service::popup_service::PopupService,
 };
 
 use super::i18n::OpinionNewTranslate;
@@ -24,9 +23,8 @@ pub struct OpinionProps {
 
 #[component]
 pub fn OpinionCreatePage(props: OpinionProps) -> Element {
-    let popup_service: PopupService = use_context();
     let translates: OpinionNewTranslate = translate(&props.lang.clone());
-    let ctrl = Controller::new(props.lang, translates.clone(), popup_service);
+    let ctrl = Controller::new(props.lang);
 
     let step = ctrl.get_current_step();
     rsx! {

@@ -269,9 +269,7 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                             button {
                                                 RowOption { width: "24", height: "24" }
                                             }
-                                            nav {
-                                                tabindex: "0",
-                                                class: "border-2 bg-white invisible border-none shadow-lg rounded w-60 absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
+                                            nav { class: "border-2 bg-white invisible border-none shadow-lg rounded w-60 absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
                                                 ul { class: "py-1",
                                                     li {
                                                         class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
@@ -296,7 +294,7 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                         }
                     }
 
-                    //페이지네이션
+                    //pagenation
                     div { class: "flex flex-row w-full justify-center items-center mt-[20px]",
                         div { class: "mr-[20px] w-[24px] h-[24px]",
                             ArrowLeft { width: "24", height: "24" }
@@ -607,6 +605,7 @@ pub fn CreateMaterialModal(
                 }
             }
 
+            //FIXME: fix to real data
             div { class: "flex flex-row w-full justify-start items-start font-normal text-[#6d6d6d] text-[14px] mt-[40px] mb-[20px]",
                 "총 5개 자료 업로드"
             }

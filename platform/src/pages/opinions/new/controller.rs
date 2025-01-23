@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
-use dioxus_translate::Language;
+use dioxus_translate::{translate, Language};
 use models::prelude::{
     AttributeSummary, Field, OpinionInfo, OpinionInformation, PanelAttributeDetailInfo,
     PublicOpinionType,
@@ -40,11 +40,9 @@ pub enum CurrentStep {
 }
 
 impl Controller {
-    pub fn new(
-        _lang: dioxus_translate::Language,
-        translates: OpinionNewTranslate,
-        popup_service: PopupService,
-    ) -> Self {
+    pub fn new(lang: dioxus_translate::Language) -> Self {
+        let popup_service: PopupService = use_context();
+        let translates: OpinionNewTranslate = translate(&lang.clone());
         let ctrl = Self {
             popup_service: use_signal(|| popup_service),
             current_step: use_signal(|| CurrentStep::PublicOpinionComposition),
@@ -341,7 +339,8 @@ impl Controller {
             .with_title(translates.create_panel);
     }
 
-    pub fn open_add_attribute_modal(&self, lang: Language, translates: CompositionPanelTranslate) {
+    pub fn open_add_attribute_modal(&self, lang: Language) {
+        let translates: CompositionPanelTranslate = translate(&lang);
         let mut popup_service = (self.popup_service)().clone();
         popup_service
             .open(rsx! {
@@ -356,7 +355,8 @@ impl Controller {
             .with_title(translates.add_attribute);
     }
 
-    pub fn open_send_alerm_modal(&self, lang: Language, translates: PreviewTranslate) {
+    pub fn open_send_alerm_modal(&self, lang: Language) {
+        let translates: PreviewTranslate = translate(&lang);
         let mut popup_service = (self.popup_service)().clone();
         popup_service
             .open(rsx! {

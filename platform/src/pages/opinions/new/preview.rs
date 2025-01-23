@@ -44,9 +44,8 @@ pub fn Preview(props: PreviewProps) -> Element {
                 div {
                     class: "cursor-pointer flex flex-row w-[130px] h-[55px] rounded-[4px] justify-center items-center bg-[#2a60d3] font-semibold text-[16px] text-white",
                     onclick: {
-                        let translate = translate.clone();
                         move |_| {
-                            ctrl.open_send_alerm_modal(props.lang, translate.clone());
+                            ctrl.open_send_alerm_modal(props.lang);
                         }
                     },
                     "{translate.start_public_opinion}"
