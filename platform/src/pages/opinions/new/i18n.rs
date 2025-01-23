@@ -366,6 +366,64 @@ translate! {
         ko: "패널 새로 만들기",
         en: "Create New Panel"
     }
+    add_attribute: {
+        ko: "속성 추가하기",
+        en: "Add Attribute"
+    }
+}
+
+translate! {
+    AddAttributeModalTranslate;
+
+    add_attribute_modal_title: {
+        ko: "속성을 추가하려면, '패널 & 속성 관리' 페이지로 이동해야합니다.",
+        en: "To add a property, you need to go to the 'Manage Panels & Properties' page."
+    }
+    add_attribute_modal_description: {
+        ko: "지금까지 작성한 내용을 임시 저장하고 이동하시겠습니까?",
+        en: "Would you like to save what you have written so far and move on?"
+    }
+    temporary_save: {
+        ko: "임시 저장하고 이동하기",
+        en: "Save and move"
+    }
+    cancel: {
+        ko: "취소",
+        en: "Cancel"
+    }
+}
+
+translate! {
+    CreateNewPanelModalTranslate;
+
+    panel_name: {
+        ko: "패널명",
+        en: "Panel Name"
+    }
+    panel_name_hint: {
+        ko: "패널명 입력",
+        en: "Input Panel Name"
+    }
+    panel_name_info: {
+        ko: "중복 입력은 허용되지 않으며, 최소 2글자 이상 입력해야 합니다.",
+        en: "Duplicate entries are not allowed and you must enter at least 2 characters."
+    }
+    add_attribute: {
+        ko: "속성 추가하기",
+        en: "Add Attribute"
+    }
+    save: {
+        ko: "저장하기",
+        en: "Save"
+    }
+    cancel: {
+        ko: "취소",
+        en: "Cancel"
+    }
+    total_member: {
+        ko: "총 인원",
+        en: "Total Member"
+    }
 }
 
 translate! {

@@ -37,11 +37,12 @@ jobs:
           key: web-cache-builder
           path: |
             target
-
-      - name: Install de
+      
+      - name: Install dependencies
         run: |
           cargo binstall dioxus-cli --version 0.6.1
-          cargo install toml-cli 
+          cargo binstall toml-cli 
+          npm install -g aws-cdk tailwindcss @tailwindcss/cli
 
       - name: Deploy APIs
         env:
@@ -50,7 +51,6 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           API_URL: https://voice-korea-api.dev.biyard.co
         run: |
-          npm i -g aws-cdk tailwindcss
           ENV=dev make deploy-web-if-needed
 
   api-deployment:
