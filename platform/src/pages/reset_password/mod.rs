@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+use controller::Controller;
 use dioxus::prelude::*;
 
 use crate::{
@@ -60,21 +61,18 @@ pub struct ResetNewPasswordi18nProps {
 
 #[derive(PartialEq, Props, Clone)]
 pub struct EmailAuthenticationProps {
-    ctrl: controller::Controller,
     lang: Language,
     i18n: EmailAuthenticationi18nProps,
 }
 
 #[derive(PartialEq, Props, Clone)]
 pub struct ResetNewPasswordProps {
-    ctrl: controller::Controller,
     lang: Language,
     i18n: ResetNewPasswordi18nProps,
 }
 
 #[derive(PartialEq, Props, Clone)]
 pub struct CompleteResetPasswordProps {
-    ctrl: controller::Controller,
     lang: Language,
     i18n: CompleteResetPasswordi18nProps,
 }
@@ -98,7 +96,6 @@ pub fn ResetPasswordPage(props: ResetPasswordPageProps) -> Element {
         div { class: "flex flex-col w-full h-full items-start justify-center px-[170px] py-[85px]",
             if ctrl.get_step() == 0 {
                 EmailAuthentication {
-                    ctrl,
                     lang: props.lang,
                     i18n: EmailAuthenticationi18nProps {
                         reset_password: translates.reset_password.to_string(),
@@ -127,7 +124,6 @@ pub fn ResetPasswordPage(props: ResetPasswordPageProps) -> Element {
                 }
             } else if ctrl.get_step() == 1 {
                 ResetNewPassword {
-                    ctrl,
                     lang: props.lang,
                     i18n: ResetNewPasswordi18nProps {
                         reset_password: translates.reset_password.to_string(),
@@ -148,7 +144,6 @@ pub fn ResetPasswordPage(props: ResetPasswordPageProps) -> Element {
                 }
             } else {
                 CompleteResetPassword {
-                    ctrl,
                     lang: props.lang,
                     i18n: CompleteResetPasswordi18nProps {
                         complete_change_password_title: translates
@@ -200,7 +195,7 @@ pub fn CompleteResetPassword(props: CompleteResetPasswordProps) -> Element {
 
 #[component]
 pub fn ResetNewPassword(props: ResetNewPasswordProps) -> Element {
-    let mut ctrl = props.ctrl;
+    let mut ctrl: Controller = use_context();
     rsx! {
         div { class: "flex flex-col w-full h-full",
             div { class: "text-[32px] font-bold text-black pb-[30px]", "{props.i18n.reset_password}" }
@@ -288,7 +283,7 @@ pub fn ResetNewPassword(props: ResetNewPasswordProps) -> Element {
 
 #[component]
 pub fn EmailAuthentication(props: EmailAuthenticationProps) -> Element {
-    let mut ctrl = props.ctrl;
+    let mut ctrl: Controller = use_context();
     rsx! {
         div { class: "flex flex-col w-full h-full",
             div { class: "text-[32px] font-bold text-black pb-[30px]", "{props.i18n.reset_password}" }

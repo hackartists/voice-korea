@@ -11,7 +11,6 @@ use crate::{
 
 #[derive(Props, Clone, PartialEq)]
 pub struct QuestionInputProps {
-    ctrl: Controller,
     lang: Language,
     temporary_save: String,
     input_question: String,
@@ -24,19 +23,17 @@ pub struct QuestionInputProps {
 
 #[derive(Props, Clone, PartialEq)]
 pub struct ObjectiveQuestionProps {
-    ctrl: Controller,
     objective_questions: Vec<ObjectiveQuestionOption>,
     add_option: String,
 }
 
 #[derive(Props, Clone, PartialEq)]
 pub struct SubjectiveQuestionProps {
-    ctrl: Controller,
     enter_subject_enter_text: String,
 }
 
 pub fn QuestionInput(props: QuestionInputProps) -> Element {
-    let mut ctrl = props.ctrl;
+    let mut ctrl: Controller = use_context();
     let survey = ctrl.get_survey();
     let questions = ctrl.get_question_types();
     let selected_question = ctrl.get_selected_question();
@@ -96,16 +93,9 @@ pub fn QuestionInput(props: QuestionInputProps) -> Element {
                     }
                 }
                 if selected_question == 0 {
-                    ObjectiveQuestion {
-                        ctrl,
-                        objective_questions,
-                        add_option: props.add_option,
-                    }
+                    ObjectiveQuestion { objective_questions, add_option: props.add_option }
                 } else {
-                    SubjectiveQuestion {
-                        ctrl,
-                        enter_subject_enter_text: props.enter_subject_enter_text,
-                    }
+                    SubjectiveQuestion { enter_subject_enter_text: props.enter_subject_enter_text }
                 }
                 div { class: "flex flex-row w-full justify-between items-center mt-[30px]",
                     Button {
@@ -165,7 +155,7 @@ pub fn SubjectiveQuestion(props: SubjectiveQuestionProps) -> Element {
 
 #[component]
 pub fn ObjectiveQuestion(props: ObjectiveQuestionProps) -> Element {
-    let mut ctrl = props.ctrl;
+    let mut ctrl: Controller = use_context();
     rsx! {
         div { class: "flex flex-col w-full justify-center items-start mt-[30px]",
             div { class: "flex flex-col w-full",

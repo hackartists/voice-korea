@@ -114,26 +114,24 @@ impl AuthControllerV1 {
         .await?;
         let email = body.email.clone();
 
-        let result: Result<
-            (Option<Vec<User>>, Option<String>),
-            easy_dynamodb::error::DynamoException,
-        > = cli
-            .find(
-                "gsi1-index",
-                None,
-                Some(1),
-                vec![("gsi1", User::gsi1(body.email))],
-            )
-            .await;
+        let users = CommonQueryResponse::<models::User>::query(
+            &log,
+            "gsi1-index",
+            None,
+            Some(1),
+            vec![("gsi1", models::User::gsi1(body.email.clone()))],
+        )
+        .await?;
 
-        let (docs, _) = match result {
-            Ok((Some(docs), Some(_))) => (docs, ()),
-            _ => return Err(ApiError::InvalidCredentials(email)),
-        };
-        let user = match docs.first() {
+        if users.items.len() == 0 {
+            return Err(ApiError::NotFound);
+        }
+
+        let user = match users.items.first() {
             Some(user) => user,
             None => return Err(ApiError::InvalidCredentials(email)),
         };
+
         let hashed_password = get_hash_string(body.password.as_bytes());
         let _ = cli
             .update(&user.id, vec![("password", hashed_password)])

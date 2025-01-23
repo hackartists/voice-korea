@@ -54,6 +54,11 @@ impl MemberControllerV1 {
 
         match body {
             MemberActionRequest::Create(req) => {
+                let user_id = match find_user_id_by_email(req.email.clone()).await? {
+                    Some(user_id) => user_id,
+                    None => return Err(ApiError::NotFound),
+                };
+
                 let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
                     &log,
                     "gsi1-index",
@@ -74,11 +79,12 @@ impl MemberControllerV1 {
                                 name: None,
                                 group: None,
                                 role: None,
-                                user_id: req.user_id.clone(),
-                                org_id: organization_id.clone(),
                                 email: req.email.clone(),
+                                projects: None,
                             },
                             item.id.clone(),
+                            user_id.clone(),
+                            organization_id.clone(),
                         )
                             .into();
 
@@ -88,7 +94,7 @@ impl MemberControllerV1 {
                     }
                 } else {
                     let id = uuid::Uuid::new_v4().to_string();
-                    let mem: OrganizationMember = (req.clone(), id).into();
+                    let mem: OrganizationMember = (req.clone(), id, user_id.clone(), organization_id.clone()).into();
 
                     mem
                 };
@@ -194,14 +200,15 @@ impl MemberControllerV1 {
 
         let member: OrganizationMember = (
             CreateMemberRequest {
-                user_id: user_id.clone(),
-                org_id: organization_id.clone(),
                 name: Some(body.name.clone()),
                 group: body.group.clone(),
                 role: body.role,
                 email: body.email.clone(),
+                projects: None,
             },
             id.clone(),
+            user_id.clone(),
+            organization_id.clone(),
         )
             .into();
 
@@ -725,4 +732,31 @@ impl MemberControllerV1 {
             }
         }
     }
+}
+
+pub async fn find_user_id_by_email(
+    email: String,
+) -> Result<Option<String>, ApiError> {
+    let log = root();
+
+    let res: CommonQueryResponse<User> = CommonQueryResponse::query(
+        &log,
+        "gsi1-index",
+        None,
+        Some(1),
+        vec![("gsi1", User::gsi1(email.clone()))],
+    )
+    .await?;
+
+    if res.items.len() == 0 {
+        return Ok(None);
+    }
+
+    let user = res.items.first().unwrap();
+
+    if user.deleted_at.is_some() {
+        return Ok(None);
+    }
+
+    Ok(Some(user.id.clone()))
 }

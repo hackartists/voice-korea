@@ -117,7 +117,6 @@ pub fn CreatePage(props: CreatePageProps) -> Element {
             // }
             if ctrl.get_step() == 0 {
                 StepThreePage {
-                    ctrl,
                     lang: props.lang,
                     join_the_membership: translates.join_the_membership,
                     email_address: translates.email_address,
@@ -155,7 +154,6 @@ pub fn CreatePage(props: CreatePageProps) -> Element {
                 }
             } else {
                 StepFourPage {
-                    ctrl,
                     lang: props.lang,
                     complete_join_membership_info: translates.complete_join_membership_info,
                     email_address: translates.email_address,

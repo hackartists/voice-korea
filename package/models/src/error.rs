@@ -51,9 +51,9 @@ pub enum ApiError {
     #[error("Email already used")]
     DuplicateUser,
 
-    // #[error("Reqwest Client Create Failed")]
+    // #[error("Request Client Create Failed")]
     // ReqwestClientFailed(String),
-    #[error("Reqwest Failed")]
+    #[error("Request Failed")]
     ReqwestFailed(String),
 
     #[error("JSON serialize Failed")]

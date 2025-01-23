@@ -2,17 +2,19 @@
 #[allow(unused_imports)]
 use std::fmt::format;
 
-use crate::api::v2::survey::{get_survey, upsert_survey_draft};
 use dioxus::prelude::*;
 use models::prelude::{SurveyDraftStatus, UpsertSurveyDraftRequest};
 
+use crate::service::prev_survey_api::PrevSurveyApi;
+
 use super::{Language, Route};
 
-#[derive(Clone, PartialEq, Copy)]
+#[derive(Clone, Copy)]
 pub struct Controller {
     survey_response: Resource<models::prelude::Survey>,
     id: Signal<String>,
-    attributes: Signal<Vec<AttributeInfo>>,
+
+    prev_survey_api: PrevSurveyApi,
 }
 
 #[derive(Clone, PartialEq)]
@@ -38,11 +40,14 @@ impl Controller {
             }
         }
 
+        let prev_survey_api: PrevSurveyApi = use_context();
+
         let id_copy = id.clone();
         let survey_response: Resource<models::prelude::Survey> = use_resource(move || {
             let id_value = id.clone();
+            let prev_survey_api = prev_survey_api.clone();
             async move {
-                let survey = get_survey(id_value).await;
+                let survey = prev_survey_api.get_survey(id_value).await;
                 survey.unwrap_or_default()
             }
         });
@@ -50,7 +55,8 @@ impl Controller {
         let ctrl = Self {
             survey_response,
             id: use_signal(|| id_copy.clone()),
-            attributes: use_signal(|| vec![]),
+
+            prev_survey_api,
         };
 
         let draft_status = ctrl.get_survey().draft_status;
@@ -61,6 +67,8 @@ impl Controller {
         {
             navigator.push(Route::DashboardPage { lang });
         };
+
+        use_context_provider(|| ctrl);
 
         ctrl
     }
@@ -185,29 +193,33 @@ impl Controller {
     }
 
     pub async fn save_button_clicked(&mut self) {
-        let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: Some(self.get_survey_id()),
-            status: Some(SurveyDraftStatus::Complete),
-            title: None,
-            quotas: None,
-            questions: None,
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: Some(self.get_survey_id()),
+                status: Some(SurveyDraftStatus::Complete),
+                title: None,
+                quotas: None,
+                questions: None,
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
     }
 
     pub async fn back_button_clicked(&mut self) {
-        let _ = upsert_survey_draft(UpsertSurveyDraftRequest {
-            id: Some(self.get_survey_id()),
-            status: Some(SurveyDraftStatus::Question),
-            title: None,
-            quotas: None,
-            questions: None,
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(UpsertSurveyDraftRequest {
+                id: Some(self.get_survey_id()),
+                status: Some(SurveyDraftStatus::Question),
+                title: None,
+                quotas: None,
+                questions: None,
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
     }
 
     pub fn get_survey_id(&self) -> String {

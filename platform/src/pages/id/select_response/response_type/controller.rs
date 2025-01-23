@@ -1,9 +1,10 @@
 #![allow(non_snake_case)]
-use crate::api::v2::survey::{get_survey, upsert_survey_draft};
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use models::prelude::SurveyDraftStatus;
+
+use crate::service::prev_survey_api::PrevSurveyApi;
 
 use super::{Language, Route};
 
@@ -37,7 +38,7 @@ pub struct SelectAttribute {
     pub is_selected: bool, //선택 되었는지 유무
 }
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     response_count: Signal<String>,
     pub bar_index: Signal<usize>,
@@ -59,6 +60,8 @@ pub struct Controller {
     clicked_attribute_index: Signal<Option<usize>>,
     attribute_modal_label: Signal<String>,
     total_attribute: Signal<Vec<AttributeModel>>,
+
+    prev_survey_api: PrevSurveyApi,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -88,10 +91,13 @@ impl Controller {
             }
         }
 
+        let prev_survey_api: PrevSurveyApi = use_context();
+
         let survey_response: Resource<models::prelude::Survey> = use_resource(move || {
             let id_value = id.clone();
+            let prev_survey_api = prev_survey_api.clone();
             async move {
-                let survey = get_survey(id_value).await;
+                let survey = prev_survey_api.get_survey(id_value).await;
                 survey.unwrap_or_default()
             }
         });
@@ -258,6 +264,8 @@ impl Controller {
             clicked_attribute_index: use_signal(|| None),
             total_attribute: use_signal(|| vec![]),
             attribute_modal_label: use_signal(|| "".to_string()),
+
+            prev_survey_api,
         };
 
         let draft_status = ctrl.get_survey().draft_status;
@@ -622,16 +630,18 @@ impl Controller {
             quota: response,
         });
 
-        let _ = upsert_survey_draft(models::prelude::UpsertSurveyDraftRequest {
-            id: Some(survey_id.clone()),
-            status: Some(models::prelude::SurveyDraftStatus::Quotas),
-            title: None,
-            quotas: Some(quotas),
-            questions: None,
-            started_at: None,
-            ended_at: None,
-        })
-        .await;
+        let _ = self
+            .prev_survey_api
+            .upsert_survey_draft(models::prelude::UpsertSurveyDraftRequest {
+                id: Some(survey_id.clone()),
+                status: Some(models::prelude::SurveyDraftStatus::Quotas),
+                title: None,
+                quotas: Some(quotas),
+                questions: None,
+                started_at: None,
+                ended_at: None,
+            })
+            .await;
 
         navigator.push(Route::SelectResponsePage { lang, survey_id });
     }
