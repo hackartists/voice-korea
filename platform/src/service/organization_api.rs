@@ -3,11 +3,25 @@ pub type Result<T> = std::result::Result<T, ServerFnError>;
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
+use dioxus_logger::tracing;
 use models::prelude::OrganizationMemberResponse;
 
-use crate::{api::common::CommonQueryResponse, utils::api::ReqwestClient};
+use crate::api::common::CommonQueryResponse;
 
 use super::login_service::LoginService;
+
+#[derive(Debug, serde::Deserialize, Clone)]
+struct MyError {
+    message: String,
+}
+
+impl From<reqwest::Error> for MyError {
+    fn from(err: reqwest::Error) -> Self {
+        MyError {
+            message: err.to_string(),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct OrganizationApi {
@@ -48,7 +62,23 @@ impl OrganizationApi {
             params.insert("bookmark", bookmark);
         }
 
-        rest_api::get_with_query("/v1/organizations", &params).await?
+        let res = rest_api::get_with_query::<
+            CommonQueryResponse<OrganizationMemberResponse>,
+            MyError,
+            _,
+        >("/v1/organizations", &params)
+        .await;
+
+        // match res.clone() {
+        //     Ok(v) => {
+        //         tracing::debug!("this line come111 {:?}", v.items);
+        //     }
+        //     Err(e) => {
+        //         tracing::error!("this line come222: {:?}", e.message);
+        //     }
+        // };
+
+        res.map_err(|e| e.message)
     }
 
     pub fn set_organization(&mut self, organizations: Vec<OrganizationMemberResponse>) {

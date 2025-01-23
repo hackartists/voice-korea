@@ -3246,6 +3246,7 @@ dependencies = [
  "dioxus-logger 0.5.1",
  "dioxus-translate",
  "easy-dynamodb",
+ "getrandom",
  "models",
  "rand",
  "regex",
