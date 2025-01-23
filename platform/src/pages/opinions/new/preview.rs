@@ -11,7 +11,6 @@ use crate::{
             SendAlertTranslate,
         },
     },
-    service::popup_service::PopupService,
 };
 
 use super::controller::CurrentStep;
@@ -25,25 +24,6 @@ pub struct PreviewProps {
 pub fn Preview(props: PreviewProps) -> Element {
     let translate: PreviewTranslate = translate(&props.lang);
     let mut ctrl: Controller = use_context();
-    let mut open_modal = use_signal(|| false);
-
-    let mut popup: PopupService = use_context();
-
-    if open_modal() {
-        popup
-            .open(rsx! {
-                SendAlertModal {
-                    lang: props.lang,
-                    onclose: move |_e: MouseEvent| {
-                        open_modal.set(false);
-                    },
-                }
-            })
-            .with_id("send_alert")
-            .with_title(&translate.send_alerm);
-    } else {
-        popup.close();
-    }
 
     rsx! {
         //FIXME: fix to real data
@@ -63,8 +43,10 @@ pub fn Preview(props: PreviewProps) -> Element {
                 }
                 div {
                     class: "cursor-pointer flex flex-row w-[130px] h-[55px] rounded-[4px] justify-center items-center bg-[#2a60d3] font-semibold text-[16px] text-white",
-                    onclick: move |_| {
-                        open_modal.set(true);
+                    onclick: {
+                        move |_| {
+                            ctrl.open_send_alerm_modal(props.lang);
+                        }
                     },
                     "{translate.start_public_opinion}"
                 }

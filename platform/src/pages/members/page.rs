@@ -423,7 +423,7 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                         }
                     }
                 }
-                //페이지네이션
+                //pagenation
                 div { class: "flex flex-row w-full justify-center items-center",
                     div { class: "mr-[20px] w-[24px] h-[24px]",
                         ArrowLeft { width: "24", height: "24" }

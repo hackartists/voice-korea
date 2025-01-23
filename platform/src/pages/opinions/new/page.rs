@@ -1,18 +1,18 @@
 #![allow(non_snake_case)]
+use crate::pages::opinions::new::composition_commitee::CompositionCommitee;
+use crate::pages::opinions::new::composition_opinion::CompositionOpinion;
+use crate::pages::opinions::new::composition_panel::CompositionPanel;
+use crate::pages::opinions::new::input_opinion::InputOpinion;
+use crate::pages::opinions::new::preview::Preview;
+use crate::pages::opinions::new::setting_discussion::SettingDiscussion;
+
 use crate::{
     components::{icons::ArrowLeft, stepper::Stepper},
-    pages::opinions::new::{
-        composition_commitee::CompositionCommitee,
-        composition_opinion::CompositionOpinion,
-        composition_panel::CompositionPanel,
-        controller::{Controller, CurrentStep},
-        input_opinion::InputOpinion,
-        setting_discussion::SettingDiscussion,
-    },
+    pages::opinions::new::controller::{Controller, CurrentStep},
     routes::Route,
 };
 
-use super::{i18n::OpinionNewTranslate, preview::Preview};
+use super::i18n::OpinionNewTranslate;
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
 
@@ -24,7 +24,7 @@ pub struct OpinionProps {
 #[component]
 pub fn OpinionCreatePage(props: OpinionProps) -> Element {
     let translates: OpinionNewTranslate = translate(&props.lang.clone());
-    let ctrl = Controller::new(props.lang, translates.clone());
+    let ctrl = Controller::new(props.lang);
 
     let step = ctrl.get_current_step();
     rsx! {
