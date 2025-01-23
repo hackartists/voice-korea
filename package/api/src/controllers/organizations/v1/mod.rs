@@ -32,7 +32,9 @@ impl OrganizationControllerV1 {
             .with_state(ctrl)
             .layer(middleware::from_fn(authorization_middleware))
     }
+}
 
+impl OrganizationControllerV1 {
     pub async fn list_organizations(
         Extension(claims): Extension<Claims>,
         State(ctrl): State<OrganizationControllerV1>,

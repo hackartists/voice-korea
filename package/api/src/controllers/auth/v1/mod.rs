@@ -207,8 +207,5 @@ impl AuthControllerV1 {
         ).await?; //FIXME: add to organization
 
         Ok(())
-    }
-
-    // FIXME: move to organization controller
-    
+    }    
 }
