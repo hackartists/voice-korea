@@ -37,7 +37,8 @@ pub struct Controller {
 }
 
 impl Controller {
-    pub fn init(_lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
+    pub fn init(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
+        let translates: MemberTranslate = translate(&lang);
         let api: MemberApi = use_context();
         let member_resource: Resource<Result<ListMemberResponse, ServerFnError>> =
             use_resource(move || {
@@ -51,23 +52,23 @@ impl Controller {
                 vec![
                     RoleField {
                         db_name: "super_admin".to_string(),
-                        field: "관리자".to_string(),
+                        field: translates.manager.to_string(),
                     },
                     RoleField {
                         db_name: "public_admin".to_string(),
-                        field: "공론 관리자".to_string(),
+                        field: translates.public_opinion_manager.to_string(),
                     },
                     RoleField {
                         db_name: "analyst".to_string(),
-                        field: "분석가".to_string(),
+                        field: translates.analyst.to_string(),
                     },
                     RoleField {
                         db_name: "mediator".to_string(),
-                        field: "중계자".to_string(),
+                        field: translates.repeater.to_string(),
                     },
                     RoleField {
                         db_name: "speaker".to_string(),
-                        field: "강연자".to_string(),
+                        field: translates.lecturer.to_string(),
                     },
                 ]
             }),

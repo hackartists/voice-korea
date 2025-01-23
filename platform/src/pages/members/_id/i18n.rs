@@ -144,6 +144,27 @@ translate! {
         ko: "삭제된 팀원은 복원할 수 없습니다. 삭제 전에 다시 한번 확인해주세요.",
         en: "Deleted team members cannot be restored. Please check again before deleting.",
     },
+
+    manager: {
+        ko: "관리자",
+        en: "Manager"
+    }
+    opinion_manager: {
+        ko: "공론 관리자",
+        en: "Public Opinion Manager"
+    }
+    analyst: {
+        ko: "분석가",
+        en: "Analyst"
+    }
+    mediator: {
+        ko: "중게자",
+        en: "Mediator"
+    }
+    speaker: {
+        ko: "강연자",
+        en: "Speaker"
+    }
 }
 
 translate! {
