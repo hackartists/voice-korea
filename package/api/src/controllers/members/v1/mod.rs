@@ -157,30 +157,10 @@ impl MemberControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
         slog::debug!(log, "invite_member: {:?} {:?}", organization_id, body);
 
-        let res: CommonQueryResponse<User> = CommonQueryResponse::query(
-            &log,
-            "gsi1-index",
-            None,
-            Some(1),
-            vec![("gsi1", User::gsi1(body.email.clone()))],
-        )
-        .await?;
-
-        if res.items.len() == 0 {
-            return Err(ApiError::NotFound);
-        }
-
-        let user = match res.items.first() {
-            Some(user) => {
-                if user.deleted_at.is_some() {
-                    return Err(ApiError::NotFound);
-                }
-                user
-            }
+        let user_id = match find_user_id_by_email(body.email.clone()).await? {
+            Some(user_id) => user_id,
             None => return Err(ApiError::NotFound),
         };
-
-        let user_id = user.id.clone();
 
         // check org member exists
         let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
