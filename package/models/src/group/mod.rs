@@ -204,7 +204,6 @@ impl Into<Group> for (CreateGroupRequest, String, String, String) {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Eq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TeamMemberRequest {
-    pub member_id: String,
     pub email: String,
     pub name: Option<String>,
     pub group: Option<GroupInfo>,

@@ -548,8 +548,23 @@ impl GroupControllerV1 {
 
         let cli = easy_dynamodb::get_client(&log);
 
+        let member: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
+            &log,
+            "gsi1-index",
+            None,
+            Some(1),
+            vec![("gsi1", OrganizationMember::get_gsi1(&req.member_id))],
+        )
+        .await?;
+
+        if member.items.len() == 0 {
+            return Err(ApiError::NotFound);
+        }
+
+        let member_id = member.items.first().unwrap();
+
         let res = cli
-            .get::<OrganizationMember>(&req.member_id)
+            .get::<OrganizationMember>(&member_id)
             .await
             .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
 
