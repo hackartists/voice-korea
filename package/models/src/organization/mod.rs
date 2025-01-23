@@ -96,25 +96,24 @@ impl OrganizationMember {
     }
 }
 
-impl Into<OrganizationMember> for (CreateMemberRequest, String) {
+impl Into<OrganizationMember> for (CreateMemberRequest, String, String, String) {
     fn into(self) -> OrganizationMember {
-        let (req, id) = self;
+        let (req, id, user_id, organization_id) = self;
         let now = chrono::Utc::now().timestamp_millis();
 
         OrganizationMember {
             id,
             r#type: OrganizationMember::get_type(),
-            gsi1: OrganizationMember::get_gsi1(&req.user_id),
-            gsi2: OrganizationMember::get_gsi2(&req.user_id, &req.org_id),
-            user_id: req.user_id,
-            organization_id: req.org_id,
+            gsi1: OrganizationMember::get_gsi1(&user_id),
+            gsi2: OrganizationMember::get_gsi2(&user_id, &organization_id),
+            user_id,
+            organization_id,
             created_at: now,
             updated_at: now,
             deleted_at: None,
             name: req.name,
             role: req.role,
             email: req.email,
-            // projects: req.projects,
         }
     }
 }
