@@ -46,10 +46,6 @@ jobs:
       - name: Install dependencies
         run: |
           npm install -g aws-cdk tailwindcss
-      
-      - name: Install dependencies and tailwindcss locally
-        run: |
-          npm install --save-dev tailwindcss
 
       - name: Deploy APIs
         env:
@@ -58,6 +54,7 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           API_URL: https://voice-korea-api.dev.biyard.co
         run: |
+          env
           ENV=dev make deploy-web-if-needed
 
   api-deployment:
