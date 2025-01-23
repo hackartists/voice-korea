@@ -51,7 +51,7 @@ clean:
 	rm -rf dist public/tailwind.css .aws-sam
 
 public/tailwind.css:
-	NODE_ENV=production tailwindcss -i ./input.css -o ./public/tailwind.css --minify
+	NODE_ENV=production npx tailwindcss -i ./input.css -o ./public/tailwind.css --minify
 
 build: public/tailwind.css
 	$(BUILD_ENV) dx build -p platform --release
