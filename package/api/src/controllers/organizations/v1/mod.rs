@@ -100,6 +100,8 @@ impl OrganizationControllerV1 {
             return Err(ApiError::ValidationError("Email is required".to_string()));
         }
 
+        // TODO: Check for existing organization with same email (unique constraint in postgres)
+
         let id: String = uuid::Uuid::new_v4().to_string();
 
         let organization: Organization =

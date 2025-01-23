@@ -779,10 +779,16 @@ impl GroupControllerV1 {
         claims: Claims,
     ) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "create_group"));
+
+        if req.name.trim().is_empty() {
+            return Err(ApiError::ValidationError("Group name is required".to_string()));
+        }
+
         slog::debug!(log, "create_group {:?}", req.clone());
         let cli = easy_dynamodb::get_client(&log);
         let id = uuid::Uuid::new_v4().to_string();
         let group: Group = (req.clone(), id.clone(), claims.id, organization_id).into();
+
 
         match cli.create(group.clone()).await {
             Ok(()) => {
