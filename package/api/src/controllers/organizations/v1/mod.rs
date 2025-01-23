@@ -92,8 +92,13 @@ impl OrganizationControllerV1 {
         user_id: String, 
         body: SignUpParams
     ) -> Result<String, ApiError> {
-        let log = root();
+        let log = root().new(o!("api" => "create_organization"));
+        slog::debug!(log, "Creating organization for user: {}", user_id);
         let cli = easy_dynamodb::get_client(&log);
+
+        if body.email.is_empty() {
+            return Err(ApiError::ValidationError("Email is required".to_string()));
+        }
 
         let id: String = uuid::Uuid::new_v4().to_string();
 

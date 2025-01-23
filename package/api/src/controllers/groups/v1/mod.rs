@@ -553,7 +553,7 @@ impl GroupControllerV1 {
             "gsi1-index",
             None,
             Some(1),
-            vec![("gsi1", OrganizationMember::get_gsi1(&req.member_id))],
+            vec![("gsi1", OrganizationMember::get_gsi1(&req.email))],
         )
         .await?;
 
@@ -561,7 +561,7 @@ impl GroupControllerV1 {
             return Err(ApiError::NotFound);
         }
 
-        let member_id = member.items.first().unwrap();
+        let member_id = member.items.first().unwrap().id.clone();
 
         let res = cli
             .get::<OrganizationMember>(&member_id)
@@ -592,7 +592,7 @@ impl GroupControllerV1 {
         cli.create(GroupMember::new(
             uuid::Uuid::new_v4().to_string(),
             group_id.to_string(),
-            req.member_id.clone(),
+            member_id.clone(),
         ))
         .await
         .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
