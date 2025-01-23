@@ -20,6 +20,7 @@ use crate::pages::opinions::page::OpinionPage;
 use crate::pages::panels::page::PanelPage;
 use crate::pages::reset_password::ResetPasswordPage;
 use crate::pages::resources::page::ResourcePage;
+use crate::pages::surveys::new::page::SurveyCreatePage;
 use crate::pages::surveys::page::SurveyPage;
 use crate::prelude::*;
 use dioxus_translate::Language;
@@ -63,6 +64,8 @@ pub enum Route {
             ResourcePage { lang: Language },
             #[route("/surveys")]
             SurveyPage { lang: Language },
+            #[route("/surveys/new")]
+            SurveyCreatePage { lang: Language },
         #[end_layout]
 
         #[route("/")]
