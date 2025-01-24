@@ -252,7 +252,6 @@ impl GroupControllerV1 {
             None => return Err(ApiError::NotFound),
         };
 
-  
         if !group.r#type.contains("deleted") {
             let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
                 &log,
@@ -264,6 +263,10 @@ impl GroupControllerV1 {
             .await?;
             let mut members: Vec<GroupMemberResponse> = vec![];
             for item in res.items {
+                if item.deleted_at.is_some() {
+                    continue;
+                }
+
                 let member = match cli
                     .get::<OrganizationMember>(&item.org_member_id)
                     .await
@@ -272,6 +275,10 @@ impl GroupControllerV1 {
                     Some(m) => m,
                     None => continue,
                 };
+
+                if member.deleted_at.is_some() {
+                    continue;
+                }
     
                 let user = match cli
                     .get::<User>(&member.user_id)
@@ -281,6 +288,10 @@ impl GroupControllerV1 {
                     Some(u) => u,
                     None => continue,
                 };
+
+                if item.deleted_at.is_some() {
+                    continue;
+                }
 
                 members.push(GroupMemberResponse {
                     id: item.id,

@@ -17,8 +17,8 @@ pub struct GroupProject {
 pub struct GroupMember {
     pub id: String,
     pub r#type: String,
-    pub gsi1: String,
-    pub gsi2: String,
+    pub gsi1: String, // group#member#{group_id}
+    pub gsi2: String, // group#member#{org_member_id}
     pub created_at: i64,
     pub updated_at: i64,
     pub deleted_at: Option<i64>,
