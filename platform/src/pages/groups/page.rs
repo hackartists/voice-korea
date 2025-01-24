@@ -91,14 +91,14 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                         Search { width: "18", height: "18", color: "#7c8292" }
                     }
                     div { class: "flex flex-row gap-[10px]",
-                        div { class: "flex flex-row w-[140px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px]",
+                        button {
+                            class: "flex flex-row w-[140px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px]",
+                            onclick: move |_| async move {
+                                ctrl.open_create_group_modal(props.lang, clicked_group_id, clicked_group_name)
+                                    .await;
+                            },
                             Folder { width: "24", height: "24" }
-                            div {
-                                class: "text-white font-bold text-[16px]",
-                                onclick: move |_| async move {
-                                    ctrl.open_create_group_modal(props.lang, clicked_group_id, clicked_group_name)
-                                        .await;
-                                },
+                            div { class: "text-white font-bold text-[16px]",
                                 "{translates.create_group}"
                             }
                         }

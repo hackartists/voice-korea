@@ -6,6 +6,7 @@ use dioxus_logger::tracing;
 use dioxus_translate::translate;
 use dioxus_translate::Language;
 use models::prelude::GroupInfo;
+use models::prelude::GroupResponse;
 use models::prelude::InviteMemberRequest;
 use models::prelude::Role;
 
@@ -182,8 +183,7 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                             //TODO: update member group
                                             onchange: move |e: Event<FormData>| {
                                                 spawn(async move {
-                                                    tracing::debug!("select_group: {}", e.value());
-                                                    ctrl.update_group(index, e.value()).await;
+                                                    ctrl.update_group(index, e.value().parse::<usize>().unwrap()).await;
                                                 });
                                             },
                                             option {
@@ -192,11 +192,11 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                                 selected: members[index].clone().group == "",
                                                 {translates.no_group}
                                             }
-                                            for group in groups.clone() {
+                                            for (i , group) in groups.clone().iter().enumerate() {
                                                 option {
-                                                    value: group.clone(),
-                                                    selected: group == members[index].group,
-                                                    "{group}"
+                                                    value: i.to_string(),
+                                                    selected: group.name == members[index].group,
+                                                    "{group.name}"
                                                 }
                                             }
                                         }
@@ -384,7 +384,7 @@ pub fn RemoveMemberModal(
 #[component]
 pub fn AddMemberModal(
     lang: Language,
-    groups: Vec<String>,
+    groups: Vec<GroupResponse>,
     roles: Vec<RoleField>,
     onclose: EventHandler<MouseEvent>,
     invite_member: EventHandler<InviteMemberRequest>,
@@ -471,9 +471,9 @@ pub fn AddMemberModal(
                             option { value: "", selected: select_group() == "", {i18n.select_group} }
                             for group in groups.clone() {
                                 option {
-                                    value: group.clone(),
-                                    selected: group == select_group(),
-                                    "{group}"
+                                    value: group.clone().name,
+                                    selected: group.name == select_group(),
+                                    "{group.name}"
                                 }
                             }
                         }

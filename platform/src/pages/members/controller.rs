@@ -1,11 +1,15 @@
 use dioxus::prelude::*;
+use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{GroupInfo, InviteMemberRequest, ListMemberResponse, UpdateMemberRequest};
+use models::prelude::{
+    GroupInfo, GroupResponse, InviteMemberRequest, ListMemberResponse, UpdateMemberRequest,
+};
 
 use crate::{
+    api::common::CommonQueryResponse,
     models::role_field::RoleField,
     pages::members::page::AddMemberModal,
-    service::{member_api::MemberApi, popup_service::PopupService},
+    service::{group_api::GroupApi, member_api::MemberApi, popup_service::PopupService},
 };
 
 use super::{i18n::MemberTranslate, page::RemoveMemberModal};
@@ -29,11 +33,12 @@ pub struct Member {
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
     pub members: Signal<MemberSummary>,
-    pub groups: Signal<Vec<String>>,
+    pub groups: Signal<Vec<GroupResponse>>,
     pub roles: Signal<Vec<RoleField>>,
     pub member_resource: Resource<Result<ListMemberResponse, ServerFnError>>,
     popup_service: Signal<PopupService>,
     member_api: MemberApi,
+    pub group_resource: Resource<Result<CommonQueryResponse<GroupResponse>, ServerFnError>>,
 }
 
 impl Controller {
@@ -45,6 +50,14 @@ impl Controller {
                 let api = api.clone();
                 async move { api.list_members(Some(100), None).await }
             });
+
+        let group_api: GroupApi = use_context();
+        let group_resource: Resource<Result<CommonQueryResponse<GroupResponse>, ServerFnError>> =
+            use_resource(move || {
+                let api = group_api.clone();
+                async move { api.list_groups(Some(100), None).await }
+            });
+
         let mut ctrl = Self {
             members: use_signal(|| MemberSummary::default()),
             groups: use_signal(|| vec![]),
@@ -75,6 +88,19 @@ impl Controller {
             member_resource,
             member_api: api,
             popup_service: use_signal(|| popup_service),
+            group_resource,
+        };
+
+        let groups = if let Some(v) = group_resource.value()() {
+            match v {
+                Ok(v) => v.items,
+                Err(e) => {
+                    tracing::error!("list groups failed: {:?}", e);
+                    vec![]
+                }
+            }
+        } else {
+            vec![]
         };
 
         let (members, role_counts) = if let Some(v) = member_resource.value()() {
@@ -111,17 +137,12 @@ impl Controller {
             (vec![], vec![])
         };
 
+        ctrl.groups.set(groups);
+
         ctrl.members.set(MemberSummary {
             role_counts,
             members,
         });
-
-        ctrl.groups.set(vec![
-            "보이스코리아".to_string(),
-            "보이스코리아1".to_string(),
-            "보이스코리아2".to_string(),
-            "보이스코리아3".to_string(),
-        ]);
 
         ctrl
     }
@@ -130,7 +151,7 @@ impl Controller {
         (self.members)()
     }
 
-    pub fn get_groups(&self) -> Vec<String> {
+    pub fn get_groups(&self) -> Vec<GroupResponse> {
         (self.groups)()
     }
 
@@ -144,9 +165,10 @@ impl Controller {
         self.member_resource.restart();
     }
 
-    pub async fn update_group(&mut self, index: usize, group_name: String) {
+    pub async fn update_group(&mut self, index: usize, group_index: usize) {
         let api: MemberApi = use_context();
         let members = self.get_members().members;
+        let group = self.get_groups()[group_index].clone();
         let member = members[index].clone();
         let _ = api
             .update_member(
@@ -154,8 +176,8 @@ impl Controller {
                 UpdateMemberRequest {
                     name: member.profile_name,
                     group: Some(GroupInfo {
-                        id: "group_id".to_string(),
-                        name: group_name.clone(),
+                        id: group.id,
+                        name: group.name,
                     }), //FIXME: fix to real group
                     role: if member.role != "" {
                         Some(member.role)

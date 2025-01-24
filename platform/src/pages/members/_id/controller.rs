@@ -2,11 +2,12 @@ use chrono::{Local, TimeZone};
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{GroupMemberRelationship, UpdateMemberRequest};
+use models::prelude::{Group, GroupMemberRelationship, GroupResponse, UpdateMemberRequest};
 
 use crate::{
+    api::common::CommonQueryResponse,
     models::role_field::RoleField,
-    service::{member_api::MemberApi, popup_service::PopupService},
+    service::{group_api::GroupApi, member_api::MemberApi, popup_service::PopupService},
 };
 
 use super::{
@@ -34,7 +35,7 @@ pub struct MemberDetail {
     pub email: String,
     pub profile_image: Option<String>,
     pub profile_name: Option<String>,
-    pub group: String,
+    pub group: Group,
     pub role: String,
     pub register_date: String,
     pub project_history: Vec<ProjectHistory>,
@@ -54,12 +55,13 @@ pub struct ProjectHistory {
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
     pub member: Signal<MemberDetail>,
-    pub groups: Signal<Vec<String>>,
+    pub groups: Signal<Vec<GroupResponse>>,
     pub roles: Signal<Vec<RoleField>>,
     pub member_resource: Resource<Result<GroupMemberRelationship, ServerFnError>>,
 
     pub member_api: MemberApi,
     pub popup_service: Signal<PopupService>,
+    pub group_resource: Resource<Result<CommonQueryResponse<GroupResponse>, ServerFnError>>,
 }
 
 impl Controller {
@@ -76,6 +78,14 @@ impl Controller {
                 let member_id = member_id.clone();
                 async move { api.get_member(member_id.clone()).await }
             });
+
+        let group_api: GroupApi = use_context();
+        let group_resource: Resource<Result<CommonQueryResponse<GroupResponse>, ServerFnError>> =
+            use_resource(move || {
+                let api = group_api.clone();
+                async move { api.list_groups(Some(100), None).await }
+            });
+
         let mut ctrl = Self {
             member: use_signal(|| MemberDetail::default()),
             groups: use_signal(|| vec![]),
@@ -103,6 +113,7 @@ impl Controller {
                     },
                 ]
             }),
+            group_resource,
             member_resource,
             member_api: api,
             popup_service: use_signal(|| popup_service),
@@ -123,9 +134,9 @@ impl Controller {
                         profile_name: d.member.name,
                         //FIXME: fix to group
                         group: if d.groups.len() == 0 {
-                            "".to_string()
+                            Group::default()
                         } else {
-                            d.groups[0].name.clone()
+                            d.groups[0].clone()
                         },
                         role: if d.member.role.is_none() {
                             "".to_string()
@@ -145,13 +156,19 @@ impl Controller {
             MemberDetail::default()
         };
 
-        ctrl.groups.set(vec![
-            "보이스코리아".to_string(),
-            "보이스코리아1".to_string(),
-            "보이스코리아2".to_string(),
-            "보이스코리아3".to_string(),
-        ]);
+        let groups = if let Some(v) = group_resource.value()() {
+            match v {
+                Ok(v) => v.items,
+                Err(e) => {
+                    tracing::error!("list groups failed: {:?}", e);
+                    vec![]
+                }
+            }
+        } else {
+            vec![]
+        };
 
+        ctrl.groups.set(groups);
         ctrl.member.set(member);
 
         ctrl
@@ -161,7 +178,7 @@ impl Controller {
         (self.member)()
     }
 
-    pub fn get_groups(&self) -> Vec<String> {
+    pub fn get_groups(&self) -> Vec<GroupResponse> {
         (self.groups)()
     }
 

@@ -4,7 +4,7 @@ use super::i18n::GroupDetailTranslate;
 use dioxus::prelude::*;
 use dioxus_translate::translate;
 use dioxus_translate::Language;
-use models::prelude::{GroupMemberResponse, TeamMemberRequest};
+use models::prelude::{GroupInfo, GroupMemberResponse, TeamMemberRequest};
 
 use crate::components::icons::Plus;
 use crate::pages::groups::_id::i18n::{
@@ -127,6 +127,7 @@ pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
 
     let group_name = group.group.clone();
     let group_name_copy = group_name.clone();
+    let group_name_copy2 = group_name.clone();
 
     let translates: GroupDetailTranslate = translate(&props.lang);
 
@@ -206,8 +207,10 @@ pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
                     },
                     onadd: move |_e: MouseEvent| {
                         let group_id = group_id_copy3.clone();
+                        let group_name = group_name_copy2.clone();
                         async move {
-                            ctrl.open_add_member_modal(props.lang, group_id.clone()).await;
+                            ctrl.open_add_member_modal(props.lang, group_id.clone(), group_name.clone())
+                                .await;
                         }
                     },
                     onremove: move |member_id: String| {
@@ -743,6 +746,8 @@ pub fn RemoveGroupModal(
 #[component]
 pub fn AddMemberModal(
     lang: Language,
+    group_id: String,
+    group_name: String,
     roles: Vec<String>,
     onclose: EventHandler<MouseEvent>,
     onadd: EventHandler<TeamMemberRequest>,
@@ -849,15 +854,21 @@ pub fn AddMemberModal(
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
                 div {
                     class: "flex flex-row w-[120px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px] cursor-pointer",
-                    //FIXME: fix to member id, group field hardcoding
-                    onclick: move |_| {
-                        onadd
-                            .call(TeamMemberRequest {
-                                email: email(),
-                                name: if name() != "" { Some(name()) } else { None },
-                                role: if select_role() != "" { Some(select_role()) } else { None },
-                                group: None,
-                            });
+                    onclick: {
+                        let group_id = group_id.clone();
+                        let group_name = group_name.clone();
+                        move |_| {
+                            onadd
+                                .call(TeamMemberRequest {
+                                    email: email(),
+                                    name: if name() != "" { Some(name()) } else { None },
+                                    role: if select_role() != "" { Some(select_role()) } else { None },
+                                    group: Some(GroupInfo {
+                                        id: group_id.clone(),
+                                        name: group_name.clone(),
+                                    }),
+                                });
+                        }
                     },
                     AddUser { width: "24", height: "24" }
                     div { class: "text-white font-bold text-[16px]", {i18n.invite} }

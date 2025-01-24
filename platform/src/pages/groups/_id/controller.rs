@@ -269,18 +269,25 @@ impl Controller {
             .with_title(translates.remove_team_member);
     }
 
-    pub async fn open_add_member_modal(&self, lang: Language, group_id: String) {
+    pub async fn open_add_member_modal(
+        &self,
+        lang: Language,
+        group_id: String,
+        group_name: String,
+    ) {
         let mut popup_service = (self.popup_service)().clone();
         let translates: GroupDetailTranslate = translate(&lang);
-        let _api: GroupApi = self.group_api;
+        let api: GroupApi = self.group_api;
 
-        let _group_resource = self.group_resource;
+        let mut group_resource = self.group_resource;
         let roles = self.get_roles();
 
         popup_service
             .open(rsx! {
                 AddMemberModal {
                     lang,
+                    group_id: group_id.clone(),
+                    group_name,
                     onclose: move |_e: MouseEvent| {
                         popup_service.close();
                     },
@@ -288,7 +295,15 @@ impl Controller {
                         let group_id = group_id.clone();
                         let req = req.clone();
                         async move {
-                            tracing::debug!("on onadd clicked: {} {:?}", group_id, req);
+                            match api.add_team_member(group_id, req).await {
+                                Ok(_) => {
+                                    group_resource.restart();
+                                    popup_service.close();
+                                }
+                                Err(e) => {
+                                    tracing::error!("failed to update group name: {e}");
+                                }
+                            };
                             popup_service.close();
                         }
                     },
