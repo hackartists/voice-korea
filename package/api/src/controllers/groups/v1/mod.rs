@@ -324,63 +324,7 @@ impl GroupControllerV1 {
     }
 }
 
-// TODO: refactoring to group member model
 impl GroupControllerV1 {
-    pub async fn _remove_group_member(
-        &self,
-        ctrl: GroupControllerV1,
-        member_id: String,
-    ) -> Result<(), ApiError> {
-        let log = ctrl.log.new(o!("api" => "update_member"));
-        slog::debug!(log, "update_group_member");
-        let cli = easy_dynamodb::get_client(&log);
-
-        // check member in group
-        let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
-            &log,
-            "gsi2-index",
-            None,
-            Some(1),
-            vec![("gsi2", GroupMember::get_gsi2(&member_id))],
-        )
-        .await?;
-
-        if res.items.len() == 0 {
-            return Ok(());
-        }
-
-        let group_member = res.items.first().unwrap();
-        let now = chrono::Utc::now().timestamp_millis();
-
-        let res = cli
-            .update(
-                &group_member.id,
-                vec![
-                    ("deleted_at", UpdateField::I64(now)),
-                    ("type", UpdateField::String(GroupMember::get_deleted_type())),
-                    (
-                        "gsi1",
-                        UpdateField::String(GroupMember::get_gsi1_deleted(&group_member.group_id)),
-                    ),
-                    (
-                        "gsi2",
-                        UpdateField::String(GroupMember::get_gsi2_deleted(
-                            &group_member.org_member_id,
-                        )),
-                    ),
-                ],
-            )
-            .await;
-
-        match res {
-            Ok(()) => Ok(()),
-            Err(e) => {
-                slog::error!(log, "Remove Member Failed {e:?}");
-                Err(ApiError::DynamoUpdateException(e.to_string()))
-            }
-        }
-    }
-
     pub async fn upsert_group_member(
         &self,
         ctrl: GroupControllerV1,
@@ -389,7 +333,7 @@ impl GroupControllerV1 {
         member_id: String,
     ) -> Result<(), ApiError> {
         let log = ctrl.log.new(o!("api" => "update_member"));
-        slog::debug!(log, "update_group_member");
+        slog::debug!(log, "upsert_group_member");
         let cli = easy_dynamodb::get_client(&log);
 
         //check member
@@ -526,9 +470,9 @@ impl GroupControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
 
         // check if member is already in the group
-        let member = match find_member_by_email(req.email.clone(), org_id.to_string()).await {
-            Ok(m) => m,
-            Err(_) => (),
+        let member = match find_member_by_email(req.email.clone(), org_id.to_string()).await? {
+            Some(m) => m,
+            None => return Err(ApiError::NotFound),
         };
 
         let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(

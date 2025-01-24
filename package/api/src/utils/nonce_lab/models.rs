@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use models::prelude::{
-    Age, Attribute, Gender, Panel, Quota, RegionCode, SalaryTier, SurveyQuestion,
+    Age, Attribute, Gender, PanelInfo, Quota, RegionCode, SalaryTier, SurveyQuestion,
     SurveyQuestionType, SurveyStatus,
 };
 use serde::{Deserialize, Serialize};
@@ -91,7 +91,7 @@ impl From<SurveyQuestion> for NonceLabSurveyQuestion {
 pub struct NonceLabQuota {
     pub id: Option<u32>,
     pub attribute: Option<NonceLabAttribute>,
-    pub panel: Option<Panel>,
+    pub panel: Option<PanelInfo>,
     pub quota: u64,
 }
 

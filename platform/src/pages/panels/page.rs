@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{Attribute, Panel};
+use models::prelude::{Attribute, PanelInfo};
 
 use crate::{
     components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},
@@ -194,7 +194,7 @@ pub fn AttributeList(
 #[component]
 pub fn PanelList(
     lang: Language,
-    panels: Vec<Panel>,
+    panels: Vec<PanelInfo>,
     attributes: Vec<Attribute>,
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,

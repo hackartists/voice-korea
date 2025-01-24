@@ -49,15 +49,11 @@ impl OrganizationControllerV1 {
             claims.email.clone()
         );
 
-        let size = pagination.size.unwrap_or(100);
-
-        let bookmark = pagination.bookmark;
-
         let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
             &log,
             "gsi1-index",
-            bookmark,
-            Some(size as i32),
+            pagination.bookmark,
+            Some(pagination.size.unwrap_or(100) as i32),
             vec![("gsi1", OrganizationMember::get_gsi1(&claims.email))],
         )
         .await?;
@@ -80,8 +76,8 @@ impl OrganizationControllerV1 {
             organizations.push(OrganizationMemberResponse {
                 id: item.id,
                 created_at: item.created_at,
-                updated_at: item.updated_at,
-                deleted_at: item.deleted_at,
+                updated_at: item.updated_at, // check this field in the model
+                deleted_at: item.deleted_at, // check this field in the model
                 user_id: item.user_id.clone(),
                 organization_id: item.organization_id.clone(),
                 organization_name: org.name.clone(),
@@ -109,15 +105,13 @@ impl OrganizationControllerV1 {
 
         // TODO: Check for existing organization with same email (unique constraint in postgres)
 
-        let id: String = uuid::Uuid::new_v4().to_string();
-
         let organization: Organization =
-            Organization::new(id.clone(), user_id.clone(), body.email.clone());
+            Organization::new(user_id.clone(), body.email.clone());
         let _ = cli
             .upsert(organization)
             .await
             .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
 
-        Ok(id)
+        Ok(organization.id)
     }
 }

@@ -103,7 +103,7 @@ impl MemberControllerV1 {
                     Ok(()) => {
                         if let Some(group) = req.group.clone() {
                             let _ = ctrl
-                                .update_group_member(group.id, group.name, member.id.clone())
+                                .upsert_group_member(group.id, group.name, member.id.clone())
                                 .await?;
                         }
                         return Ok(());
@@ -194,19 +194,21 @@ impl MemberControllerV1 {
 
         match cli.upsert(member.clone()).await {
             Ok(()) => {
+                // invite member to group
                 if let Some(group) = body.group.clone() {
                     let _ = ctrl
-                        .update_group_member(group.id, group.name, id.to_string())
+                        .upsert_group_member(group.id, group.name, id.to_string())
                         .await?;
                 }
 
+                // TODO: add invite member to project 
                 Ok(())
             }
             Err(e) => {
                 slog::error!(log, "Create Member Failed {e:?}");
                 Err(ApiError::DynamoCreateException(e.to_string()))
             }
-        }
+        }        
     }
 
     //TODO: implement search projects in organization
@@ -406,8 +408,8 @@ impl MemberControllerV1 {
         &self,
         member_id: String
     ) -> Result<(), ApiError> {
-        let log = self.log.new(o!("api" => "update_member"));
-        slog::debug!(log, "update_group_member");
+        let log = self.log.new(o!("api" => "remove_group_member"));
+        slog::debug!(log, "remove_group_member");
         let cli = easy_dynamodb::get_client(&log);
 
         //check member
@@ -466,14 +468,15 @@ impl MemberControllerV1 {
         }
     }
 
-    pub async fn update_group_member(
+    // TODO: refactor group member update logic
+    pub async fn upsert_group_member(
         &self,
         group_id: String,
         group_name: String,
         member_id: String,
     ) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "update_member"));
-        slog::debug!(log, "update_group_member");
+        slog::debug!(log, "upsert_group_member");
         let cli = easy_dynamodb::get_client(&log);
 
         //check member
@@ -642,11 +645,12 @@ impl MemberControllerV1 {
 
         let res = cli.update(member_id, update_data).await;
 
+        // TODO: refactor group member update logic
         match res {
             Ok(()) => {
                 if req.group.is_some() {
                     let _ = self
-                        .update_group_member(
+                        .upsert_group_member(
                             req.group.clone().unwrap().id,
                             req.group.unwrap().name,
                             member_id.to_string(),
@@ -690,6 +694,13 @@ impl MemberControllerV1 {
                     (
                         "gsi1",
                         UpdateField::String(OrganizationMember::get_gsi1_deleted(&d.unwrap().unwrap().email)),
+                    ),
+                    (
+                        "gsi2",
+                        UpdateField::String(OrganizationMember::get_gsi2_deleted(
+                            &d.unwrap().unwrap().email,
+                            &d.unwrap().unwrap().organization_id,
+                        )),
                     ),
                 ],
             )
@@ -766,7 +777,7 @@ pub async fn find_user_id_by_email(
 pub async fn find_member_by_email(
     email: String,
     organization_id: String,
-) -> Result<OrganizationMember, ApiError> {
+) -> Result<Option<OrganizationMember>, ApiError> {
     let log = root();
 
     let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
@@ -779,14 +790,14 @@ pub async fn find_member_by_email(
     .await?;
 
     if res.items.len() == 0 {
-        return Err(ApiError::NotFound);
+        return Ok(None);
     }
 
     let member = res.items.first().unwrap();
 
     if member.deleted_at.is_some() {
-        return Err(ApiError::NotFound);
+        return Ok(None);
     }
 
-    Ok(member.clone())
+    Ok(Some(member.clone()))
 }

@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use crate::prelude::AttributeItem;
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
@@ -27,14 +26,43 @@ pub struct PanelAttributeItem {
     pub id: String,
     pub r#type: String,
     pub gsi1: String, // panel_attribute#panel_id
-    pub gsi2: String, // panel_attribute#panel_id#attribute_id
+    pub gsi2: String, // panel_attribute#panel_id#attribute_id : unique
     pub panel_id: String,
     pub attribute_id: String,
+
+    pub created_at: i64,
+}
+
+impl PanelAttributeItem {
+    pub fn new(panel_id: String, attribute_id: String) -> Self {
+        let now = chrono::Utc::now().timestamp();
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            r#type: "panel_attribute".to_string(),
+            gsi1: format!("panel_attribute#{}", panel_id),
+            gsi2: format!("panel_attribute#{}#{}", panel_id, attribute_id),
+            panel_id,
+            attribute_id,
+            created_at: now,
+        }
+    }
+
+    pub fn get_gsi1(panel_id: &str) -> String {
+        format!("{}#{}", Self::get_type(), panel_id)
+    }
+
+    pub fn get_gsi2(panel_id: &str, attribute_id: &str) -> String {
+        format!("{}#{}#{}", Self::get_type(), panel_id, attribute_id)
+    }
+
+    pub fn get_type() -> String {
+        "panel_attribute".to_string()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct Panel {
+pub struct PanelInfo { // TODO: rename Panel when survey part is done
     pub id: String,
     pub r#type: String,
     pub organization_id: String,
@@ -48,7 +76,7 @@ pub struct Panel {
     pub deleted_at: Option<i64>,
 }
 
-impl Panel {
+impl PanelInfo {
     pub fn new(
         organization_id: String, 
         name: String,
@@ -72,7 +100,7 @@ impl Panel {
         format!("{}#{}", Self::get_type(), organization_id)
     }
 
-    pub fn get_gsi_deleted(organization_id: &str) -> String {
+    pub fn get_gsi1_deleted(organization_id: &str) -> String {
         format!("{}#{}", Self::get_deleted_type(), organization_id)
     }
 
