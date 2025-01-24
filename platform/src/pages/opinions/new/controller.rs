@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::prelude::{
-    AttributeSummary, Field, OpinionInfo, OpinionInformation, PanelAttributeDetailInfo,
+    AttributeResponse, Field, OpinionInfo, OpinionInformation, AttributeItemResponse,
     PublicOpinionType,
 };
 
@@ -26,7 +26,7 @@ pub struct Controller {
     opinion_informations: Signal<OpinionInformation>,
 
     //step 4
-    total_attributes: Signal<Vec<AttributeSummary>>,
+    total_attributes: Signal<Vec<AttributeResponse>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -114,69 +114,69 @@ impl Controller {
             //FIXME: fix to connect api
             total_attributes: use_signal(|| {
                 vec![
-                    AttributeSummary {
+                    AttributeResponse {
                         id: "1".to_string(),
                         name: "직업".to_string(),
-                        attribute: vec![PanelAttributeDetailInfo {
-                            id: None,
+                        attribute: vec![AttributeItemResponse {
+                            id: "1".to_string(),
                             name: "개발자".to_string(),
                         }],
                     },
-                    AttributeSummary {
+                    AttributeResponse {
                         id: "2".to_string(),
                         name: "성별".to_string(),
-                        attribute: vec![PanelAttributeDetailInfo {
-                            id: None,
+                        attribute: vec![AttributeItemResponse {
+                            id: "1".to_string(),
                             name: "여성".to_string(),
                         }],
                     },
-                    AttributeSummary {
+                    AttributeResponse {
                         id: "3".to_string(),
                         name: "나이".to_string(),
                         attribute: vec![
-                            PanelAttributeDetailInfo {
-                                id: None,
+                            AttributeItemResponse {
+                                id: "1".to_string(),
                                 name: "20대".to_string(),
                             },
-                            PanelAttributeDetailInfo {
-                                id: None,
+                            AttributeItemResponse {
+                                id: "2".to_string(),
                                 name: "30대".to_string(),
                             },
-                            PanelAttributeDetailInfo {
-                                id: None,
+                            AttributeItemResponse {
+                                id: "3".to_string(),
                                 name: "40대".to_string(),
                             },
-                            PanelAttributeDetailInfo {
-                                id: None,
+                            AttributeItemResponse {
+                                id: "4".to_string(),
                                 name: "50대".to_string(),
                             },
-                            PanelAttributeDetailInfo {
-                                id: None,
+                            AttributeItemResponse {
+                                id: "5".to_string(),
                                 name: "60대".to_string(),
                             },
                         ],
                     },
-                    AttributeSummary {
+                    AttributeResponse {
                         id: "4".to_string(),
                         name: "학력".to_string(),
-                        attribute: vec![PanelAttributeDetailInfo {
-                            id: None,
+                        attribute: vec![AttributeItemResponse {
+                            id: "1".to_string(),
                             name: "대학원".to_string(),
                         }],
                     },
-                    AttributeSummary {
+                    AttributeResponse {
                         id: "5".to_string(),
                         name: "거주지".to_string(),
-                        attribute: vec![PanelAttributeDetailInfo {
-                            id: None,
+                        attribute: vec![AttributeItemResponse {
+                            id: "1".to_string(),
                             name: "서울".to_string(),
                         }],
                     },
-                    AttributeSummary {
+                    AttributeResponse {
                         id: "6".to_string(),
                         name: "국적".to_string(),
-                        attribute: vec![PanelAttributeDetailInfo {
-                            id: None,
+                        attribute: vec![AttributeItemResponse {
+                            id: "1".to_string(),
                             name: "국내".to_string(),
                         }],
                     },
@@ -187,7 +187,7 @@ impl Controller {
         ctrl
     }
 
-    pub fn get_total_attributes(&self) -> Vec<AttributeSummary> {
+    pub fn get_total_attributes(&self) -> Vec<AttributeResponse> {
         (self.total_attributes)()
     }
 

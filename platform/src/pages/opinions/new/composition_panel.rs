@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{AttributeSummary, PanelAttribute};
+use models::prelude::{AttributeResponse, PanelAttribute};
 
 use crate::{
     components::icons::{Checked, Clear, Remove, UnChecked},
@@ -107,7 +107,7 @@ pub fn AddAttributeModal(lang: Language, onclose: EventHandler<MouseEvent>) -> E
 
 #[component]
 pub fn CreateNewPanelModal(
-    attributes: Signal<Vec<AttributeSummary>>,
+    attributes: Signal<Vec<AttributeResponse>>,
     lang: Language,
     onclick: EventHandler<String>,
     onsave: EventHandler<String>,

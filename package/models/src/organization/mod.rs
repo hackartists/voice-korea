@@ -139,19 +139,19 @@ pub struct Organization {
 }
 
 impl Organization {
-    pub fn new(id: String, user_id: String, email_address: String) -> Self {
-        let mut organization = Organization::default();
+    pub fn new(user_id: String, email_address: String) -> Self {
         let now = chrono::Utc::now().timestamp_millis();
-        organization.id = id;
-        organization.r#type = Organization::get_type();
-        organization.gsi1 = Organization::get_gsi1(&email_address);
-        organization.created_at = now;
-        organization.updated_at = now;
-        organization.deleted_at = None;
-        organization.user_id = user_id;
-        organization.name = email_address;
-
-        organization
+        let id = uuid::Uuid::new_v4().to_string();
+        Self {
+            id: id.clone(),
+            r#type: Self::get_type(),
+            gsi1: Self::get_gsi1(&id),
+            created_at: now,
+            updated_at: now,
+            deleted_at: None,
+            name: email_address,
+            user_id,
+        }
     }
 
     pub fn get_gsi1(id: &str) -> String {

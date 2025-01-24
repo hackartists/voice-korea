@@ -10,7 +10,8 @@ use by_axum::{
 use slog::o;
 
 use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware,
+    common::CommonQueryResponse, 
+    middleware::auth::authorization_middleware,
 };
 
 use models::prelude::*;
@@ -90,7 +91,7 @@ impl AttributeControllerV1 {
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<AttributeControllerV1>,
         Path(attribute_id): Path<String>,
-    ) -> Result<Json<AttributeSummary>, ApiError> {
+    ) -> Result<Json<AttributeResponse>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "get_attribute"));
         slog::debug!(
@@ -100,63 +101,29 @@ impl AttributeControllerV1 {
             attribute_id
         );
 
-        Ok(Json(AttributeSummary {
-            id: "1".to_string(),
-            name: "직업".to_string(),
-            attribute: vec![
-                PanelAttributeDetailInfo {
-                    id: Some("1".to_string()),
-                    name: "속성1".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("2".to_string()),
-                    name: "속성2".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("3".to_string()),
-                    name: "속성3".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("4".to_string()),
-                    name: "속성4".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("5".to_string()),
-                    name: "속성5".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("6".to_string()),
-                    name: "속성6".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("7".to_string()),
-                    name: "속성7".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("8".to_string()),
-                    name: "속성8".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("9".to_string()),
-                    name: "속성9".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("10".to_string()),
-                    name: "속성10".to_string(),
-                },
-                PanelAttributeDetailInfo {
-                    id: Some("11".to_string()),
-                    name: "속성11".to_string(),
-                },
-            ],
-        }))
+        Ok(Json(
+            AttributeResponse {
+                id: "1".to_string(),
+                name: "name".to_string(),
+                attribute: vec![
+                    AttributeItemResponse {
+                        id: "1".to_string(),
+                        name: "속성1".to_string(),
+                    },
+                    AttributeItemResponse {
+                        id: "2".to_string(),
+                        name: "속성2".to_string(),
+                    },
+                ],
+            }
+        ))
     }
 
     pub async fn list_attributes(
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<AttributeControllerV1>,
         Query(pagination): Query<Pagination>,
-    ) -> Result<Json<CommonQueryResponse<AttributeSummary>>, ApiError> {
+    ) -> Result<Json<CommonQueryResponse<AttributeResponse>>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "list_attributes"));
         slog::debug!(
@@ -168,303 +135,31 @@ impl AttributeControllerV1 {
 
         Ok(Json(CommonQueryResponse {
             items: vec![
-                AttributeSummary {
+                AttributeResponse {
                     id: "1".to_string(),
-                    name: "직업".to_string(),
+                    name: "name".to_string(),
                     attribute: vec![
-                        PanelAttributeDetailInfo {
-                            id: Some("1".to_string()),
+                        AttributeItemResponse {
+                            id: "1".to_string(),
                             name: "속성1".to_string(),
                         },
-                        PanelAttributeDetailInfo {
-                            id: Some("2".to_string()),
+                        AttributeItemResponse {
+                            id: "2".to_string(),
                             name: "속성2".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("3".to_string()),
-                            name: "속성3".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("4".to_string()),
-                            name: "속성4".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("5".to_string()),
-                            name: "속성5".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("6".to_string()),
-                            name: "속성6".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("7".to_string()),
-                            name: "속성7".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("8".to_string()),
-                            name: "속성8".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("9".to_string()),
-                            name: "속성9".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("10".to_string()),
-                            name: "속성10".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("11".to_string()),
-                            name: "속성11".to_string(),
                         },
                     ],
                 },
-                AttributeSummary {
+                AttributeResponse {
                     id: "2".to_string(),
-                    name: "성별".to_string(),
+                    name: "name".to_string(),
                     attribute: vec![
-                        PanelAttributeDetailInfo {
-                            id: Some("1".to_string()),
+                        AttributeItemResponse {
+                            id: "1".to_string(),
                             name: "속성1".to_string(),
                         },
-                        PanelAttributeDetailInfo {
-                            id: Some("2".to_string()),
+                        AttributeItemResponse {
+                            id: "2".to_string(),
                             name: "속성2".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("3".to_string()),
-                            name: "속성3".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("4".to_string()),
-                            name: "속성4".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("5".to_string()),
-                            name: "속성5".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("6".to_string()),
-                            name: "속성6".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("7".to_string()),
-                            name: "속성7".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("8".to_string()),
-                            name: "속성8".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("9".to_string()),
-                            name: "속성9".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("10".to_string()),
-                            name: "속성10".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("11".to_string()),
-                            name: "속성11".to_string(),
-                        },
-                    ],
-                },
-                AttributeSummary {
-                    id: "3".to_string(),
-                    name: "나이".to_string(),
-                    attribute: vec![
-                        PanelAttributeDetailInfo {
-                            id: Some("1".to_string()),
-                            name: "속성1".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("2".to_string()),
-                            name: "속성2".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("3".to_string()),
-                            name: "속성3".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("4".to_string()),
-                            name: "속성4".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("5".to_string()),
-                            name: "속성5".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("6".to_string()),
-                            name: "속성6".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("7".to_string()),
-                            name: "속성7".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("8".to_string()),
-                            name: "속성8".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("9".to_string()),
-                            name: "속성9".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("10".to_string()),
-                            name: "속성10".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("11".to_string()),
-                            name: "속성11".to_string(),
-                        },
-                    ],
-                },
-                AttributeSummary {
-                    id: "4".to_string(),
-                    name: "학력".to_string(),
-                    attribute: vec![
-                        PanelAttributeDetailInfo {
-                            id: Some("1".to_string()),
-                            name: "속성1".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("2".to_string()),
-                            name: "속성2".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("3".to_string()),
-                            name: "속성3".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("4".to_string()),
-                            name: "속성4".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("5".to_string()),
-                            name: "속성5".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("6".to_string()),
-                            name: "속성6".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("7".to_string()),
-                            name: "속성7".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("8".to_string()),
-                            name: "속성8".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("9".to_string()),
-                            name: "속성9".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("10".to_string()),
-                            name: "속성10".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("11".to_string()),
-                            name: "속성11".to_string(),
-                        },
-                    ],
-                },
-                AttributeSummary {
-                    id: "5".to_string(),
-                    name: "거주지".to_string(),
-                    attribute: vec![
-                        PanelAttributeDetailInfo {
-                            id: Some("1".to_string()),
-                            name: "속성1".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("2".to_string()),
-                            name: "속성2".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("3".to_string()),
-                            name: "속성3".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("4".to_string()),
-                            name: "속성4".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("5".to_string()),
-                            name: "속성5".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("6".to_string()),
-                            name: "속성6".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("7".to_string()),
-                            name: "속성7".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("8".to_string()),
-                            name: "속성8".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("9".to_string()),
-                            name: "속성9".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("10".to_string()),
-                            name: "속성10".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("11".to_string()),
-                            name: "속성11".to_string(),
-                        },
-                    ],
-                },
-                AttributeSummary {
-                    id: "6".to_string(),
-                    name: "국적".to_string(),
-                    attribute: vec![
-                        PanelAttributeDetailInfo {
-                            id: Some("1".to_string()),
-                            name: "속성1".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("2".to_string()),
-                            name: "속성2".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("3".to_string()),
-                            name: "속성3".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("4".to_string()),
-                            name: "속성4".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("5".to_string()),
-                            name: "속성5".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("6".to_string()),
-                            name: "속성6".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("7".to_string()),
-                            name: "속성7".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("8".to_string()),
-                            name: "속성8".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("9".to_string()),
-                            name: "속성9".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("10".to_string()),
-                            name: "속성10".to_string(),
-                        },
-                        PanelAttributeDetailInfo {
-                            id: Some("11".to_string()),
-                            name: "속성11".to_string(),
                         },
                     ],
                 },
@@ -482,6 +177,30 @@ impl AttributeControllerV1 {
     ) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "create_attribute"));
         slog::debug!(log, "create_attribute {:?} {:?}", organization_id, body);
+        let cli = easy_dynamodb::get_client(&log);
+
+        let attribute = Attribute::new(
+            organization_id.to_string(),
+            body.name,
+        );
+
+        let _ = cli
+            .upsert(&attribute)
+            .await
+            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+
+        for item in body.attribute_item {
+            let attribute_item = AttributeItem::new(
+                attribute.id.clone(),
+                item.name,
+            );
+
+            let _ = cli
+                .upsert(&attribute_item)
+                .await
+                .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+        }
+
         Ok(())
     }
 }

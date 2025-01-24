@@ -4,8 +4,7 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use models::prelude::{
-    AttributeActionRequest, AttributeByIdActionRequest, AttributeSummary, CreateAttributeRequest,
-    UpdateAttributeRequest,
+    AttributeActionRequest, AttributeByIdActionRequest, AttributeResponse, CreateAttributeRequest, UpdateAttributeRequest
 };
 
 use crate::{api::common::CommonQueryResponse, utils::api::ReqwestClient};
@@ -79,7 +78,7 @@ impl AttributeApi {
     pub async fn search_attributes(
         &self,
         keyword: String,
-    ) -> Result<CommonQueryResponse<AttributeSummary>> {
+    ) -> Result<CommonQueryResponse<AttributeResponse>> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -106,7 +105,7 @@ impl AttributeApi {
         &self,
         size: Option<i64>,
         bookmark: Option<String>,
-    ) -> Result<CommonQueryResponse<AttributeSummary>> {
+    ) -> Result<CommonQueryResponse<AttributeResponse>> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -152,7 +151,7 @@ impl AttributeApi {
         Ok(())
     }
 
-    pub async fn get_attribute(&self, attribute_id: String) -> Result<AttributeSummary> {
+    pub async fn get_attribute(&self, attribute_id: String) -> Result<AttributeResponse> {
         let token = self.get_token();
         let id = self.get_organization_id();
 

@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{AttributeSummary, PanelSummary};
+use models::prelude::{AttributeResponse, PanelResponse};
 
 use crate::{
     api::common::CommonQueryResponse,
@@ -17,15 +17,15 @@ use super::{
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Controller {
-    panels: Signal<Vec<PanelSummary>>,
-    attributes: Signal<Vec<AttributeSummary>>,
+    panels: Signal<Vec<PanelResponse>>,
+    attributes: Signal<Vec<AttributeResponse>>,
     popup_service: Signal<PopupService>,
     translate: Signal<PanelTranslate>,
 
     attribute_resource:
-        Resource<Result<CommonQueryResponse<models::prelude::AttributeSummary>, ServerFnError>>,
+        Resource<Result<CommonQueryResponse<models::prelude::AttributeResponse>, ServerFnError>>,
     panel_resource:
-        Resource<Result<CommonQueryResponse<models::prelude::PanelSummary>, ServerFnError>>,
+        Resource<Result<CommonQueryResponse<models::prelude::PanelResponse>, ServerFnError>>,
 
     attribute_bookmark: Signal<Option<String>>,
     panel_bookmark: Signal<Option<String>>,
@@ -41,7 +41,7 @@ impl Controller {
         let mut panel_bookmark = Signal::new(None);
 
         let attribute_resource: Resource<
-            Result<CommonQueryResponse<models::prelude::AttributeSummary>, ServerFnError>,
+            Result<CommonQueryResponse<models::prelude::AttributeResponse>, ServerFnError>,
         > = use_resource(move || {
             let api = attribute_api.clone();
             let bookmark = attribute_bookmark();
@@ -67,7 +67,7 @@ impl Controller {
         });
 
         let panel_resource: Resource<
-            Result<CommonQueryResponse<models::prelude::PanelSummary>, ServerFnError>,
+            Result<CommonQueryResponse<models::prelude::PanelResponse>, ServerFnError>,
         > = use_resource(move || {
             let api = panel_api.clone();
             //FIXME: add bookmark
@@ -129,12 +129,12 @@ impl Controller {
         self.panel_resource.restart();
     }
 
-    pub fn get_panels(&self) -> Vec<PanelSummary> {
+    pub fn get_panels(&self) -> Vec<PanelResponse> {
         tracing::debug!("this line come panel: {:?}", (self.panels)());
         (self.panels)()
     }
 
-    pub fn get_attributes(&self) -> Vec<AttributeSummary> {
+    pub fn get_attributes(&self) -> Vec<AttributeResponse> {
         (self.attributes)()
     }
 
