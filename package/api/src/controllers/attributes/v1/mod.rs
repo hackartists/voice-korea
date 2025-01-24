@@ -10,7 +10,7 @@ use by_axum::{
 use slog::o;
 
 use crate::{
-    // common::CommonQueryResponse, 
+    common::CommonQueryResponse, 
     middleware::auth::authorization_middleware,
 };
 
@@ -91,7 +91,7 @@ impl AttributeControllerV1 {
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<AttributeControllerV1>,
         Path(attribute_id): Path<String>,
-    ) -> Result<Json<()>, ApiError> {
+    ) -> Result<Json<AttributeResponse>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "get_attribute"));
         slog::debug!(
@@ -101,14 +101,29 @@ impl AttributeControllerV1 {
             attribute_id
         );
 
-        Ok(Json(()))
+        Ok(Json(
+            AttributeResponse {
+                id: "1".to_string(),
+                name: "name".to_string(),
+                attribute: vec![
+                    AttributeItemResponse {
+                        id: "1".to_string(),
+                        name: "속성1".to_string(),
+                    },
+                    AttributeItemResponse {
+                        id: "2".to_string(),
+                        name: "속성2".to_string(),
+                    },
+                ],
+            }
+        ))
     }
 
     pub async fn list_attributes(
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<AttributeControllerV1>,
         Query(pagination): Query<Pagination>,
-    ) -> Result<(), ApiError> {
+    ) -> Result<Json<CommonQueryResponse<AttributeResponse>>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "list_attributes"));
         slog::debug!(
@@ -118,13 +133,39 @@ impl AttributeControllerV1 {
             pagination
         );
 
-        // Ok(Json(CommonQueryResponse {
-        //     items: vec![
-
-        //     ],
-        //     bookmark: None,
-        // }))
-        Ok(())
+        Ok(Json(CommonQueryResponse {
+            items: vec![
+                AttributeResponse {
+                    id: "1".to_string(),
+                    name: "name".to_string(),
+                    attribute: vec![
+                        AttributeItemResponse {
+                            id: "1".to_string(),
+                            name: "속성1".to_string(),
+                        },
+                        AttributeItemResponse {
+                            id: "2".to_string(),
+                            name: "속성2".to_string(),
+                        },
+                    ],
+                },
+                AttributeResponse {
+                    id: "2".to_string(),
+                    name: "name".to_string(),
+                    attribute: vec![
+                        AttributeItemResponse {
+                            id: "1".to_string(),
+                            name: "속성1".to_string(),
+                        },
+                        AttributeItemResponse {
+                            id: "2".to_string(),
+                            name: "속성2".to_string(),
+                        },
+                    ],
+                },
+            ],
+            bookmark: None,
+        }))
     }
 }
 

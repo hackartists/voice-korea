@@ -9,7 +9,7 @@ use by_axum::{
 };
 use slog::o;
 use crate::{
-    // common::CommonQueryResponse, 
+    common::CommonQueryResponse, 
     middleware::auth::authorization_middleware
 };
 use models::prelude::*;
@@ -78,28 +78,78 @@ impl PanelControllerV1 {
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<PanelControllerV1>,
         Path(panel_id): Path<String>,
-    ) -> Result<Json<()>, ApiError> {
+    ) -> Result<Json<PanelResponse>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "get_panel"));
         slog::debug!(log, "get_panel: {:?} {:?}", organization_id, panel_id);
 
-        Ok(Json(()))
+        Ok(Json(
+            PanelResponse {
+                id: panel_id,
+                name: "Panel Name".to_string(),
+                count: 10,
+                attribute: vec![
+                    AttributeResponse {
+                        id: "attribute_id".to_string(),
+                        name: "Attribute Name".to_string(),
+                        attribute: vec![AttributeItemResponse {
+                            id: "attribute_item_id".to_string(),
+                            name: "Attribute Item Name".to_string(),
+                        }],
+                    },
+                    AttributeResponse {
+                        id: "attribute_id".to_string(),
+                        name: "Attribute Name".to_string(),
+                        attribute: vec![AttributeItemResponse {
+                            id: "attribute_item_id".to_string(),
+                            name: "Attribute Item Name".to_string(),
+                        }],
+                    },
+                ],
+            },
+        ))
     }
 
     pub async fn list_panels(
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<PanelControllerV1>,
         Query(pagination): Query<Pagination>,
-    ) -> Result<(), ApiError> {
+    ) -> Result<Json<CommonQueryResponse<PanelResponse>>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "list_panels"));
         slog::debug!(log, "list_panels {:?} {:?}", organization_id, pagination);
 
-        // Ok(Json(CommonQueryResponse {
-        //     items: vec![],
-        //     bookmark: None,
-        // }))
-        Ok(())
+        Ok(Json(CommonQueryResponse {
+            items: vec![
+                PanelResponse {
+                    id: "1".to_string(),
+                    name: "Panel Name".to_string(),
+                    count: 10,
+                    attribute: vec![AttributeResponse {
+                        id: "attribute_id".to_string(),
+                        name: "Attribute Name".to_string(),
+                        attribute: vec![AttributeItemResponse {
+                            id: "attribute_item_id".to_string(),
+                            name: "Attribute Item Name".to_string(),
+                        }],
+                    }],
+                },
+                PanelResponse {
+                    id: "2".to_string(),
+                    name: "Panel Name".to_string(),
+                    count: 10,
+                    attribute: vec![AttributeResponse {
+                        id: "attribute_id".to_string(),
+                        name: "Attribute Name".to_string(),
+                        attribute: vec![AttributeItemResponse {
+                            id: "attribute_item_id".to_string(),
+                            name: "Attribute Item Name".to_string(),
+                        }],
+                    }],
+                },
+            ],
+            bookmark: None,
+        }))
     }
 }
 

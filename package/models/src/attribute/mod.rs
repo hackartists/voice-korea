@@ -9,7 +9,7 @@ use schemars::JsonSchema;
 
 pub struct CreateAttributeRequest {
     pub name: String,
-    pub attribute_item: Vec<AttributeItem>,
+    pub attribute_items: Vec<AttributeItem>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
@@ -17,7 +17,7 @@ pub struct CreateAttributeRequest {
 
 pub struct UpdateAttributeRequest {
     pub name: String,
-    pub attribute: Vec<AttributeItem>,
+    pub attribute_items: Vec<AttributeItem>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
