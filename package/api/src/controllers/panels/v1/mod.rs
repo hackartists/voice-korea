@@ -87,7 +87,7 @@ impl PanelControllerV1 {
             name: "패널명1".to_string(),
             count: 50,
             attribute: vec![
-                PanelAttributeInfo {
+                PanelAttributeItem {
                     id: Some("1".to_string()),
                     name: "직업".to_string(),
                     attribute: vec![
@@ -101,7 +101,7 @@ impl PanelControllerV1 {
                         },
                     ],
                 },
-                PanelAttributeInfo {
+                PanelAttributeItem {
                     id: Some("2".to_string()),
                     name: "성별".to_string(),
                     attribute: vec![
@@ -115,7 +115,7 @@ impl PanelControllerV1 {
                         },
                     ],
                 },
-                PanelAttributeInfo {
+                PanelAttributeItem {
                     id: Some("3".to_string()),
                     name: "나이".to_string(),
                     attribute: vec![
@@ -129,7 +129,7 @@ impl PanelControllerV1 {
                         },
                     ],
                 },
-                PanelAttributeInfo {
+                PanelAttributeItem {
                     id: Some("4".to_string()),
                     name: "학력".to_string(),
                     attribute: vec![
@@ -143,7 +143,7 @@ impl PanelControllerV1 {
                         },
                     ],
                 },
-                PanelAttributeInfo {
+                PanelAttributeItem {
                     id: Some("5".to_string()),
                     name: "거주지".to_string(),
                     attribute: vec![
@@ -157,7 +157,7 @@ impl PanelControllerV1 {
                         },
                     ],
                 },
-                PanelAttributeInfo {
+                PanelAttributeItem {
                     id: Some("6".to_string()),
                     name: "국적".to_string(),
                     attribute: vec![
@@ -191,7 +191,7 @@ impl PanelControllerV1 {
                     name: "패널명1".to_string(),
                     count: 50,
                     attribute: vec![
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("1".to_string()),
                             name: "직업".to_string(),
                             attribute: vec![
@@ -205,7 +205,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("2".to_string()),
                             name: "성별".to_string(),
                             attribute: vec![
@@ -219,7 +219,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("3".to_string()),
                             name: "나이".to_string(),
                             attribute: vec![
@@ -233,7 +233,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("4".to_string()),
                             name: "학력".to_string(),
                             attribute: vec![
@@ -247,7 +247,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("5".to_string()),
                             name: "거주지".to_string(),
                             attribute: vec![
@@ -261,7 +261,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("6".to_string()),
                             name: "국적".to_string(),
                             attribute: vec![
@@ -282,7 +282,7 @@ impl PanelControllerV1 {
                     name: "패널명2".to_string(),
                     count: 50,
                     attribute: vec![
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("1".to_string()),
                             name: "직업".to_string(),
                             attribute: vec![
@@ -296,7 +296,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("2".to_string()),
                             name: "성별".to_string(),
                             attribute: vec![
@@ -310,7 +310,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("3".to_string()),
                             name: "나이".to_string(),
                             attribute: vec![
@@ -324,7 +324,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("4".to_string()),
                             name: "학력".to_string(),
                             attribute: vec![
@@ -338,7 +338,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("5".to_string()),
                             name: "거주지".to_string(),
                             attribute: vec![
@@ -352,7 +352,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("6".to_string()),
                             name: "국적".to_string(),
                             attribute: vec![
@@ -373,7 +373,7 @@ impl PanelControllerV1 {
                     name: "패널명3".to_string(),
                     count: 50,
                     attribute: vec![
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("1".to_string()),
                             name: "직업".to_string(),
                             attribute: vec![
@@ -387,7 +387,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("2".to_string()),
                             name: "성별".to_string(),
                             attribute: vec![
@@ -401,7 +401,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("3".to_string()),
                             name: "나이".to_string(),
                             attribute: vec![
@@ -415,7 +415,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("4".to_string()),
                             name: "학력".to_string(),
                             attribute: vec![
@@ -429,7 +429,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("5".to_string()),
                             name: "거주지".to_string(),
                             attribute: vec![
@@ -443,7 +443,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("6".to_string()),
                             name: "국적".to_string(),
                             attribute: vec![
@@ -464,7 +464,7 @@ impl PanelControllerV1 {
                     name: "패널명4".to_string(),
                     count: 50,
                     attribute: vec![
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("1".to_string()),
                             name: "직업".to_string(),
                             attribute: vec![
@@ -478,7 +478,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("2".to_string()),
                             name: "성별".to_string(),
                             attribute: vec![
@@ -492,7 +492,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("3".to_string()),
                             name: "나이".to_string(),
                             attribute: vec![
@@ -506,7 +506,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("4".to_string()),
                             name: "학력".to_string(),
                             attribute: vec![
@@ -520,7 +520,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("5".to_string()),
                             name: "거주지".to_string(),
                             attribute: vec![
@@ -534,7 +534,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("6".to_string()),
                             name: "국적".to_string(),
                             attribute: vec![
@@ -555,7 +555,7 @@ impl PanelControllerV1 {
                     name: "패널명5".to_string(),
                     count: 50,
                     attribute: vec![
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("1".to_string()),
                             name: "직업".to_string(),
                             attribute: vec![
@@ -569,7 +569,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("2".to_string()),
                             name: "성별".to_string(),
                             attribute: vec![
@@ -583,7 +583,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("3".to_string()),
                             name: "나이".to_string(),
                             attribute: vec![
@@ -597,7 +597,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("4".to_string()),
                             name: "학력".to_string(),
                             attribute: vec![
@@ -611,7 +611,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("5".to_string()),
                             name: "거주지".to_string(),
                             attribute: vec![
@@ -625,7 +625,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("6".to_string()),
                             name: "국적".to_string(),
                             attribute: vec![
@@ -646,7 +646,7 @@ impl PanelControllerV1 {
                     name: "패널명6".to_string(),
                     count: 50,
                     attribute: vec![
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("1".to_string()),
                             name: "직업".to_string(),
                             attribute: vec![
@@ -660,7 +660,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("2".to_string()),
                             name: "성별".to_string(),
                             attribute: vec![
@@ -674,7 +674,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("3".to_string()),
                             name: "나이".to_string(),
                             attribute: vec![
@@ -688,7 +688,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("4".to_string()),
                             name: "학력".to_string(),
                             attribute: vec![
@@ -702,7 +702,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("5".to_string()),
                             name: "거주지".to_string(),
                             attribute: vec![
@@ -716,7 +716,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("6".to_string()),
                             name: "국적".to_string(),
                             attribute: vec![
@@ -737,7 +737,7 @@ impl PanelControllerV1 {
                     name: "패널명7".to_string(),
                     count: 50,
                     attribute: vec![
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("1".to_string()),
                             name: "직업".to_string(),
                             attribute: vec![
@@ -751,7 +751,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("2".to_string()),
                             name: "성별".to_string(),
                             attribute: vec![
@@ -765,7 +765,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("3".to_string()),
                             name: "나이".to_string(),
                             attribute: vec![
@@ -779,7 +779,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("4".to_string()),
                             name: "학력".to_string(),
                             attribute: vec![
@@ -793,7 +793,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("5".to_string()),
                             name: "거주지".to_string(),
                             attribute: vec![
@@ -807,7 +807,7 @@ impl PanelControllerV1 {
                                 },
                             ],
                         },
-                        PanelAttributeInfo {
+                        PanelAttributeItem {
                             id: Some("6".to_string()),
                             name: "국적".to_string(),
                             attribute: vec![

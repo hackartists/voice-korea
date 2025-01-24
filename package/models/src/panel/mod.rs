@@ -10,7 +10,7 @@ use schemars::JsonSchema;
 pub struct CreatePanelRequest {
     pub name: String,
     pub count: i64,
-    pub attribute: Vec<PanelAttributeInfo>,
+    pub attribute: Vec<PanelAttributeItem>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -18,15 +18,15 @@ pub struct CreatePanelRequest {
 pub struct UpdatePanelRequest {
     pub name: String,
     pub count: i64,
-    pub attribute: Vec<PanelAttributeInfo>,
+    pub attribute: Vec<PanelAttributeItem>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct PanelAttributeInfo {
-    pub id: Option<String>,
-    pub name: String,
-    pub attribute: Vec<AttributeItem>,
+pub struct PanelAttributeItem {
+    pub id: String,
+    pub panel_id: String,
+    pub attribute_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -34,9 +34,13 @@ pub struct PanelAttributeInfo {
 pub struct Panel {
     pub id: String,
     pub organization_id: String,
+
     pub name: String,
     pub count: i64,
-    pub attribute: Vec<PanelAttributeInfo>,
+
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub deleted_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]

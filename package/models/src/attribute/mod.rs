@@ -32,8 +32,8 @@ pub struct Attribute { // attributes
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AttributeItem {
-    pub id: String,
-    pub attribute_id: String,
+    pub id: Option<String>, // FIXME: if postgre is implemented, this field will be not null
+    pub attribute_id: Option<String>, // FIXME: if postgre is implemented, this field will be not null
     pub name: String,
 }
 
