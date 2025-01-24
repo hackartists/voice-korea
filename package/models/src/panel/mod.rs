@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::prelude::PanelAttributeDetailInfo;
+use crate::prelude::AttributeItem;
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
@@ -26,13 +26,14 @@ pub struct UpdatePanelRequest {
 pub struct PanelAttributeInfo {
     pub id: Option<String>,
     pub name: String,
-    pub attribute: Vec<PanelAttributeDetailInfo>,
+    pub attribute: Vec<AttributeItem>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct PanelSummary {
+pub struct Panel {
     pub id: String,
+    pub organization_id: String,
     pub name: String,
     pub count: i64,
     pub attribute: Vec<PanelAttributeInfo>,

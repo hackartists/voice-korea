@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{AttributeSummary, PanelSummary};
+use models::prelude::{Attribute, Panel};
 
 use crate::{
     components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},
@@ -71,7 +71,7 @@ pub fn PanelPage(props: PanelProps) -> Element {
 #[component]
 pub fn AttributeList(
     lang: Language,
-    attributes: Vec<AttributeSummary>,
+    attributes: Vec<Attribute>,
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
 ) -> Element {
@@ -194,8 +194,8 @@ pub fn AttributeList(
 #[component]
 pub fn PanelList(
     lang: Language,
-    panels: Vec<PanelSummary>,
-    attributes: Vec<AttributeSummary>,
+    panels: Vec<Panel>,
+    attributes: Vec<Attribute>,
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
 ) -> Element {

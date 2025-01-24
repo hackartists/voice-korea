@@ -9,7 +9,7 @@ use schemars::JsonSchema;
 
 pub struct CreateAttributeRequest {
     pub name: String,
-    pub attribute: Vec<PanelAttributeDetailInfo>,
+    pub attribute: Vec<AttributeItem>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
@@ -17,23 +17,23 @@ pub struct CreateAttributeRequest {
 
 pub struct UpdateAttributeRequest {
     pub name: String,
-    pub attribute: Vec<PanelAttributeDetailInfo>,
+    pub attribute: Vec<AttributeItem>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 
-pub struct AttributeSummary {
+pub struct Attribute { // attributes
     pub id: String,
+    pub panel_id: String,
     pub name: String,
-    pub attribute: Vec<PanelAttributeDetailInfo>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-
-pub struct PanelAttributeDetailInfo {
-    pub id: Option<String>,
+pub struct AttributeItem {
+    pub id: String,
+    pub attribute_id: String,
     pub name: String,
 }
 
@@ -50,4 +50,12 @@ pub enum AttributeActionRequest {
 pub enum AttributeByIdActionRequest {
     Delete,
     Update(UpdateAttributeRequest),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub struct AttributesResponse {
+    pub id: String,
+    pub name: String,
+    pub attribute: Vec<String>,
 }
