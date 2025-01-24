@@ -525,14 +525,26 @@ impl GroupControllerV1 {
 
         let cli = easy_dynamodb::get_client(&log);
 
-        // let _: GroupMember = match CommonQueryResponse::query(
-        //     &log,
-        //     "gsi2-index",
-        //     None,
-        //     Some(1),
-        //     vec![("gsi2", GroupMember::get_gsi2(&req.email))],
-        // )
+        // check if member is already in the group
+        let member = match find_member_by_email(req.email.clone(), org_id.to_string()).await {
+            Ok(m) => m,
+            Err(_) => (),
+        };
 
+        let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
+            &log,
+            "gsi2-index",
+            None,
+            Some(1),
+            vec![("gsi2", GroupMember::get_gsi2(&member.id))],
+        )
+        .await?;
+
+        if res.items.len() > 0 {
+            return Err(ApiError::AlreadyExists);
+        }
+
+        // check if member is exist in the organization
         let member: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
             &log,
             "gsi2-index",
@@ -548,6 +560,7 @@ impl GroupControllerV1 {
 
         let member_id = member.items.first().unwrap().id.clone();
 
+        // check whether the group exists
         let group = match cli
             .get::<Group>(&group_id)
             .await
@@ -557,7 +570,6 @@ impl GroupControllerV1 {
             None => return Err(ApiError::NotFound),
         };
 
-        // check whether the user is in the organization
         if group.organization_id != org_id {
             return Err(ApiError::InvalidPermissions);
         }
