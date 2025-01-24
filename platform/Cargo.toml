@@ -1,6 +1,6 @@
 [package]
 name = "platform"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["victor138128 <yepp0517@naver.com>"]
 edition = "2021"
 
@@ -8,11 +8,7 @@ edition = "2021"
 
 [dependencies]
 serde = { version = "1.0.197", features = ["derive"] }
-dioxus = { version = "0.6.0", features = [
-  "default",
-  "fullstack",
-  "router",
-] }
+dioxus = { version = "0.6.0", features = ["default", "fullstack", "router"] }
 chrono = "0.4"
 dioxus-aws = { version = "0.6.13" }
 reqwest = { version = "0.12.5", features = ["blocking", "json"] }
@@ -55,6 +51,12 @@ server = [
   "axum",
 ]
 lambda = ["dioxus-aws/lambda", "server"]
-web = ["dioxus-aws/web", "web-only", "web-sys", "wasm-bindgen", "wasm-bindgen-futures"]
+web = [
+  "dioxus-aws/web",
+  "web-only",
+  "web-sys",
+  "wasm-bindgen",
+  "wasm-bindgen-futures",
+]
 web-only = ["dioxus-translate/web"]
 static_str_ops = ["dep:static_str_ops"]

@@ -166,7 +166,6 @@ impl Group {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreateGroupMember {
-    pub member_id: String,
     pub member_name: String,
     pub member_email: String,
 }

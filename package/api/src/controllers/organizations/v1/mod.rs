@@ -46,7 +46,7 @@ impl OrganizationControllerV1 {
             log,
             "list_organizations {:?} {:?}",
             pagination,
-            claims.id.clone()
+            claims.email.clone()
         );
 
         let size = pagination.size.unwrap_or(100);
@@ -58,17 +58,24 @@ impl OrganizationControllerV1 {
             "gsi1-index",
             bookmark,
             Some(size as i32),
-            vec![("gsi1", OrganizationMember::get_gsi1(&claims.id))],
+            vec![("gsi1", OrganizationMember::get_gsi1(&claims.email))],
         )
         .await?;
 
         let mut organizations: Vec<OrganizationMemberResponse> = vec![];
 
         for item in res.items {
-            let res = cli
+            let org = match cli
                 .get::<Organization>(&item.organization_id)
                 .await
-                .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
+                .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+            {
+                Ok(v) => v.unwrap(),
+                Err(e) => {
+                    slog::error!(log, "Failed to get organization: {}", e);
+                    continue;
+                }
+            };
 
             organizations.push(OrganizationMemberResponse {
                 id: item.id,
@@ -77,8 +84,8 @@ impl OrganizationControllerV1 {
                 deleted_at: item.deleted_at,
                 user_id: item.user_id.clone(),
                 organization_id: item.organization_id.clone(),
-                organization_name: res.clone().unwrap().name.clone(),
-                creator: res.unwrap().user_id.clone(),
+                organization_name: org.name.clone(),
+                creator: org.user_id.clone(),
             });
         }
 

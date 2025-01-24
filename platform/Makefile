@@ -42,7 +42,7 @@ BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) LOG_LEVEL=$(LOG_LEVE
 setup.tool:
 	cargo install dioxus-cli --version 0.6.0-rc.0
 	cargo install toml-cli
-	npm i -g tailwindcss
+	npm i -g tailwindcss@3
 
 run: public/tailwind.css
 	$(BUILD_ENV) dx serve -p platform
@@ -51,7 +51,7 @@ clean:
 	rm -rf dist public/tailwind.css .aws-sam
 
 public/tailwind.css:
-	tailwindcss -i ./input.css -o ./public/tailwind.css --minify
+	npx tailwindcss -i ./input.css -o ./public/tailwind.css
 
 build: public/tailwind.css
 	$(BUILD_ENV) dx build -p platform --release

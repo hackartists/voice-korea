@@ -57,8 +57,8 @@ impl OrganizationMember {
         OrganizationMember {
             id: uuid::Uuid::new_v4().to_string(),
             r#type: OrganizationMember::get_type(),
-            gsi1: OrganizationMember::get_gsi1(&user_id),
-            gsi2: OrganizationMember::get_gsi2(&user_id, &organization_id),
+            gsi1: OrganizationMember::get_gsi1(&email),
+            gsi2: OrganizationMember::get_gsi2(&email, &organization_id),
             user_id,
             organization_id,
             created_at: now,
@@ -71,23 +71,23 @@ impl OrganizationMember {
         }
     }
 
-    pub fn get_gsi1(user_id: &str) -> String {
-        format!("{}#{}", Self::get_type(), user_id)
+    pub fn get_gsi1(email: &str) -> String {
+        format!("{}#{}", Self::get_type(), email)
     }
 
-    pub fn get_gsi2(user_id: &str, organization_id: &str) -> String {
-        format!("{}#{}#{}", Self::get_type(), user_id, organization_id)
+    pub fn get_gsi2(email: &str, organization_id: &str) -> String {
+        format!("{}#{}#{}", Self::get_type(), email, organization_id)
     }
 
-    pub fn get_gsi1_deleted(user_id: &str) -> String {
-        format!("{}#{}", Self::get_deleted_type(), user_id)
+    pub fn get_gsi1_deleted(email: &str) -> String {
+        format!("{}#{}", Self::get_deleted_type(), email)
     }
 
-    pub fn get_gsi2_deleted(user_id: &str, organization_id: &str) -> String {
+    pub fn get_gsi2_deleted(email: &str, organization_id: &str) -> String {
         format!(
             "{}#{}#{}",
             Self::get_deleted_type(),
-            user_id,
+            email,
             organization_id
         )
     }
@@ -109,8 +109,8 @@ impl Into<OrganizationMember> for (CreateMemberRequest, String, String, String) 
         OrganizationMember {
             id,
             r#type: OrganizationMember::get_type(),
-            gsi1: OrganizationMember::get_gsi1(&user_id),
-            gsi2: OrganizationMember::get_gsi2(&user_id, &organization_id),
+            gsi1: OrganizationMember::get_gsi1(&req.email),
+            gsi2: OrganizationMember::get_gsi2(&req.email, &organization_id),
             user_id,
             organization_id,
             created_at: now,
