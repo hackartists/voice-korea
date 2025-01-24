@@ -158,7 +158,7 @@ translate! {
         en: "Analyst"
     }
     mediator: {
-        ko: "중게자",
+        ko: "중계자",
         en: "Mediator"
     }
     speaker: {
