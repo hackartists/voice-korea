@@ -165,10 +165,10 @@ impl MemberControllerV1 {
         // check org member exists
         let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
             &log,
-            "gsi1-index",
+            "gsi2-index",
             None,
             Some(1),
-            vec![("gsi1", OrganizationMember::get_gsi2(&body.email.clone(), &organization_id.clone()))],
+            vec![("gsi2", OrganizationMember::get_gsi2(&body.email.clone(), &organization_id.clone()))],
         )
         .await?;
 

@@ -516,10 +516,10 @@ impl GroupControllerV1 {
 
         let member: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
             &log,
-            "gsi1-index",
+            "gsi2-index",
             None,
             Some(1),
-            vec![("gsi1", OrganizationMember::get_gsi1(&req.email))],
+            vec![("gsi2", OrganizationMember::get_gsi2(&req.email, org_id))],
         )
         .await?;
 
