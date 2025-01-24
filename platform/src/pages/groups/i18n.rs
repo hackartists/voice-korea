@@ -3,6 +3,10 @@ use dioxus_translate::translate;
 translate! {
     GroupTranslate;
 
+    input_name_hint: {
+        ko: "이름을 검색하세요.",
+        en: "Please Search the Name",
+    }
     organization_management: {
         ko: "조직관리",
         en: "Organization Management",
@@ -171,6 +175,10 @@ translate! {
 translate! {
     CreateGroupModalTranslate;
 
+    input_name_hint: {
+        ko: "이름을 검색하세요.",
+        en: "Please Input the Name",
+    },
     group_name: {
         ko: "그룹명",
         en: "Group Name"

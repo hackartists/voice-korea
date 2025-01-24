@@ -2,7 +2,9 @@ use dioxus::prelude::*;
 
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{CreateGroupRequest, GroupMemberRelationship, ListMemberResponse};
+use models::prelude::{
+    CreateGroupRequest, GroupMemberRelationship, ListMemberResponse, TeamMemberRequest,
+};
 
 use crate::service::{group_api::GroupApi, member_api::MemberApi, popup_service::PopupService};
 
@@ -126,6 +128,20 @@ impl Controller {
         (self.groups)()
     }
 
+    pub async fn remove_group_member(&mut self, group_id: String, member_id: String) {
+        let api: GroupApi = use_context();
+        let mut group_resource = self.group_resource;
+
+        match api.remove_team_member(group_id, member_id).await {
+            Ok(_) => {
+                group_resource.restart();
+            }
+            Err(e) => {
+                tracing::error!("failed to remove team member: {e}");
+            }
+        };
+    }
+
     pub async fn create_group(&mut self, req: CreateGroupRequest) {
         let api: GroupApi = use_context();
         match api.create_group(req).await {
@@ -134,6 +150,35 @@ impl Controller {
                 tracing::error!("failed to create group: {e}");
             }
         }
+    }
+
+    pub async fn invite_team_member(
+        &mut self,
+        group_id: String,
+        email: String,
+        name: Option<String>,
+    ) {
+        let api: GroupApi = use_context();
+        match api
+            .add_team_member(
+                group_id,
+                TeamMemberRequest {
+                    email,
+                    name,
+                    group: None,
+                    role: None,
+                },
+            )
+            .await
+        {
+            Ok(_) => {
+                self.group_resource.restart();
+                self.member_resource.restart()
+            }
+            Err(e) => {
+                tracing::error!("failed to invite team member: {e}");
+            }
+        };
     }
 
     pub async fn remove_group(&mut self, group_id: String) {
@@ -252,11 +297,13 @@ impl Controller {
         let api: GroupApi = self.group_api;
 
         let mut group_resource = self.group_resource;
+        let members = self.get_members();
 
         popup_service
             .open(rsx! {
                 CreateGroupModal {
                     lang,
+                    members,
                     oncreate: move |req: CreateGroupRequest| async move {
                         match api.create_group(req).await {
                             Ok(_) => group_resource.restart(),

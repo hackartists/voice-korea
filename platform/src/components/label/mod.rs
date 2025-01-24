@@ -8,6 +8,7 @@ pub fn Label(
     label_name: String,
     label_color: String,
     #[props(default = true)] is_delete: bool,
+    onremove: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
         if is_delete {
@@ -17,7 +18,12 @@ pub fn Label(
                     label_color,
                 ),
                 div { class: "text-white font-semibold text-[14px] mr-[7px]", {label_name} }
-                Remove { width: "18", height: "18" }
+                button {
+                    onclick: move |e: Event<MouseData>| {
+                        onremove.call(e);
+                    },
+                    Remove { width: "18", height: "18" }
+                }
             }
         } else {
             div {

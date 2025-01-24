@@ -369,6 +369,8 @@ pub fn GroupCommonProject(
                                             label_name: project.panels[0].clone(),
                                             label_color: "bg-[#35343f]",
                                             is_delete: false,
+                                            //FIXME: implement onremove logic
+                                            onremove: move |_| {},
                                         }
                                     }
                                     Expand { width: "18", height: "18" }

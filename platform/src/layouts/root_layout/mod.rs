@@ -51,10 +51,16 @@ pub fn RootLayout(lang: Language) -> Element {
                     lang,
                 }
                 div { class: "flex flex-col grow w-full bg-[#f0f2fc] px-[60px] pt-[25px]",
-                    Link { to: Route::LoginPage { lang },
-                        div { class: "flex flex-row w-full justify-end items-end gap-[5px]",
-                            Logout { width: "20", height: "20" }
-                            div { class: "font-bold text-[#555462] text-[15px]", "logout" }
+                    div { class: "flex flex-row w-full justify-end items-end gap-[5px]",
+                        Link {
+                            class: "flex flex-row w-min justify-start items-start",
+                            to: Route::LoginPage { lang },
+                            div { class: "w-[20px] h-[20px]",
+                                Logout { width: "20", height: "20" }
+                            }
+                            div { class: "ml-[5px] font-bold text-[#555462] text-[15px]",
+                                "logout"
+                            }
                         }
                     }
                     Outlet::<Route> {}

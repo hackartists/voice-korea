@@ -226,4 +226,25 @@ translate! {
         ko: "취소하기",
         en: "Cancel",
     },
+
+    manager: {
+        ko: "관리자",
+        en: "Manager",
+    },
+    public_opinion_manager: {
+        ko: "공론 관리자",
+        en: "Public Opinion Manager",
+    },
+    analyst: {
+        ko: "분석가",
+        en: "Analyst",
+    },
+    repeater: {
+        ko: "중계자",
+        en: "Repeater",
+    },
+    lecturer: {
+        ko: "강연자",
+        en: "Lecturer",
+    },
 }
