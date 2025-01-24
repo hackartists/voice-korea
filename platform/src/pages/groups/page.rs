@@ -40,12 +40,16 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
     let groups = group.clone();
     let group_len = groups.len();
 
+    let members = ctrl.get_members();
+
     let mut member_clicked = use_signal(|| vec![]);
     let mut member_extended = use_signal(|| vec![]);
+    let mut member_add_extended = use_signal(|| vec![]);
 
     use_effect(use_reactive(&group_len, move |group_len| {
         member_clicked.set(vec![false; group_len]);
         member_extended.set(vec![false; group_len]);
+        member_add_extended.set(vec![false; group_len]);
     }));
 
     rsx! {
@@ -155,7 +159,7 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                             && (!member_clicked()[index] && groups[index].member_list.len() > 0)
                                         {
                                             Label {
-                                                label_name: groups[index].member_list[0].clone(),
+                                                label_name: if groups[index].member_list[0].clone().name != "" { groups[index].member_list[0].clone().name } else { groups[index].member_list[0].clone().email },
                                                 label_color: "bg-[#35343f]",
                                             }
                                         } else {
@@ -165,10 +169,24 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                                         div { class: "inline-flex flex-wrap justify-center items-center gap-[10px] mr-[20px]",
                                                             for member in groups[index].member_list.clone() {
                                                                 Label {
-                                                                    label_name: member,
+                                                                    label_name: if member.name != "" { member.name } else { member.email },
                                                                     label_color: "bg-[#35343f]",
                                                                 }
                                                             }
+                                                        }
+                                                        div {
+                                                            class: "flex flex-row mr-[20px] w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] rounded-[4px] text-[15px] font-bold text-[#35343f]",
+                                                            onclick: move |e: MouseEvent| {
+                                                                e.stop_propagation();
+                                                                e.prevent_default();
+                                                                let mut extended = member_add_extended.clone()();
+                                                                extended[index] = !extended[index];
+                                                                member_add_extended.set(extended);
+                                                                let mut extended = member_extended.clone()();
+                                                                extended[index] = false;
+                                                                member_extended.set(extended);
+                                                            },
+                                                            "+"
                                                         }
                                                         div {
                                                             onclick: move |e: MouseEvent| {
@@ -177,6 +195,9 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                                                 let mut extended = member_extended.clone()();
                                                                 extended[index] = !extended[index];
                                                                 member_extended.set(extended);
+                                                                let mut extended = member_add_extended.clone()();
+                                                                extended[index] = false;
+                                                                member_add_extended.set(extended);
                                                             },
                                                             Expand {
                                                                 width: "24",
@@ -192,8 +213,52 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                                             div { class: "inline-flex flex-wrap justify-start items-start gap-[10px] mr-[20px]",
                                                                 for member in groups[index].member_list.clone() {
                                                                     Label {
-                                                                        label_name: member,
+                                                                        label_name: if member.name != "" { member.name } else { member.email },
                                                                         label_color: "bg-[#35343f]",
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    if index < member_add_extended().len() && member_add_extended()[index] {
+                                                        div {
+                                                            class: "absolute top-full bg-white border border-[#bfc8d9] shadow-lg rounded-[4px] w-full z-50",
+                                                            onclick: move |event| {
+                                                                event.stop_propagation();
+                                                                event.prevent_default();
+                                                            },
+                                                            div { class: "flex flex-col w-full justify-start items-start",
+                                                                div {
+                                                                    class: format!(
+                                                                        "flex flex-row w-full justify-start items-center bg-white px-[15px] py-[20px]",
+                                                                    ),
+                                                                    //FIXME: add search logic
+                                                                    input {
+                                                                        class: "flex flex-row w-full h-full bg-transparent focus:outline-none",
+                                                                        r#type: "text",
+                                                                        placeholder: "이름을 검색하세요.".to_string(),
+                                                                        oninput: move |event| {
+                                                                            event.stop_propagation();
+                                                                            event.prevent_default();
+                                                                        },
+                                                                    }
+                                                                }
+
+                                                                for member in members.clone() {
+                                                                    if !groups[index].member_list.iter().any(|m| m.id == member.member.user_id.clone()) {
+                                                                        div { class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
+                                                                            div { class: "font-bold text-[#222222] text-[15px] mb-[5px]",
+                                                                                if member.member.name.clone().is_none() {
+                                                                                    "{member.member.email}"
+                                                                                } else {
+                                                                                    {format!("{}", member.member.name.unwrap_or_default().clone())}
+                                                                                }
+                                                                            }
+                                                                            div { class: "font-medium text-[#222222] text-[10px]",
+                                                                                "{member.member.email}"
+                                                                            }
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -372,7 +437,7 @@ pub fn CreateGroupModal(
     let i18n: CreateGroupModalTranslate = translate(&lang);
     let mut group_name = use_signal(|| "".to_string());
     rsx! {
-        div { class: "flex flex-col w-full justify-start items-start ",
+        div { class: "flex flex-col w-[540px] min-w-[540px] justify-start items-start ",
             div { class: "flex flex-col w-full justify-start items-start",
                 div { class: "font-semibold text-[14px] text-[#222222] mb-[16px]", {i18n.group_name} }
                 input {
@@ -384,13 +449,15 @@ pub fn CreateGroupModal(
                         group_name.set(event.value());
                     },
                 }
-                div { class: "font-normal text-[13px] text-[#222222]", {} }
+                div { class: "font-normal text-[13px] text-[#222222]",
+                    "{i18n.create_group_description}"
+                }
             }
             div { class: "flex flex-col w-full justify-start items-start mt-[40px]",
                 div { class: "font-semibold text-[14px] text-[#222222] mb-[16px]",
                     {i18n.add_team_member}
                 }
-                div { class: "flex flex-row w-full justify-center items-start",
+                div { class: "flex flex-row w-full justify-center items-start bg-white border border-[#bfc8d9] rounded-[8px] p-[24px]",
                     div { class: "flex flex-row justify-start items-center text-[#222222] font-medium text-[15px] mr-[3px] w-[40px] h-[45px]",
                         {i18n.team_member}
                     }
@@ -401,7 +468,7 @@ pub fn CreateGroupModal(
                 div { class: "font-semibold text-[14px] text-[#222222] mb-[16px]",
                     {i18n.invite_project}
                 }
-                div { class: "flex flex-col w-full justify-center items-start",
+                div { class: "flex flex-col w-full justify-center items-start bg-white border border-[#bfc8d9] rounded-[8px] p-[24px]",
                     div { class: "flex flex-row w-full justify-center items-start mb-[10px]",
                         div { class: "flex flex-row justify-start items-center text-[#222222] font-medium text-[15px] mr-[3px] w-[40px] h-[45px]",
                             {i18n.public_opinion}

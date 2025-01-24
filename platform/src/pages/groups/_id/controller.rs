@@ -2,11 +2,12 @@ use chrono::{Local, TimeZone};
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{GroupMemberResponse, TeamMemberRequest};
+use models::prelude::{GroupInfo, GroupMemberResponse, TeamMemberRequest, UpdateMemberRequest};
 
 use crate::{
+    models::role_field::RoleField,
     routes::Route,
-    service::{group_api::GroupApi, popup_service::PopupService},
+    service::{group_api::GroupApi, member_api::MemberApi, popup_service::PopupService},
 };
 
 use super::{
@@ -64,7 +65,7 @@ pub struct GroupMember {
 pub struct Controller {
     pub group: Signal<GroupDetail>,
     pub groups: Signal<Vec<String>>,
-    pub roles: Signal<Vec<String>>,
+    pub roles: Signal<Vec<RoleField>>,
     pub group_resource: Resource<Result<models::prelude::GroupResponse, ServerFnError>>,
 
     popup_service: Signal<PopupService>,
@@ -73,10 +74,11 @@ pub struct Controller {
 
 impl Controller {
     pub fn init(
-        _lang: dioxus_translate::Language,
+        lang: dioxus_translate::Language,
         popup_service: PopupService,
         group_id: String,
     ) -> Self {
+        let translates: GroupDetailTranslate = translate(&lang);
         let api: GroupApi = use_context();
         let group_resource: Resource<Result<models::prelude::GroupResponse, ServerFnError>> =
             use_resource(move || {
@@ -89,11 +91,26 @@ impl Controller {
             groups: use_signal(|| vec![]),
             roles: use_signal(|| {
                 vec![
-                    "관리자".to_string(),
-                    "공론 관리자".to_string(),
-                    "분석가".to_string(),
-                    "중계자".to_string(),
-                    "강연자".to_string(),
+                    RoleField {
+                        db_name: "super_admin".to_string(),
+                        field: translates.manager.to_string(),
+                    },
+                    RoleField {
+                        db_name: "public_admin".to_string(),
+                        field: translates.public_opinion_manager.to_string(),
+                    },
+                    RoleField {
+                        db_name: "analyst".to_string(),
+                        field: translates.analyst.to_string(),
+                    },
+                    RoleField {
+                        db_name: "mediator".to_string(),
+                        field: translates.repeater.to_string(),
+                    },
+                    RoleField {
+                        db_name: "speaker".to_string(),
+                        field: translates.lecturer.to_string(),
+                    },
                 ]
             }),
             group_resource,
@@ -145,7 +162,7 @@ impl Controller {
         (self.groups)()
     }
 
-    pub fn get_roles(&self) -> Vec<String> {
+    pub fn get_roles(&self) -> Vec<RoleField> {
         (self.roles)()
     }
 
@@ -158,6 +175,30 @@ impl Controller {
     pub async fn update_group_name(&mut self, group_id: String, group_name: String) {
         let api: GroupApi = use_context();
         let _ = api.update_group_name(group_id, group_name).await;
+        self.group_resource.restart();
+    }
+
+    pub async fn update_role(&mut self, index: usize, role_name: String) {
+        let api: MemberApi = use_context();
+        let members = self.get_group().group_members;
+        let member = members[index].clone();
+        let _ = api
+            .update_member(
+                member.org_member_id,
+                UpdateMemberRequest {
+                    name: if member.user_name != "" {
+                        Some(member.user_name.clone())
+                    } else {
+                        None
+                    },
+                    group: Some(GroupInfo {
+                        id: member.group_id,
+                        name: member.group_name,
+                    }),
+                    role: Some(role_name),
+                },
+            )
+            .await;
         self.group_resource.restart();
     }
 
@@ -244,9 +285,9 @@ impl Controller {
     ) {
         let mut popup_service = (self.popup_service)().clone();
         let translates: GroupDetailTranslate = translate(&lang);
-        let _api: GroupApi = self.group_api;
+        let api: GroupApi = self.group_api;
 
-        let _group_resource = self.group_resource;
+        let mut group_resource = self.group_resource;
 
         popup_service
             .open(rsx! {
@@ -256,7 +297,14 @@ impl Controller {
                         let group_id = group_id.clone();
                         let member_id = member_id.clone();
                         async move {
-                            tracing::debug!("on remove clicked: {} {}", group_id, member_id);
+                            match api.remove_team_member(group_id, member_id).await {
+                                Ok(_) => {
+                                    group_resource.restart();
+                                }
+                                Err(e) => {
+                                    tracing::error!("failed to remove team member: {e}");
+                                }
+                            };
                             popup_service.close();
                         }
                     },
@@ -298,10 +346,9 @@ impl Controller {
                             match api.add_team_member(group_id, req).await {
                                 Ok(_) => {
                                     group_resource.restart();
-                                    popup_service.close();
                                 }
                                 Err(e) => {
-                                    tracing::error!("failed to update group name: {e}");
+                                    tracing::error!("failed to add team member: {e}");
                                 }
                             };
                             popup_service.close();

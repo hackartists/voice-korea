@@ -2,9 +2,9 @@ use dioxus::prelude::*;
 
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::CreateGroupRequest;
+use models::prelude::{CreateGroupRequest, GroupMemberRelationship, ListMemberResponse};
 
-use crate::service::{group_api::GroupApi, popup_service::PopupService};
+use crate::service::{group_api::GroupApi, member_api::MemberApi, popup_service::PopupService};
 
 use super::{
     i18n::GroupTranslate,
@@ -12,15 +12,23 @@ use super::{
 };
 
 #[derive(Debug, Clone, PartialEq, Default)]
+pub struct GroupMemberSummary {
+    pub id: String,
+    pub name: String,
+    pub email: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct GroupSummary {
     pub group_id: String,
     pub group_name: String,
     pub member_count: u64,
-    pub member_list: Vec<String>,
+    pub member_list: Vec<GroupMemberSummary>,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
+    pub members: Signal<Vec<GroupMemberRelationship>>,
     pub groups: Signal<Vec<GroupSummary>>,
     pub group_resource: Resource<
         Result<
@@ -28,6 +36,7 @@ pub struct Controller {
             ServerFnError,
         >,
     >,
+    pub member_resource: Resource<Result<ListMemberResponse, ServerFnError>>,
     popup_service: Signal<PopupService>,
     group_api: GroupApi,
 }
@@ -44,11 +53,22 @@ impl Controller {
             let api = api.clone();
             async move { api.list_groups(Some(100), None).await }
         });
+
+        let member_api: MemberApi = use_context();
+        let member_resource: Resource<Result<ListMemberResponse, ServerFnError>> =
+            use_resource(move || {
+                let api = member_api.clone();
+                async move { api.list_members(Some(100), None).await }
+            });
+
         let mut ctrl = Self {
             groups: use_signal(|| vec![]),
             group_resource,
             popup_service: use_signal(|| popup_service),
             group_api: api,
+
+            members: use_signal(|| vec![]),
+            member_resource,
         };
 
         let groups = if let Some(v) = group_resource.value()() {
@@ -60,7 +80,15 @@ impl Controller {
                         group_id: group.id.clone(),
                         group_name: group.name.clone(),
                         member_count: group.members.len() as u64,
-                        member_list: group.members.iter().map(|v| v.user_name.clone()).collect(), // FIXME: fix to real member list
+                        member_list: group
+                            .members
+                            .iter()
+                            .map(|v| GroupMemberSummary {
+                                id: v.id.clone(),
+                                name: v.user_name.clone(),
+                                email: v.user_email.clone(),
+                            })
+                            .collect(),
                     })
                     .collect(),
                 Err(e) => {
@@ -72,13 +100,29 @@ impl Controller {
             vec![]
         };
 
+        let members = if let Some(v) = member_resource.value()() {
+            match v {
+                Ok(d) => d.members,
+                Err(_) => vec![],
+            }
+        } else {
+            vec![]
+        };
+
         ctrl.groups.set(groups);
+        ctrl.members.set(members);
         use_context_provider(|| ctrl);
 
         ctrl
     }
 
+    pub fn get_members(&self) -> Vec<GroupMemberRelationship> {
+        tracing::debug!("total members: {:?}", (self.members)());
+        (self.members)()
+    }
+
     pub fn get_groups(&self) -> Vec<GroupSummary> {
+        tracing::debug!("total groups: {:?}", (self.groups)());
         (self.groups)()
     }
 
