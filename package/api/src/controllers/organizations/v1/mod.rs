@@ -108,7 +108,7 @@ impl OrganizationControllerV1 {
         let organization: Organization =
             Organization::new(user_id.clone(), body.email.clone());
         let _ = cli
-            .upsert(organization)
+            .upsert(organization.clone())
             .await
             .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
 

@@ -693,13 +693,13 @@ impl MemberControllerV1 {
                     ("type", UpdateField::String(OrganizationMember::get_deleted_type())),
                     (
                         "gsi1",
-                        UpdateField::String(OrganizationMember::get_gsi1_deleted(&d.unwrap().unwrap().email)),
+                        UpdateField::String(OrganizationMember::get_gsi1_deleted(&d.clone().unwrap().unwrap().email)),
                     ),
                     (
                         "gsi2",
                         UpdateField::String(OrganizationMember::get_gsi2_deleted(
-                            &d.unwrap().unwrap().email,
-                            &d.unwrap().unwrap().organization_id,
+                            &d.clone().unwrap().unwrap().email,
+                            &d.clone().unwrap().unwrap().organization_id,
                         )),
                     ),
                 ],

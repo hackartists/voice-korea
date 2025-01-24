@@ -62,7 +62,7 @@ impl PanelAttributeItem {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct PanelInfo { // TODO: rename Panel when survey part is done
+pub struct Panel {
     pub id: String,
     pub r#type: String,
     pub organization_id: String,
@@ -76,7 +76,7 @@ pub struct PanelInfo { // TODO: rename Panel when survey part is done
     pub deleted_at: Option<i64>,
 }
 
-impl PanelInfo {
+impl Panel {
     pub fn new(
         organization_id: String, 
         name: String,
@@ -112,6 +112,12 @@ impl PanelInfo {
         "panel".to_string()
     }
 }
+
+// TODO: migration name
+// pub struct PanelInfo {
+//     id: String,
+//     name: String,
+// }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

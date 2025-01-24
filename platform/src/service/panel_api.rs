@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use models::prelude::{
-    CreatePanelRequest, PanelActionRequest, PanelByIdActionRequest, PanelInfo,
+    CreatePanelRequest, PanelActionRequest, PanelByIdActionRequest, Panel,
     UpdatePanelRequest,
 };
 
@@ -72,7 +72,7 @@ impl PanelApi {
         Ok(())
     }
 
-    pub async fn get_panel(&self, panel_id: String) -> Result<PanelInfo> {
+    pub async fn get_panel(&self, panel_id: String) -> Result<Panel> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -91,7 +91,7 @@ impl PanelApi {
         Ok(panel)
     }
 
-    pub async fn search_panel(&self, keyword: String) -> Result<CommonQueryResponse<PanelInfo>> {
+    pub async fn search_panel(&self, keyword: String) -> Result<CommonQueryResponse<Panel>> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -136,7 +136,7 @@ impl PanelApi {
         &self,
         size: Option<i64>,
         bookmark: Option<String>,
-    ) -> Result<CommonQueryResponse<PanelInfo>> {
+    ) -> Result<CommonQueryResponse<Panel>> {
         let token = self.get_token();
         let id = self.get_organization_id();
 

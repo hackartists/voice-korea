@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{Attribute, PanelInfo};
+use models::prelude::{Attribute, Panel};
 
 use crate::{
     components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},
@@ -194,7 +194,7 @@ pub fn AttributeList(
 #[component]
 pub fn PanelList(
     lang: Language,
-    panels: Vec<PanelInfo>,
+    panels: Vec<Panel>,
     attributes: Vec<Attribute>,
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
@@ -293,13 +293,14 @@ pub fn PanelList(
                                         "{panel.count}"
                                     }
                                 }
-                                for attribute in panel.attribute.clone() {
-                                    div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
-                                        for attr in attribute.attribute.clone() {
-                                            PanelLabel { label: attr.name }
-                                        }
-                                    }
-                                }
+                                // TODO: Response type matching
+                                // for attribute in panel.attribute.clone() {
+                                //     div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
+                                //         for attr in attribute.attribute.clone() {
+                                //             PanelLabel { label: attr.name }
+                                //         }
+                                //     }
+                                // }
                                 div { class: "group relative",
                                     div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
                                         button {

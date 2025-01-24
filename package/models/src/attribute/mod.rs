@@ -107,6 +107,10 @@ impl AttributeItem {
         format!("{}#{}", Self::get_deleted_type(), attribute_id)
     }
 
+    pub fn get_deleted_type() -> String {
+        "deleted#attribute#item".to_string()
+    }
+
     pub fn get_type() -> String {
         "attribute#item".to_string()
     }

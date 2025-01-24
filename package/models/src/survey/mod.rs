@@ -144,15 +144,15 @@ impl fmt::Display for QuestionSequence {
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Quota {
-    pub attribute: Option<Attribute>,
-    pub panel: Option<Panel>,
+    pub attribute: Option<SurveyAttribute>,
+    pub panel: Option<SurveyPanel>,
     pub quota: u64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct Attribute {
+pub struct SurveyAttribute {
     // e.g. 1, 2, 3, 4, 5
     pub salary_tier: Option<SalaryTier>,
     // e.g. 02(Seoul), 051(Busan) and so on.
@@ -164,7 +164,7 @@ pub struct Attribute {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct Panel {
+pub struct SurveyPanel {
     panel: Vec<ProofId>,
 }
 

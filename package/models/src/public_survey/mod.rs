@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::{field::Field, prelude::PanelInfo};
+use crate::{field::Field, prelude::Panel};
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
@@ -45,7 +45,7 @@ pub struct PublicSurveySummary {
     pub title: String,
     pub total_response: u64,
     pub survey_response: u64,
-    pub panels: Vec<PanelInfo>,
+    pub panels: Vec<Panel>,
     pub start_date: i64,
     pub end_date: i64,
     pub status: PublicSurveyStatus,

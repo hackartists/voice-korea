@@ -9,7 +9,8 @@ use by_axum::{
 };
 use slog::o;
 use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware
+    // common::CommonQueryResponse, 
+    middleware::auth::authorization_middleware
 };
 use models::prelude::*;
 
@@ -112,7 +113,7 @@ impl PanelControllerV1 {
         slog::debug!(log, "create_panel {:?} {:?}", organization_id, body);
         let cli = easy_dynamodb::get_client(&log);
 
-        let panel = PanelInfo::new(
+        let panel = Panel::new(
             organization_id.to_string(), 
             body.name, 
             body.count

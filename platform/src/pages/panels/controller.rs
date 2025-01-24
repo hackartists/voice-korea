@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{Attribute, PanelInfo};
+use models::prelude::{Attribute, Panel};
 
 use crate::{
     api::common::CommonQueryResponse,
@@ -17,7 +17,7 @@ use super::{
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Controller {
-    panels: Signal<Vec<PanelInfo>>,
+    panels: Signal<Vec<Panel>>,
     attributes: Signal<Vec<Attribute>>,
     popup_service: Signal<PopupService>,
     translate: Signal<PanelTranslate>,
@@ -25,7 +25,7 @@ pub struct Controller {
     attribute_resource:
         Resource<Result<CommonQueryResponse<models::prelude::Attribute>, ServerFnError>>,
     panel_resource:
-        Resource<Result<CommonQueryResponse<models::prelude::PanelInfo>, ServerFnError>>,
+        Resource<Result<CommonQueryResponse<models::prelude::Panel>, ServerFnError>>,
 
     attribute_bookmark: Signal<Option<String>>,
     panel_bookmark: Signal<Option<String>>,
@@ -67,7 +67,7 @@ impl Controller {
         });
 
         let panel_resource: Resource<
-            Result<CommonQueryResponse<models::prelude::PanelInfo>, ServerFnError>,
+            Result<CommonQueryResponse<models::prelude::Panel>, ServerFnError>,
         > = use_resource(move || {
             let api = panel_api.clone();
             //FIXME: add bookmark
@@ -129,7 +129,7 @@ impl Controller {
         self.panel_resource.restart();
     }
 
-    pub fn get_panels(&self) -> Vec<PanelInfo> {
+    pub fn get_panels(&self) -> Vec<Panel> {
         tracing::debug!("this line come panel: {:?}", (self.panels)());
         (self.panels)()
     }

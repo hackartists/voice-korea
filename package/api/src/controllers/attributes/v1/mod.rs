@@ -10,7 +10,8 @@ use by_axum::{
 use slog::o;
 
 use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware,
+    // common::CommonQueryResponse, 
+    middleware::auth::authorization_middleware,
 };
 
 use models::prelude::*;
@@ -158,6 +159,8 @@ impl AttributeControllerV1 {
                 .await
                 .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
         }
+
+        Ok(())
     }
 }
 

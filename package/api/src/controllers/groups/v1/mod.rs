@@ -738,9 +738,9 @@ impl GroupControllerV1 {
                     let member_id = match find_member_by_email(
                         member.member_email.clone(),
                         organization_id.clone(),
-                    ).await {
-                        Ok(m) => m.id,
-                        Err(_) => {
+                    ).await? {
+                        Some(m) => m.id,
+                        None => {
                             slog::error!(log, "Member not found");
                             return Err(ApiError::NotFound);
                         }
