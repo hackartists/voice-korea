@@ -1,9 +1,18 @@
 use chrono::{Local, TimeZone};
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
-use models::prelude::UpdateMemberRequest;
+use dioxus_translate::{translate, Language};
+use models::prelude::{GroupMemberRelationship, UpdateMemberRequest};
 
-use crate::service::member_api::MemberApi;
+use crate::{
+    models::role_field::RoleField,
+    service::{member_api::MemberApi, popup_service::PopupService},
+};
+
+use super::{
+    i18n::MemberDetailTranslate,
+    page::{RemoveMemberModal, RemoveProjectModal},
+};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum ProjectType {
@@ -42,18 +51,26 @@ pub struct ProjectHistory {
     pub project_status: ProjectStatus,
 }
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     pub member: Signal<MemberDetail>,
     pub groups: Signal<Vec<String>>,
-    pub roles: Signal<Vec<String>>,
-    pub member_resource: Resource<Result<models::prelude::OrganizationMember, ServerFnError>>,
+    pub roles: Signal<Vec<RoleField>>,
+    pub member_resource: Resource<Result<GroupMemberRelationship, ServerFnError>>,
+
+    pub member_api: MemberApi,
+    pub popup_service: Signal<PopupService>,
 }
 
 impl Controller {
-    pub fn init(_lang: dioxus_translate::Language, member_id: String) -> Self {
+    pub fn init(
+        lang: dioxus_translate::Language,
+        popup_service: PopupService,
+        member_id: String,
+    ) -> Self {
+        let translates: MemberDetailTranslate = translate(&lang);
         let api: MemberApi = use_context();
-        let member_resource: Resource<Result<models::prelude::OrganizationMember, ServerFnError>> =
+        let member_resource: Resource<Result<GroupMemberRelationship, ServerFnError>> =
             use_resource(move || {
                 let api = api.clone();
                 let member_id = member_id.clone();
@@ -64,35 +81,56 @@ impl Controller {
             groups: use_signal(|| vec![]),
             roles: use_signal(|| {
                 vec![
-                    "관리자".to_string(),
-                    "공론 관리자".to_string(),
-                    "분석가".to_string(),
-                    "중계자".to_string(),
-                    "강연자".to_string(),
+                    RoleField {
+                        db_name: "super_admin".to_string(),
+                        field: translates.manager.to_string(),
+                    },
+                    RoleField {
+                        db_name: "public_admin".to_string(),
+                        field: translates.opinion_manager.to_string(),
+                    },
+                    RoleField {
+                        db_name: "analyst".to_string(),
+                        field: translates.analyst.to_string(),
+                    },
+                    RoleField {
+                        db_name: "mediator".to_string(),
+                        field: translates.mediator.to_string(),
+                    },
+                    RoleField {
+                        db_name: "speaker".to_string(),
+                        field: translates.speaker.to_string(),
+                    },
                 ]
             }),
             member_resource,
+            member_api: api,
+            popup_service: use_signal(|| popup_service),
         };
 
         let member = if let Some(v) = member_resource.value()() {
             match v {
                 Ok(d) => {
-                    let seconds = d.created_at / 1000;
-                    let nanoseconds = (d.created_at % 1000) * 1_000_000;
+                    let seconds = d.member.created_at / 1000;
+                    let nanoseconds = (d.member.created_at % 1000) * 1_000_000;
                     let datetime = Local.timestamp_opt(seconds, nanoseconds as u32).unwrap();
 
                     let formatted_date = datetime.format("%Y년 %m월 %d일").to_string();
 
                     let data = MemberDetail {
-                        email: d.email.clone(),
+                        email: d.member.email.clone(),
                         profile_image: None,
-                        profile_name: d.name,
+                        profile_name: d.member.name,
                         //FIXME: fix to group
-                        group: "".to_string(),
-                        role: if d.role.is_none() {
-                            "none".to_string()
+                        group: if d.groups.len() == 0 {
+                            "".to_string()
                         } else {
-                            d.role.unwrap().to_string()
+                            d.groups[0].name.clone()
+                        },
+                        role: if d.member.role.is_none() {
+                            "".to_string()
+                        } else {
+                            d.member.role.clone().unwrap().to_string()
                         },
                         register_date: formatted_date,
                         project_history: vec![],
@@ -127,7 +165,7 @@ impl Controller {
         (self.groups)()
     }
 
-    pub fn get_roles(&self) -> Vec<String> {
+    pub fn get_roles(&self) -> Vec<RoleField> {
         (self.roles)()
     }
 
@@ -149,5 +187,65 @@ impl Controller {
                 tracing::error!("remove failed: {v}");
             }
         };
+    }
+
+    pub async fn open_remove_project_modal(
+        &self,
+        lang: Language,
+        member_id: String,
+        history_id: String,
+    ) {
+        let mut popup_service = (self.popup_service)().clone();
+        let translates: MemberDetailTranslate = translate(&lang);
+        let _api: MemberApi = self.member_api;
+
+        let _member_resource = self.member_resource;
+
+        popup_service
+            .open(rsx! {
+                RemoveProjectModal {
+                    lang,
+                    remove_project: move |_e: MouseEvent| {
+                        let member_id = member_id.clone();
+                        let history_id = history_id.clone();
+                        async move {
+                            tracing::debug!("remove project clicked id: {} {}", member_id, history_id);
+                        }
+                    },
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("remove_project_title")
+            .with_title(translates.remove_project_title);
+    }
+
+    pub async fn open_remove_member_modal(&self, lang: Language, member_id: String) {
+        let mut popup_service = (self.popup_service)().clone();
+        let translates: MemberDetailTranslate = translate(&lang);
+        let api: MemberApi = self.member_api;
+
+        let mut member_resource = self.member_resource;
+
+        popup_service
+            .open(rsx! {
+                RemoveMemberModal {
+                    lang,
+                    remove_member: move |_e: MouseEvent| {
+                        let member_id = member_id.clone();
+                        async move {
+                            let _ = api.remove_member(member_id.clone()).await;
+                            member_resource.restart();
+                            popup_service.close();
+                        }
+                    },
+                    onclose: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("remove_team_member_title")
+            .with_title(translates.remove_team_member_title);
     }
 }

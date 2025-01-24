@@ -26,19 +26,44 @@ pub struct Controller {
         Resource<Result<CommonQueryResponse<models::prelude::AttributeSummary>, ServerFnError>>,
     panel_resource:
         Resource<Result<CommonQueryResponse<models::prelude::PanelSummary>, ServerFnError>>,
+
+    attribute_bookmark: Signal<Option<String>>,
+    panel_bookmark: Signal<Option<String>>,
 }
 
 impl Controller {
     pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
         let attribute_api: AttributeApi = use_context();
         let panel_api: PanelApi = use_context();
+        let translate: PanelTranslate = translate(&lang);
+
+        let mut attribute_bookmark = Signal::new(None);
+        let mut panel_bookmark = Signal::new(None);
 
         let attribute_resource: Resource<
             Result<CommonQueryResponse<models::prelude::AttributeSummary>, ServerFnError>,
         > = use_resource(move || {
             let api = attribute_api.clone();
+            let bookmark = attribute_bookmark();
             //FIXME: add bookmark
-            async move { api.list_attributes(Some(100), None).await }
+            async move {
+                let res = api.list_attributes(Some(5), bookmark).await;
+
+                match res.clone() {
+                    Ok(v) => {
+                        if let Some(bookmark) = v.bookmark {
+                            if attribute_bookmark() != Some(bookmark.clone()) {
+                                attribute_bookmark.set(Some(bookmark.clone()));
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("error: {:?}", e);
+                    }
+                }
+
+                res
+            }
         });
 
         let panel_resource: Resource<
@@ -46,40 +71,66 @@ impl Controller {
         > = use_resource(move || {
             let api = panel_api.clone();
             //FIXME: add bookmark
-            async move { api.list_panels(Some(100), None).await }
+            async move {
+                let res = api.list_panels(Some(5), None).await;
+                match res.clone() {
+                    Ok(v) => {
+                        if let Some(bookmark) = v.bookmark {
+                            if panel_bookmark() != Some(bookmark.clone()) {
+                                panel_bookmark.set(Some(bookmark.clone()));
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("error: {:?}", e);
+                    }
+                }
+
+                res
+            }
         });
 
-        let translate: PanelTranslate = translate(&lang);
-        let attributes = if let Some(v) = attribute_resource.value()() {
-            match v {
-                Ok(d) => d.items,
-                Err(_) => vec![],
-            }
-        } else {
-            vec![]
-        };
-
-        let panels = if let Some(v) = panel_resource.value()() {
-            match v {
-                Ok(d) => d.items,
-                Err(_) => vec![],
-            }
-        } else {
-            vec![]
-        };
-        let ctrl = Self {
-            panels: use_signal(|| panels),
-            attributes: use_signal(|| attributes),
+        let mut ctrl = Self {
+            panels: use_signal(|| vec![]),
+            attributes: use_signal(|| vec![]),
             popup_service: use_signal(|| popup_service),
             translate: use_signal(|| translate),
 
             attribute_resource,
             panel_resource,
+
+            attribute_bookmark,
+            panel_bookmark,
         };
+
+        match panel_resource.value()() {
+            Some(panel) => {
+                if panel.is_ok() {
+                    ctrl.panels.set(panel.unwrap().items);
+                }
+            }
+            _ => {}
+        }
+
+        match attribute_resource.value()() {
+            Some(attribute) => {
+                if attribute.is_ok() {
+                    ctrl.attributes.set(attribute.unwrap().items);
+                }
+            }
+            _ => {}
+        }
+
+        use_context_provider(|| ctrl);
         ctrl
     }
 
+    pub async fn next_panel_clicked(&mut self) {
+        self.panel_resource.restart();
+    }
+
     pub fn get_panels(&self) -> Vec<PanelSummary> {
+        tracing::debug!("this line come panel: {:?}", (self.panels)());
         (self.panels)()
     }
 

@@ -4,9 +4,14 @@ use super::i18n::GroupDetailTranslate;
 use dioxus::prelude::*;
 use dioxus_translate::translate;
 use dioxus_translate::Language;
-use models::prelude::GroupMemberResponse;
+use models::prelude::{GroupMemberResponse, TeamMemberRequest};
 
 use crate::components::icons::Plus;
+use crate::pages::groups::_id::i18n::{
+    AddDetailMemberModalTranslate, RemoveDetailGroupMemberModalTranslate,
+    RemoveDetailGroupModalTranslate, RemoveDetailProjectModalTranslate,
+    UpdateDetailGroupNameModalTranslate,
+};
 use crate::{
     components::{
         icons::{AddUser, ArrowLeft, ArrowRight, ColOption, Expand, RowOption, Search, Switch},
@@ -107,155 +112,23 @@ pub struct AddMemberTranslate {
     investigation: String,
 }
 
-#[derive(Clone, PartialEq)]
-pub enum ModalType {
-    None,
-    UpdateGroupName,
-    RemoveGroup,
-    RemoveMember,
-    RemoveProject,
-    AddMember,
-}
-
 #[component]
 pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
-    let mut ctrl = Controller::init(props.lang, props.group_id.clone());
+    let popup: PopupService = use_context();
+    let ctrl = Controller::init(props.lang, popup, props.group_id.clone());
     let group = ctrl.get_group();
     let total_groups = ctrl.get_groups();
     let total_roles = ctrl.get_roles();
     let group_id_copy1 = props.group_id.clone();
     let group_id_copy2 = props.group_id.clone();
+    let group_id_copy3 = props.group_id.clone();
+    let group_id_copy4 = props.group_id.clone();
+    let group_id_copy5 = props.group_id.clone();
 
     let group_name = group.group.clone();
+    let group_name_copy = group_name.clone();
 
     let translates: GroupDetailTranslate = translate(&props.lang);
-    let mut modal_type = use_signal(|| ModalType::None);
-    let mut popup: PopupService = use_context();
-
-    let navigator = use_navigator();
-
-    if ModalType::UpdateGroupName == modal_type() {
-        popup
-            .open(rsx! {
-                UpdateGroupNameModal {
-                    update_group_name: move |name: String| {
-                        let group_id = group_id_copy1.clone();
-                        async move {
-                            ctrl.update_group_name(group_id, name).await;
-                            modal_type.set(ModalType::None);
-                        }
-                    },
-                    initialize_group_name: group_name.clone(),
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                    },
-                    i18n: UpdateGroupNameTranslate {
-                        update_group_name_modal_info: translates
-                            .update_group_name_modal_info
-                            .to_string(),
-                        group_name: translates.group_name.to_string(),
-                        update_group_name_hint: translates.update_group_name_hint.to_string(),
-                        update_group_name_warning: translates.update_group_name_warning.to_string(),
-                        update: translates.update.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                }
-            })
-            .with_id("update_group_name")
-            .with_title(translates.update_group_name);
-    } else if ModalType::RemoveGroup == modal_type() {
-        popup
-            .open(rsx! {
-                RemoveGroupModal {
-                    remove_group: move |_e: MouseEvent| {
-                        let group_id = group_id_copy2.clone();
-                        async move {
-                            ctrl.remove_group(group_id).await;
-                            modal_type.set(ModalType::None);
-                            navigator
-                                .push(Route::GroupPage {
-                                    lang: props.lang,
-                                });
-                        }
-                    },
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                    },
-                    i18n: RemoveGroupTranslate {
-                        remove_group_modal_title: translates.remove_group_modal_title.to_string(),
-                        remove_group_modal_info: translates.remove_group_modal_info.to_string(),
-                        remove: translates.remove.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                }
-            })
-            .with_id("remove_group")
-            .with_title(translates.remove_group);
-    } else if ModalType::RemoveMember == modal_type() {
-        popup
-            .open(rsx! {
-                RemoveMemberModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                    },
-                    i18n: RemoveMemberTranslate {
-                        remove_member_modal_title: translates.remove_member_modal_title.to_string(),
-                        remove_member_modal_info: translates.remove_member_modal_info.to_string(),
-                        remove: translates.remove.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                }
-            })
-            .with_id("remove_team_member")
-            .with_title(translates.remove_team_member);
-    } else if ModalType::AddMember == modal_type() {
-        popup
-            .open(rsx! {
-                AddMemberModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                    },
-                    roles: total_roles.clone(),
-                    i18n: AddMemberTranslate {
-                        necessary: translates.necessary.to_string(),
-                        input_email_address: translates.input_email_address.to_string(),
-                        input_email_address_hint: translates.input_email_address_hint.to_string(),
-                        input_email_address_info: translates.input_email_address_info.to_string(),
-                        privacy: translates.privacy.to_string(),
-                        required_input: translates.required_input.to_string(),
-                        select_role: translates.select_role.to_string(),
-                        invite_project: translates.invite_project.to_string(),
-                        invite: translates.invite.to_string(),
-                        cancel: translates.cancel.to_string(),
-                        name: translates.name.to_string(),
-                        role: translates.role.to_string(),
-                        public_opinion: translates.public_opinion.to_string(),
-                        investigation: translates.investigation.to_string(),
-                    },
-                }
-            })
-            .with_id("add_team_member")
-            .with_title(translates.add_team_member);
-    } else if ModalType::RemoveProject == modal_type() {
-        popup
-            .open(rsx! {
-                RemoveProjectModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                    },
-                    i18n: RemoveProjectTranslate {
-                        remove_project_modal_title: translates.remove_project_modal_title.to_string(),
-                        remove_project_modal_info: translates.remove_project_modal_info.to_string(),
-                        remove: translates.remove.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                }
-            })
-            .with_id("remove_project")
-            .with_title(translates.remove_project);
-    } else {
-        popup.close();
-    }
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -284,14 +157,26 @@ pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
                             li {
                                 class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                 onclick: move |_| {
-                                    modal_type.set(ModalType::RemoveGroup);
+                                    let group_id = group_id_copy1.clone();
+                                    async move {
+                                        ctrl.open_remove_group_modal(props.lang, group_id.clone()).await;
+                                    }
                                 },
                                 {translates.remove_group}
                             }
                             li {
                                 class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                 onclick: move |_| {
-                                    modal_type.set(ModalType::UpdateGroupName);
+                                    let group_id = group_id_copy2.clone();
+                                    let group_name = group_name.clone();
+                                    async move {
+                                        ctrl.open_update_group_name_modal(
+                                                props.lang,
+                                                group_id.clone(),
+                                                group_name.clone(),
+                                            )
+                                            .await;
+                                    }
                                 },
                                 {translates.update_group_name}
                             }
@@ -307,7 +192,7 @@ pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
                     members: ctrl.get_group().group_members,
                     total_groups,
                     total_roles,
-                    group_name,
+                    group_name: group_name_copy.clone(),
                     i18n: GroupParticipantTranslate {
                         group_team_member: translates.group_team_member.to_string(),
                         add_member: translates.add_member.to_string(),
@@ -319,11 +204,22 @@ pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
                         no_role: translates.no_role.to_string(),
                         remove_team_member: translates.remove_team_member_li.to_string(),
                     },
-                    change_popup_state: move |modal: String| {
-                        if modal == "add_member" {
-                            modal_type.set(ModalType::AddMember);
-                        } else {
-                            modal_type.set(ModalType::RemoveMember);
+                    onadd: move |_e: MouseEvent| {
+                        let group_id = group_id_copy3.clone();
+                        async move {
+                            ctrl.open_add_member_modal(props.lang, group_id.clone()).await;
+                        }
+                    },
+                    onremove: move |member_id: String| {
+                        let member_id = member_id.clone();
+                        let group_id = group_id_copy4.clone();
+                        async move {
+                            ctrl.open_remove_member_modal(
+                                    props.lang,
+                                    group_id.clone(),
+                                    member_id.clone(),
+                                )
+                                .await;
                         }
                     },
                 }
@@ -344,8 +240,13 @@ pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
                         finish: translates.finish.to_string(),
                         exclude_from_project: translates.exclude_from_project.to_string(),
                     },
+                    //FIXME: fix real project id
                     change_popup_state: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::RemoveProject);
+                        let group_id = group_id_copy5.clone();
+                        async move {
+                            ctrl.open_remove_project_modal(props.lang, group_id.clone(), "0".to_string())
+                                .await;
+                        }
                     },
                 }
             }
@@ -507,7 +408,8 @@ pub fn GroupParticipant(
     members: Vec<GroupMemberResponse>,
     total_groups: Vec<String>,
     total_roles: Vec<String>,
-    change_popup_state: EventHandler<String>,
+    onadd: EventHandler<MouseEvent>,
+    onremove: EventHandler<String>,
     group_name: String,
     i18n: GroupParticipantTranslate,
 ) -> Element {
@@ -549,8 +451,8 @@ pub fn GroupParticipant(
                     div { class: "flex flex-row gap-[40px] items-center",
                         div {
                             class: "flex flex-row w-[150px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px] cursor-pointer",
-                            onclick: move |_| {
-                                change_popup_state.call("add_member".to_string());
+                            onclick: move |e| {
+                                onadd.call(e);
                             },
                             AddUser { width: "24", height: "24" }
                             div { class: "text-white font-bold text-[16px]", {i18n.add_member} }
@@ -671,8 +573,11 @@ pub fn GroupParticipant(
                                         ul { class: "py-1",
                                             li {
                                                 class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                onclick: move |_| {
-                                                    change_popup_state.call("remove_member".to_string());
+                                                onclick: {
+                                                    let member_id = member.org_member_id.clone();
+                                                    move |_| {
+                                                        onremove.call(member_id.clone());
+                                                    }
                                                 },
                                                 {i18n.remove_team_member.clone()}
                                             }
@@ -690,9 +595,11 @@ pub fn GroupParticipant(
 
 #[component]
 pub fn RemoveProjectModal(
+    lang: Language,
+    onremove: EventHandler<MouseEvent>,
     onclose: EventHandler<MouseEvent>,
-    i18n: RemoveProjectTranslate,
 ) -> Element {
+    let i18n: RemoveDetailProjectModalTranslate = translate(&lang);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "flex flex-col text-[#222222] font-normal text-[14px] gap-[5px]",
@@ -702,15 +609,17 @@ pub fn RemoveProjectModal(
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
                 div {
                     class: "flex flex-row w-[85px] h-[40px] justify-center items-center bg-[#2a60d3] rounded-md cursor-pointer",
-                    onclick: move |_| {},
-                    div { class: "text-white font-bold text-[16px]", {i18n.remove.clone()} }
+                    onclick: move |e: MouseEvent| {
+                        onremove.call(e);
+                    },
+                    div { class: "text-white font-bold text-[16px]", "{i18n.remove}" }
                 }
                 div {
                     class: "flex flex-row w-[85px] h-[40px] font-semibold text-[16px] text-[#222222] justify-center items-center cursor-pointer",
                     onclick: move |e: MouseEvent| {
                         onclose.call(e);
                     },
-                    {i18n.cancel.clone()}
+                    "{i18n.cancel}"
                 }
             }
         }
@@ -719,9 +628,12 @@ pub fn RemoveProjectModal(
 
 #[component]
 pub fn RemoveMemberModal(
+    lang: Language,
+    onremove: EventHandler<MouseEvent>,
     onclose: EventHandler<MouseEvent>,
-    i18n: RemoveMemberTranslate,
 ) -> Element {
+    let i18n: RemoveDetailGroupMemberModalTranslate = translate(&lang);
+
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "flex flex-col text-[#222222] font-normal text-[14px] gap-[5px]",
@@ -732,14 +644,14 @@ pub fn RemoveMemberModal(
                 div {
                     class: "flex flex-row w-[85px] h-[40px] justify-center items-center bg-[#2a60d3] rounded-md cursor-pointer",
                     onclick: move |_| {},
-                    div { class: "text-white font-bold text-[16px]", {i18n.remove.clone()} }
+                    div { class: "text-white font-bold text-[16px]", "{i18n.remove}" }
                 }
                 div {
                     class: "flex flex-row w-[85px] h-[40px] font-semibold text-[16px] text-[#222222] justify-center items-center cursor-pointer",
                     onclick: move |e: MouseEvent| {
                         onclose.call(e);
                     },
-                    {i18n.cancel.clone()}
+                    "{i18n.cancel}"
                 }
             }
         }
@@ -748,11 +660,12 @@ pub fn RemoveMemberModal(
 
 #[component]
 pub fn UpdateGroupNameModal(
+    lang: Language,
     onclose: EventHandler<MouseEvent>,
     update_group_name: EventHandler<String>,
     initialize_group_name: String,
-    i18n: UpdateGroupNameTranslate,
 ) -> Element {
+    let i18n: UpdateDetailGroupNameModalTranslate = translate(&lang);
     let mut group_name = use_signal(|| initialize_group_name);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -796,10 +709,11 @@ pub fn UpdateGroupNameModal(
 
 #[component]
 pub fn RemoveGroupModal(
+    lang: Language,
     onclose: EventHandler<MouseEvent>,
     remove_group: EventHandler<MouseEvent>,
-    i18n: RemoveGroupTranslate,
 ) -> Element {
+    let i18n: RemoveDetailGroupModalTranslate = translate(&lang);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "flex flex-col text-[#222222] font-normal text-[14px] gap-[5px]",
@@ -828,10 +742,13 @@ pub fn RemoveGroupModal(
 
 #[component]
 pub fn AddMemberModal(
+    lang: Language,
     roles: Vec<String>,
     onclose: EventHandler<MouseEvent>,
-    i18n: AddMemberTranslate,
+    onadd: EventHandler<TeamMemberRequest>,
 ) -> Element {
+    let i18n: AddDetailMemberModalTranslate = translate(&lang);
+
     let mut email = use_signal(|| "".to_string());
 
     let mut name = use_signal(|| "".to_string());
@@ -932,7 +849,17 @@ pub fn AddMemberModal(
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
                 div {
                     class: "flex flex-row w-[120px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px] cursor-pointer",
-                    onclick: move |_| {},
+                    //FIXME: fix to member id, group field hardcoding
+                    onclick: move |_| {
+                        onadd
+                            .call(TeamMemberRequest {
+                                member_id: "".to_string(),
+                                email: email(),
+                                name: if name() != "" { Some(name()) } else { None },
+                                role: if select_role() != "" { Some(select_role()) } else { None },
+                                group: None,
+                            });
+                    },
                     AddUser { width: "24", height: "24" }
                     div { class: "text-white font-bold text-[16px]", {i18n.invite} }
                 }

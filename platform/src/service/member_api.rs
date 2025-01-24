@@ -3,12 +3,12 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use models::prelude::{
-    CreateMemberRequest, InviteMemberRequest, MemberActionRequest, MemberByIdActionRequest,
-    OrganizationMember, UpdateMemberRequest,
+    CreateMemberRequest, GroupMemberRelationship, InviteMemberRequest, ListMemberResponse,
+    MemberActionRequest, MemberByIdActionRequest, UpdateMemberRequest,
 };
 
 use super::{login_service::LoginService, organization_api::OrganizationApi};
-use crate::{api::common::CommonQueryResponse, utils::api::ReqwestClient};
+use crate::utils::api::ReqwestClient;
 
 #[derive(Debug, Clone, Copy)]
 pub struct MemberApi {
@@ -90,7 +90,7 @@ impl MemberApi {
         &self,
         size: Option<i64>,
         bookmark: Option<String>,
-    ) -> Result<CommonQueryResponse<OrganizationMember>> {
+    ) -> Result<ListMemberResponse> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -118,7 +118,7 @@ impl MemberApi {
         Ok(members)
     }
 
-    pub async fn get_member(&self, user_id: String) -> Result<OrganizationMember> {
+    pub async fn get_member(&self, user_id: String) -> Result<GroupMemberRelationship> {
         let token = self.get_token();
         let id = self.get_organization_id();
 

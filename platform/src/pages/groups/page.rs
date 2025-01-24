@@ -1,10 +1,13 @@
 #![allow(non_snake_case)]
 use crate::pages::groups::controller::Controller;
-use crate::service::group_api::GroupApi;
+use crate::pages::groups::i18n::CreateGroupModalTranslate;
+use crate::pages::groups::i18n::RemoveGroupModalTranslate;
+use crate::pages::groups::i18n::UpdateGroupNameModalTranslate;
 use dioxus::prelude::*;
 use dioxus_translate::translate;
 use dioxus_translate::Language;
 use i18n::GroupTranslate;
+use models::prelude::CreateGroupRequest;
 
 use crate::{
     components::{
@@ -22,52 +25,12 @@ pub struct GroupPageProps {
     lang: Language,
 }
 
-#[derive(Props, Clone, PartialEq)]
-pub struct UpdateGroupNameModalTranslates {
-    update_group_name_info: String,
-    update_group_name_hint: String,
-    update_group_name_warning: String,
-    group_name: String,
-    update: String,
-    cancel: String,
-}
-
-#[derive(Props, Clone, PartialEq)]
-pub struct RemoveGroupModalTranslates {
-    remove_warning: String,
-    remove_info: String,
-    remove: String,
-    cancel: String,
-}
-
-#[derive(Props, Clone, PartialEq)]
-pub struct CreateGroupModalTranslates {
-    group_name: String,
-    input_contents: String,
-    create_group_hint: String,
-    add_team_member: String,
-    team_member: String,
-    invite_project: String,
-    public_opinion: String,
-    investigation: String,
-    create: String,
-    cancel: String,
-}
-
-#[derive(Clone, PartialEq)]
-pub enum ModalType {
-    None,
-    UpdateGroupName(String),
-    RemoveGroup(String),
-    CreateGroup,
-}
-
 #[component]
 pub fn GroupPage(props: GroupPageProps) -> Element {
-    let mut ctrl = Controller::init(props.lang);
+    let popup: PopupService = use_context();
+    let ctrl = Controller::init(props.lang, popup);
     let mut name = use_signal(|| "".to_string());
     let mut is_focused = use_signal(|| false);
-    let mut modal_type = use_signal(|| ModalType::None);
     let translates: GroupTranslate = translate(&props.lang);
 
     let mut clicked_group_id = use_signal(|| "".to_string());
@@ -80,102 +43,10 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
     let mut member_clicked = use_signal(|| vec![]);
     let mut member_extended = use_signal(|| vec![]);
 
-    let group_api: GroupApi = use_context();
-
     use_effect(use_reactive(&group_len, move |group_len| {
         member_clicked.set(vec![false; group_len]);
         member_extended.set(vec![false; group_len]);
     }));
-
-    let mut popup: PopupService = use_context();
-    if let ModalType::UpdateGroupName(_group_id) = modal_type() {
-        popup
-            .open(rsx! {
-                UpdateGroupNameModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                        clicked_group_id.set("".to_string());
-                        clicked_group_name.set("".to_string());
-                    },
-                    i18n: UpdateGroupNameModalTranslates {
-                        update_group_name_info: translates.update_group_name_info.to_string(),
-                        update_group_name_hint: translates.update_group_name_hint.to_string(),
-                        update_group_name_warning: translates.update_group_name_warning.to_string(),
-                        group_name: translates.group_name.to_string(),
-                        update: translates.update.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                    initialize_group_name: clicked_group_name(),
-                    update_group_name: move |group_name: String| {
-                        let group_name = group_name.clone();
-                        async move {
-                            let _ = ctrl
-                                .update_group_name(&group_api, clicked_group_id(), group_name)
-                                .await;
-                            modal_type.set(ModalType::None);
-                            clicked_group_id.set("".to_string());
-                            clicked_group_name.set("".to_string());
-                        }
-                    },
-                }
-            })
-            .with_id("update_group")
-            .with_title(translates.update_group_name);
-    } else if let ModalType::RemoveGroup(_group_id) = modal_type() {
-        popup
-            .open(rsx! {
-                RemoveGroupModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                        clicked_group_id.set("".to_string());
-                        clicked_group_name.set("".to_string());
-                    },
-                    i18n: RemoveGroupModalTranslates {
-                        remove_warning: translates.remove_warning.to_string(),
-                        remove_info: translates.remove_info.to_string(),
-                        remove: translates.remove.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                    remove_group: move |_e: Event<MouseData>| {
-                        async move {
-                            let _ = ctrl.remove_group(&group_api, clicked_group_id()).await;
-                            modal_type.set(ModalType::None);
-                            clicked_group_id.set("".to_string());
-                            clicked_group_name.set("".to_string());
-                        }
-                    },
-                }
-            })
-            .with_id("remove_group")
-            .with_title(translates.remove_group);
-    } else if let ModalType::CreateGroup = modal_type() {
-        popup
-            .open(rsx! {
-                CreateGroupModal {
-                    onclose: move |_e: MouseEvent| {
-                        modal_type.set(ModalType::None);
-                        clicked_group_id.set("".to_string());
-                        clicked_group_name.set("".to_string());
-                    },
-                    i18n: CreateGroupModalTranslates {
-                        group_name: translates.group_name.to_string(),
-                        input_contents: translates.input_contents.to_string(),
-                        create_group_hint: translates.create_group_hint.to_string(),
-                        add_team_member: translates.add_team_member.to_string(),
-                        team_member: translates.team_member.to_string(),
-                        invite_project: translates.invite_project.to_string(),
-                        public_opinion: translates.public_opinion.to_string(),
-                        investigation: translates.investigation.to_string(),
-                        create: translates.create.to_string(),
-                        cancel: translates.cancel.to_string(),
-                    },
-                }
-            })
-            .with_id("create_group")
-            .with_title(translates.create_group);
-    } else {
-        popup.close();
-    }
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -208,9 +79,6 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                             placeholder: "Enter public name or email address".to_string(),
                             value: (name)(),
                             onfocus: move |_| {
-                                if !popup.is_opened() {
-                                    modal_type.set(ModalType::None);
-                                }
                                 is_focused.set(true);
                             },
                             onblur: move |_| {
@@ -227,8 +95,9 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                             Folder { width: "24", height: "24" }
                             div {
                                 class: "text-white font-bold text-[16px]",
-                                onclick: move |_| {
-                                    modal_type.set(ModalType::CreateGroup);
+                                onclick: move |_| async move {
+                                    ctrl.open_create_group_modal(props.lang, clicked_group_id, clicked_group_name)
+                                        .await;
                                 },
                                 "{translates.create_group}"
                             }
@@ -359,15 +228,21 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                                 ul { class: "py-1",
                                                     li {
                                                         class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                        onclick: move |_| {
-                                                            modal_type.set(ModalType::RemoveGroup(clicked_group_id()));
+                                                        onclick: move |_| async move {
+                                                            ctrl.open_remove_group_modal(props.lang, clicked_group_id, clicked_group_name)
+                                                                .await;
                                                         },
                                                         "{translates.remove_group_li}"
                                                     }
                                                     li {
                                                         class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                        onclick: move |_| {
-                                                            modal_type.set(ModalType::UpdateGroupName(clicked_group_id()));
+                                                        onclick: move |_| async move {
+                                                            ctrl.open_update_group_name_modal(
+                                                                    props.lang,
+                                                                    clicked_group_id,
+                                                                    clicked_group_name,
+                                                                )
+                                                                .await;
                                                         },
                                                         "{translates.update_group_name_li}"
                                                     }
@@ -408,11 +283,12 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
 
 #[component]
 pub fn UpdateGroupNameModal(
+    lang: Language,
     onclose: EventHandler<MouseEvent>,
-    i18n: UpdateGroupNameModalTranslates,
     initialize_group_name: String,
     update_group_name: EventHandler<String>,
 ) -> Element {
+    let i18n: UpdateGroupNameModalTranslate = translate(&lang);
     let mut group_name = use_signal(|| initialize_group_name);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -456,10 +332,11 @@ pub fn UpdateGroupNameModal(
 
 #[component]
 pub fn RemoveGroupModal(
+    lang: Language,
     onclose: EventHandler<MouseEvent>,
-    i18n: RemoveGroupModalTranslates,
     remove_group: EventHandler<MouseEvent>,
 ) -> Element {
+    let i18n: RemoveGroupModalTranslate = translate(&lang);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start ",
             div { class: "flex flex-col text-[#222222] font-normal text-[14px] gap-[5px]",
@@ -488,9 +365,11 @@ pub fn RemoveGroupModal(
 
 #[component]
 pub fn CreateGroupModal(
+    lang: Language,
     onclose: EventHandler<MouseEvent>,
-    i18n: CreateGroupModalTranslates,
+    oncreate: EventHandler<CreateGroupRequest>,
 ) -> Element {
+    let i18n: CreateGroupModalTranslate = translate(&lang);
     let mut group_name = use_signal(|| "".to_string());
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start ",
@@ -538,8 +417,18 @@ pub fn CreateGroupModal(
                 }
             }
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
-                div { class: "flex flex-row w-[110px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px]",
-                    //FIMME: implement create logic with condition
+                button {
+                    class: "flex flex-row w-[110px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px]",
+                    //FIXME: add members, projects content
+                    onclick: move |_| async move {
+                        oncreate
+                            .call(CreateGroupRequest {
+                                name: group_name(),
+                                members: vec![],
+                                public_opinion_projects: vec![],
+                                investigation_projects: vec![],
+                            });
+                    },
                     Folder { width: "24", height: "24" }
                     div { class: "text-white font-bold text-[16px]", {i18n.create} }
                 }

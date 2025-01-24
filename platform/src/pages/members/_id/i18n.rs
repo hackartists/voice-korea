@@ -144,4 +144,67 @@ translate! {
         ko: "삭제된 팀원은 복원할 수 없습니다. 삭제 전에 다시 한번 확인해주세요.",
         en: "Deleted team members cannot be restored. Please check again before deleting.",
     },
+
+    manager: {
+        ko: "관리자",
+        en: "Manager"
+    }
+    opinion_manager: {
+        ko: "공론 관리자",
+        en: "Public Opinion Manager"
+    }
+    analyst: {
+        ko: "분석가",
+        en: "Analyst"
+    }
+    mediator: {
+        ko: "중계자",
+        en: "Mediator"
+    }
+    speaker: {
+        ko: "강연자",
+        en: "Speaker"
+    }
+}
+
+translate! {
+    RemoveProjectModalTranslate;
+
+    remove_project_info: {
+        ko: "정말 삭제하시겠습니까?",
+        en: "Are you sure you want to delete it?",
+    },
+    remove_project_warning: {
+        ko: "삭제된 프로젝트는 복원할 수 없습니다. 삭제 전에 다시 한번 확인해주세요.",
+        en: "Deleted projects cannot be restored. Please check again before deleting.",
+    },
+    remove: {
+        ko: "삭제하기",
+        en: "Remove",
+    },
+    cancel: {
+        ko: "취소하기",
+        en: "Cancel",
+    },
+}
+
+translate! {
+    RemoveMemberDetailModalTranslate;
+
+    remove_member_info: {
+        ko: "정말 삭제하시겠습니까?",
+        en: "Are you sure you want to delete it?",
+    },
+    remove_member_warning: {
+        ko: "삭제된 팀원은 복원할 수 없습니다. 삭제 전에 다시 한번 확인해주세요.",
+        en: "Deleted team members cannot be restored. Please check again before deleting.",
+    },
+    remove: {
+        ko: "삭제하기",
+        en: "Remove",
+    },
+    cancel: {
+        ko: "취소하기",
+        en: "Cancel",
+    },
 }
