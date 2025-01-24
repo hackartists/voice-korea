@@ -25,7 +25,8 @@ pub struct UpdateAttributeRequest {
 
 pub struct Attribute { // attributes
     pub id: String,
-    pub panel_id: String,
+    pub r#type: String,
+    pub organization_id: String,
     pub name: String,
 }
 
@@ -33,6 +34,7 @@ pub struct Attribute { // attributes
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AttributeItem {
     pub id: Option<String>, // FIXME: if postgre is implemented, this field will be not null
+    pub r#type: String,
     pub attribute_id: Option<String>, // FIXME: if postgre is implemented, this field will be not null
     pub name: String,
 }

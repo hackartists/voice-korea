@@ -515,6 +515,14 @@ impl GroupControllerV1 {
 
         let cli = easy_dynamodb::get_client(&log);
 
+        // let _: GroupMember = match CommonQueryResponse::query(
+        //     &log,
+        //     "gsi2-index",
+        //     None,
+        //     Some(1),
+        //     vec![("gsi2", GroupMember::get_gsi2(&req.email))],
+        // )
+
         let member: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
             &log,
             "gsi1-index",
