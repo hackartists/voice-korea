@@ -75,8 +75,7 @@ impl GroupControllerV1 {
                 ctrl.remove_group(&claims.id, &group_id).await?;
             }
             GroupByIdActionRequest::AddTeamMember(req) => {
-                ctrl.add_team_member(&group_id, &organization_id, req)
-                    .await?;
+                ctrl.add_team_member(&group_id, &organization_id, req).await?;
             }
             GroupByIdActionRequest::RemoveTeamMember(group_member_id) => {
                 ctrl.remove_team_member(&group_id, &group_member_id).await?;
@@ -194,10 +193,10 @@ impl GroupControllerV1 {
                 let user = match cli
                     .get::<User>(&member.user_id)
                     .await
-                    .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+                    .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
                 {
-                    Ok(u) => u.unwrap(),
-                    Err(_) => continue,
+                    Some(u) => u,
+                    None => continue,
                 };
 
                 members.push(GroupMemberResponse {
@@ -247,13 +246,12 @@ impl GroupControllerV1 {
         let group = match cli
             .get::<Group>(&group_id)
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
         {
-            Ok(g) => g.unwrap(),
-            Err(_) => return Err(ApiError::NotFound),
+            Some(g) => g,
+            None => return Err(ApiError::NotFound),
         };
 
-  
         if !group.r#type.contains("deleted") {
             let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
                 &log,
@@ -265,23 +263,35 @@ impl GroupControllerV1 {
             .await?;
             let mut members: Vec<GroupMemberResponse> = vec![];
             for item in res.items {
+                if item.deleted_at.is_some() {
+                    continue;
+                }
+
                 let member = match cli
                     .get::<OrganizationMember>(&item.org_member_id)
                     .await
-                    .map_err(|e| ApiError::DynamoQueryException(e.to_string())) 
+                    .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
                 {
-                    Ok(m) => m.unwrap(),
-                    Err(_) => continue,
+                    Some(m) => m,
+                    None => continue,
                 };
+
+                if member.deleted_at.is_some() {
+                    continue;
+                }
     
                 let user = match cli
                     .get::<User>(&member.user_id)
                     .await
-                    .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+                    .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
                 {
-                    Ok(u) => u.unwrap(),
-                    Err(_) => continue,
+                    Some(u) => u,
+                    None => continue,
                 };
+
+                if item.deleted_at.is_some() {
+                    continue;
+                }
 
                 members.push(GroupMemberResponse {
                     id: item.id,
@@ -386,19 +396,19 @@ impl GroupControllerV1 {
         let member = match cli
             .get::<OrganizationMember>(&member_id)
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
         {
-            Ok(m) => m.unwrap(),
-            Err(_) => return Err(ApiError::NotFound),
+            Some(m) => m,
+            None => return Err(ApiError::NotFound),
         };
 
         let user = match cli
             .get::<User>(&member.user_id)
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
         {
-            Ok(u) => u.unwrap(),
-            Err(_) => return Err(ApiError::NotFound),
+            Some(u) => u,
+            None => return Err(ApiError::NotFound),
         };
 
         // check member in group
@@ -525,10 +535,10 @@ impl GroupControllerV1 {
 
         let member: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
             &log,
-            "gsi1-index",
+            "gsi2-index",
             None,
             Some(1),
-            vec![("gsi1", OrganizationMember::get_gsi1(&req.email))],
+            vec![("gsi2", OrganizationMember::get_gsi2(&req.email, org_id))],
         )
         .await?;
 
@@ -541,10 +551,10 @@ impl GroupControllerV1 {
         let group = match cli
             .get::<Group>(&group_id)
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
         {
-            Ok(g) => g.unwrap(),
-            Err(_) => return Err(ApiError::NotFound),
+            Some(g) => g,
+            None => return Err(ApiError::NotFound),
         };
 
         // check whether the user is in the organization
@@ -560,6 +570,19 @@ impl GroupControllerV1 {
         ))
         .await
         .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+
+        // update member role
+        if let Some(role) = req.role {
+            cli.update(
+                &member_id,
+                vec![
+                    ("role", UpdateField::String(role)),
+                    ("updated_at", UpdateField::I64(chrono::Utc::now().timestamp_millis())),
+                ],
+            )
+            .await
+            .map_err(|e| ApiError::DynamoUpdateException(e.to_string()))?;
+        }
 
         Ok(())
     }
@@ -751,14 +774,18 @@ impl GroupControllerV1 {
         slog::debug!(log, "create_group {:?}", req.clone());
         let cli = easy_dynamodb::get_client(&log);
         let id = uuid::Uuid::new_v4().to_string();
-        let group: Group = (req.clone(), id.clone(), claims.id, organization_id).into();
+        let group: Group = (req.clone(), id.clone(), claims.id, organization_id.clone()).into();
 
         match cli.create(group.clone()).await {
             Ok(()) => {
                 for member in req.members.clone() {
-                    let member_id = match find_member_by_email(member.member_email.clone()).await {
-                        Ok(m) => m.unwrap().id,
+                    let member_id = match find_member_by_email(
+                        member.member_email.clone(),
+                        organization_id.clone(),
+                    ).await {
+                        Ok(m) => m.id,
                         Err(_) => {
+                            slog::error!(log, "Member not found");
                             return Err(ApiError::NotFound);
                         }
                     };
