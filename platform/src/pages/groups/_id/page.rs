@@ -853,7 +853,6 @@ pub fn AddMemberModal(
                     onclick: move |_| {
                         onadd
                             .call(TeamMemberRequest {
-                                member_id: "".to_string(),
                                 email: email(),
                                 name: if name() != "" { Some(name()) } else { None },
                                 role: if select_role() != "" { Some(select_role()) } else { None },
