@@ -116,6 +116,21 @@ impl AttributeItem {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub struct AttributeResponse {
+    pub id: String,
+    pub name: String,
+    pub attribute: Vec<AttributeItemResponse>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub struct AttributeItemResponse {
+    pub id: String,
+    pub name: String,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

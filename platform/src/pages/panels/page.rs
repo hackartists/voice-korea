@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{Attribute, Panel};
+use models::prelude::{AttributeResponse, PanelResponse};
 
 use crate::{
     components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},
@@ -71,7 +71,7 @@ pub fn PanelPage(props: PanelProps) -> Element {
 #[component]
 pub fn AttributeList(
     lang: Language,
-    attributes: Vec<Attribute>,
+    attributes: Vec<AttributeResponse>,
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
 ) -> Element {
@@ -194,8 +194,8 @@ pub fn AttributeList(
 #[component]
 pub fn PanelList(
     lang: Language,
-    panels: Vec<Panel>,
-    attributes: Vec<Attribute>,
+    panels: Vec<PanelResponse>,
+    attributes: Vec<AttributeResponse>,
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
 ) -> Element {
@@ -293,14 +293,13 @@ pub fn PanelList(
                                         "{panel.count}"
                                     }
                                 }
-                                // TODO: Response type matching
-                                // for attribute in panel.attribute.clone() {
-                                //     div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
-                                //         for attr in attribute.attribute.clone() {
-                                //             PanelLabel { label: attr.name }
-                                //         }
-                                //     }
-                                // }
+                                for attribute in panel.attribute.clone() {
+                                    div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
+                                        for attr in attribute.attribute.clone() {
+                                            PanelLabel { label: attr.name }
+                                        }
+                                    }
+                                }
                                 div { class: "group relative",
                                     div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
                                         button {

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use crate::attribute::AttributeResponse;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -113,11 +114,14 @@ impl Panel {
     }
 }
 
-// TODO: migration name
-// pub struct PanelInfo {
-//     id: String,
-//     name: String,
-// }
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub struct PanelResponse {
+    pub id: String,
+    pub name: String,
+    pub count: i64,
+    pub attribute: Vec<AttributeResponse>,
+}
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

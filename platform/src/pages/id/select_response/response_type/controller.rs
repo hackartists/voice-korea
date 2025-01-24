@@ -620,7 +620,7 @@ impl Controller {
         }
 
         quotas.push(models::prelude::Quota {
-            attribute: Some(models::prelude::Attribute {
+            attribute: Some(models::prelude::SurveyAttribute {
                 salary_tier: payload,
                 region_code: region,
                 gender,
