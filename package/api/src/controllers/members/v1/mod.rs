@@ -64,7 +64,7 @@ impl MemberControllerV1 {
                     "gsi1-index",
                     None,
                     Some(100),
-                    vec![("gsi1", OrganizationMember::get_gsi1(&""))], // FIXME: fix query
+                    vec![("gsi1", OrganizationMember::get_gsi1(&req.email))],
                 )
                 .await?;
 
@@ -168,7 +168,7 @@ impl MemberControllerV1 {
             "gsi1-index",
             None,
             Some(1),
-            vec![("gsi1", OrganizationMember::get_gsi2(&user_id.clone(), &organization_id.clone()))],
+            vec![("gsi1", OrganizationMember::get_gsi2(&body.email.clone(), &organization_id.clone()))],
         )
         .await?;
 
@@ -311,20 +311,20 @@ impl MemberControllerV1 {
                     continue;
                 }
 
-                let group = cli
+                let group = match cli
                     .get::<Group>(&item.group_id)
                     .await
-                    .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
+                    .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+                {
+                    Ok(v) => v.unwrap(),
+                    Err(_) => continue,
+                };
 
-                if group.is_none() {
+                if group.deleted_at.is_some() {
                     continue;
                 }
 
-                if group.clone().unwrap().deleted_at.is_some() {
-                    continue;
-                }
-
-                groups.push(group.unwrap());
+                groups.push(group);
             }
 
             result.push(GroupMemberRelationship {
@@ -351,16 +351,14 @@ impl MemberControllerV1 {
         slog::debug!(log, "get_member {:?} {:?}", organization_id, member_id);
         let cli = easy_dynamodb::get_client(&log);
 
-        let res = cli
+        let member = match cli
             .get::<OrganizationMember>(&member_id)
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
-
-        if res.is_none() {
-            return Err(ApiError::NotFound);
-        }
-
-        let member = res.unwrap();
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+        {
+            Ok(v) => v.unwrap(),
+            Err(_) => return Err(ApiError::NotFound),
+        };
 
         let mut groups: Vec<Group> = Vec::new();
 
@@ -378,20 +376,20 @@ impl MemberControllerV1 {
                 continue;
             }
 
-            let group = cli
+            let group = match cli
                 .get::<Group>(&item.group_id)
                 .await
-                .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
+                .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+            {
+                Ok(v) => v.unwrap(),
+                Err(_) => continue,
+            };
 
-            if group.is_none() {
+            if group.deleted_at.is_some() {
                 continue;
             }
 
-            if group.clone().unwrap().deleted_at.is_some() {
-                continue;
-            }
-
-            groups.push(group.unwrap());
+            groups.push(group);
         }
 
         Ok(Json(GroupMemberRelationship {
@@ -413,14 +411,14 @@ impl MemberControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
 
         //check member
-        let res = cli
+        let _ = match cli
             .get::<GroupMember>(&member_id)
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
-
-        if res.is_none() {
-            return Err(ApiError::NotFound);
-        }
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+        {
+            Ok(v) => v,
+            Err(_) => return Err(ApiError::NotFound),
+        };
 
         // check member in group
         let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
@@ -479,27 +477,23 @@ impl MemberControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
 
         //check member
-        let res = cli
+        let member = match cli
             .get::<OrganizationMember>(&member_id)
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+        {
+            Ok(v) => v.unwrap(),
+            Err(_) => return Err(ApiError::NotFound),
+        };
 
-        if res.is_none() {
-            return Err(ApiError::NotFound);
-        }
-
-        let member = res.unwrap();
-
-        let res = cli
+        let user = match cli
             .get::<User>(&member.user_id)
             .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
-
-        if res.is_none() {
-            return Err(ApiError::NotFound);
-        }
-
-        let user = res.unwrap();
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+        {
+            Ok(v) => v.unwrap(),
+            Err(_) => return Err(ApiError::NotFound),
+        };
 
         // check member in group
         let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
@@ -767,4 +761,31 @@ pub async fn find_user_id_by_email(
     }
 
     Ok(Some(user.id.clone()))
+}
+
+pub async fn find_member_by_email(
+    email: String,
+) -> Result<Option<OrganizationMember>, ApiError> {
+    let log = root();
+
+    let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
+        &log,
+        "gsi1-index",
+        None,
+        Some(1),
+        vec![("gsi1", OrganizationMember::get_gsi1(&email))],
+    )
+    .await?;
+
+    if res.items.len() == 0 {
+        return Ok(None);
+    }
+
+    let member = res.items.first().unwrap();
+
+    if member.deleted_at.is_some() {
+        return Ok(None);
+    }
+
+    Ok(Some(member.clone()))
 }

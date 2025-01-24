@@ -11,7 +11,7 @@ use schemars::JsonSchema;
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, aide::OperationIo)]
 pub struct Claims {
-    pub id: String, //user id
+    pub id: String, // user id
     pub email: String,
     pub exp: usize,
 }
