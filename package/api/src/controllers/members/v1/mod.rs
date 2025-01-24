@@ -157,30 +157,10 @@ impl MemberControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
         slog::debug!(log, "invite_member: {:?} {:?}", organization_id, body);
 
-        let res: CommonQueryResponse<User> = CommonQueryResponse::query(
-            &log,
-            "gsi1-index",
-            None,
-            Some(1),
-            vec![("gsi1", User::gsi1(body.email.clone()))],
-        )
-        .await?;
-
-        if res.items.len() == 0 {
-            return Err(ApiError::NotFound);
-        }
-
-        let user = match res.items.first() {
-            Some(user) => {
-                if user.deleted_at.is_some() {
-                    return Err(ApiError::NotFound);
-                }
-                user
-            }
+        let user_id = match find_user_id_by_email(body.email.clone()).await? {
+            Some(user_id) => user_id,
             None => return Err(ApiError::NotFound),
         };
-
-        let user_id = user.id.clone();
 
         // check org member exists
         let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
@@ -729,6 +709,34 @@ impl MemberControllerV1 {
             Err(e) => {
                 slog::error!(log, "Remove Member Failed {e:?}");
                 Err(ApiError::DynamoUpdateException(e.to_string()))
+            }
+        }
+    }
+
+    pub async fn create_member(
+        user_id: String,
+        org_id:String, 
+        email: String,
+        name: Option<String>,
+        role: Option<Role>,
+    ) -> Result<(), ApiError> {
+        let log = root();
+        let cli = easy_dynamodb::get_client(&log);
+
+        let organization_member: OrganizationMember =
+            OrganizationMember::new(
+                user_id.clone(), 
+                org_id.clone(), 
+                email.clone(),
+                name.clone(),
+                role,
+            );
+
+        match cli.upsert(organization_member.clone()).await {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                slog::error!(log, "Create Organization Member Failed {e:?}");
+                Err(ApiError::DynamoCreateException(e.to_string()))
             }
         }
     }

@@ -125,17 +125,25 @@ pub struct Group {
 }
 
 impl Group {
-    pub fn new(id: String, user_id: String) -> Self {
-        let mut group = Group::default();
-        let now = chrono::Utc::now().timestamp_millis();
-        group.id = id;
-        group.r#type = Group::get_type();
-        group.gsi1 = Group::get_gsi1(&user_id);
-        group.creator = user_id;
-        group.created_at = now;
-        group.updated_at = now;
-        group.deleted_at = None;
-        group
+    pub fn new(
+        user_id: String,
+        organization_id: String,
+        name: String,
+    ) -> Self {
+        let now: i64 = chrono::Utc::now().timestamp_millis();
+        Group {
+            id: uuid::Uuid::new_v4().to_string(),
+            r#type: Group::get_type(),
+            gsi1: Group::get_gsi1(&user_id),
+            creator: user_id,
+            created_at: now,
+            updated_at: now,
+            deleted_at: None,
+            name,
+            public_opinion_projects: vec![],
+            investigation_projects: vec![],
+            organization_id,
+        }
     }
 
     pub fn get_gsi1(user_id: &str) -> String {
@@ -196,7 +204,6 @@ impl Into<Group> for (CreateGroupRequest, String, String, String) {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Eq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct TeamMemberRequest {
-    pub member_id: String,
     pub email: String,
     pub name: Option<String>,
     pub group: Option<GroupInfo>,

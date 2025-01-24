@@ -32,7 +32,9 @@ impl OrganizationControllerV1 {
             .with_state(ctrl)
             .layer(middleware::from_fn(authorization_middleware))
     }
+}
 
+impl OrganizationControllerV1 {
     pub async fn list_organizations(
         Extension(claims): Extension<Claims>,
         State(ctrl): State<OrganizationControllerV1>,
@@ -84,5 +86,31 @@ impl OrganizationControllerV1 {
             items: organizations,
             bookmark: res.bookmark,
         }))
+    }
+
+    pub async fn create_organization(
+        user_id: String, 
+        body: SignUpParams
+    ) -> Result<String, ApiError> {
+        let log = root().new(o!("api" => "create_organization"));
+        slog::debug!(log, "Creating organization for user: {}", user_id);
+        let cli = easy_dynamodb::get_client(&log);
+
+        if body.email.is_empty() {
+            return Err(ApiError::ValidationError("Email is required".to_string()));
+        }
+
+        // TODO: Check for existing organization with same email (unique constraint in postgres)
+
+        let id: String = uuid::Uuid::new_v4().to_string();
+
+        let organization: Organization =
+            Organization::new(id.clone(), user_id.clone(), body.email.clone());
+        let _ = cli
+            .upsert(organization)
+            .await
+            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+
+        Ok(id)
     }
 }

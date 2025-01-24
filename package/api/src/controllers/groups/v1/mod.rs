@@ -52,31 +52,7 @@ impl GroupControllerV1 {
 
         match body {
             GroupActionRequest::Create(req) => {
-                let cli = easy_dynamodb::get_client(&log);
-                let id = uuid::Uuid::new_v4().to_string();
-                let group: Group = (req.clone(), id.clone(), claims.id, organization_id).into();
-
-                match cli.create(group.clone()).await {
-                    Ok(()) => {
-                        for member in req.members.clone() {
-                            let _ = ctrl
-                                .clone()
-                                .upsert_group_member(
-                                    ctrl.clone(),
-                                    id.clone(),
-                                    req.name.clone(),
-                                    member.member_id,
-                                )
-                                .await?;
-                        }
-
-                        return Ok(());
-                    }
-                    Err(e) => {
-                        slog::error!(log, "Create Group Failed {e:?}");
-                        return Err(ApiError::DynamoCreateException(e.to_string()));
-                    }
-                };
+                ctrl.create_group(req, organization_id, claims).await
             }
         }
     }
@@ -200,18 +176,6 @@ impl GroupControllerV1 {
             let mut members: Vec<GroupMemberResponse> = vec![];
 
             for item in res.items {
-                let member = cli
-                    .get::<OrganizationMember>(&item.org_member_id)
-                    .await
-                    .map_err(|e| ApiError::DynamoQueryException(e.to_string()));
-
-                if member.is_err() {
-                    continue;
-                }
-
-                // TODO: refactor check member logic
-                let mem = member.unwrap().unwrap();
-
                 if item.deleted_at.is_some() {
                     continue;
                 }
@@ -219,6 +183,24 @@ impl GroupControllerV1 {
                 if item.group_id != group.id {
                     continue;
                 }
+
+                let member: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
+                    &log,
+                    "gsi1-index",
+                    None,
+                    Some(1),
+                    vec![("gsi1", OrganizationMember::get_gsi1(&item.org_member_id))],
+                )
+                .await?;
+
+                if member.items.len() == 0 {
+                    continue;
+                }
+
+                let mem = match member.items.first() {
+                    Some(m) => m,
+                    None => continue,
+                };
 
                 let res = cli
                     .get::<User>(&mem.user_id)
@@ -240,7 +222,7 @@ impl GroupControllerV1 {
                     org_member_id: item.org_member_id,
                     user_name: mem.name.clone().unwrap_or_default(),
                     user_email: user.email.clone(),
-                    role_name: mem.role.map(|r| r.to_string()),
+                    role_name: mem.role.clone().map(|r| r.to_string()),
                     group_name: group.name.clone(),
                 });
             }
@@ -293,17 +275,23 @@ impl GroupControllerV1 {
                         let mut members: Vec<GroupMemberResponse> = vec![];
 
                         for item in res.items {
-                            let member = cli
-                                .get::<OrganizationMember>(&item.org_member_id)
-                                .await
-                                .map_err(|e| ApiError::DynamoQueryException(e.to_string()));
+                            let member: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
+                                &log,
+                                "gsi1-index",
+                                None,
+                                Some(1),
+                                vec![("gsi1", OrganizationMember::get_gsi1(&item.org_member_id))],
+                            )
+                            .await?;
 
-                            if member.is_err() {
+                            if member.items.len() == 0 {
                                 continue;
                             }
 
-                            // TODO: refactor check member logic
-                            let mem = member.unwrap().unwrap();
+                            let mem: &OrganizationMember = match member.items.first() {
+                                Some(m) => m,
+                                None => continue,
+                            };
 
                             let user = cli
                                 .get::<User>(&mem.user_id)
@@ -325,7 +313,7 @@ impl GroupControllerV1 {
                                 org_member_id: item.org_member_id,
                                 user_name: mem.name.clone().unwrap_or_default(),
                                 user_email: user.email.clone(),
-                                role_name: mem.role.map(|r| r.to_string()),
+                                role_name: mem.role.clone().map(|r| r.to_string()),
                                 group_name: v.name.clone(),
                             });
                         }
@@ -560,8 +548,23 @@ impl GroupControllerV1 {
 
         let cli = easy_dynamodb::get_client(&log);
 
+        let member: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
+            &log,
+            "gsi1-index",
+            None,
+            Some(1),
+            vec![("gsi1", OrganizationMember::get_gsi1(&req.email))],
+        )
+        .await?;
+
+        if member.items.len() == 0 {
+            return Err(ApiError::NotFound);
+        }
+
+        let member_id = member.items.first().unwrap().id.clone();
+
         let res = cli
-            .get::<OrganizationMember>(&req.member_id)
+            .get::<OrganizationMember>(&member_id)
             .await
             .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?;
 
@@ -589,7 +592,7 @@ impl GroupControllerV1 {
         cli.create(GroupMember::new(
             uuid::Uuid::new_v4().to_string(),
             group_id.to_string(),
-            req.member_id.clone(),
+            member_id.clone(),
         ))
         .await
         .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
@@ -767,5 +770,44 @@ impl GroupControllerV1 {
         }
 
         Ok(())
+    }
+
+    pub async fn create_group(
+        &self,
+        req: CreateGroupRequest,
+        organization_id: String,
+        claims: Claims,
+    ) -> Result<(), ApiError> {
+        let log = self.log.new(o!("api" => "create_group"));
+
+        if req.name.trim().is_empty() {
+            return Err(ApiError::ValidationError("Group name is required".to_string()));
+        }
+
+        slog::debug!(log, "create_group {:?}", req.clone());
+        let cli = easy_dynamodb::get_client(&log);
+        let id = uuid::Uuid::new_v4().to_string();
+        let group: Group = (req.clone(), id.clone(), claims.id, organization_id).into();
+
+
+        match cli.create(group.clone()).await {
+            Ok(()) => {
+                for member in req.members.clone() {
+                    self.upsert_group_member(
+                        self.clone(),
+                        id.clone(),
+                        req.name.clone(),
+                        member.member_id,
+                    )
+                    .await?;
+                }
+
+                return Ok(());
+            }
+            Err(e) => {
+                slog::error!(log, "Create Group Failed {e:?}");
+                return Err(ApiError::DynamoCreateException(e.to_string()));
+            }
+        };
     }
 }
