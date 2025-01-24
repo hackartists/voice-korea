@@ -68,11 +68,11 @@ impl OrganizationControllerV1 {
             let org = match cli
                 .get::<Organization>(&item.organization_id)
                 .await
-                .map_err(|e| ApiError::DynamoQueryException(e.to_string()))
+                .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
             {
-                Ok(v) => v.unwrap(),
-                Err(e) => {
-                    slog::error!(log, "Failed to get organization: {}", e);
+                Some(v) => v,
+                None => {
+                    slog::warn!(log, "Organization not found: {}", item.organization_id);
                     continue;
                 }
             };
