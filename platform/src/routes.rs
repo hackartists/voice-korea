@@ -44,6 +44,20 @@ pub enum Route {
             MemberPage { lang: Language },
             #[route("/members/:member_id")]
             MemberDetailPage { lang: Language, member_id: String },
+            #[route("/attributes")]
+            AttributePage { lang: Language },
+            #[route("/panels")]
+            PanelPage { lang: Language },
+            #[route("/resources")]
+            ResourcePage { lang: Language },
+            #[route("/surveys")]
+            SurveyPage { lang: Language },
+            #[route("/surveys/new")]
+            SurveyCreatePage { lang: Language },
+        #[end_layout]
+
+        //FIXME: remove this route after new ui is implemented
+        #[layout(RootLayout)]
             #[route("/id/:survey_id/write-title")]
             WriteTitlePage { lang: Language, survey_id: String },
             #[route("/id/:survey_id/write-question")]
@@ -56,16 +70,6 @@ pub enum Route {
             SurveySummaryPage { lang: Language, survey_id: String },
             #[route("/id/:survey_id/response-report")]
             ResponseReportPage { lang: Language, survey_id: String },
-            #[route("/attributes")]
-            AttributePage { lang: Language },
-            #[route("/panels")]
-            PanelPage { lang: Language },
-            #[route("/resources")]
-            ResourcePage { lang: Language },
-            #[route("/surveys")]
-            SurveyPage { lang: Language },
-            #[route("/surveys/new")]
-            SurveyCreatePage { lang: Language },
         #[end_layout]
 
         #[route("/")]
