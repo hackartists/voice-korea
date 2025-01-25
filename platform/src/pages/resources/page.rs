@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
+use models::prelude::CreateMetadataRequest;
 
 use crate::{
     components::{
@@ -324,10 +325,13 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
 #[component]
 pub fn UpdateMaterialModal(
     lang: Language,
-    onupload: EventHandler<MouseEvent>,
+    initial_title: String,
+    onupload: EventHandler<(String, Vec<String>)>,
     onclose: EventHandler<MouseEvent>,
 ) -> Element {
     let translate: UploadMaterialModalTranslate = translate(&lang);
+    let mut title: Signal<String> = use_signal(|| initial_title);
+    let metadata_urls: Signal<Vec<String>> = use_signal(|| vec![]);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "text-[#6d6d6d] font-normal text-[14px] mb-[40px]",
@@ -345,8 +349,11 @@ pub fn UpdateMaterialModal(
                     input {
                         class: "flex flex-row w-full h-full bg-transparent focus:outline-none placeholder:text-[#b4b4b4] placeholder:font-medium placeholder:text-[15px] font-medium text-[15px] text-[#222222]",
                         r#type: "text",
+                        value: title(),
                         placeholder: translate.input_hint,
-                        oninput: move |_e| {},
+                        oninput: move |e| {
+                            title.set(e.value());
+                        },
                     }
                 }
                 div { class: "font-normal text-[#222222] text-[13px]", "{translate.input_info}" }
@@ -356,18 +363,26 @@ pub fn UpdateMaterialModal(
                 div { class: "font-semibold text-[#222222] text-[14px] mb-[10px]",
                     "{translate.classification}"
                 }
-                DirectUpload { lang }
+                DirectUpload { lang, metadata_urls }
             }
 
             div { class: "flex flex-row w-full justify-start items-start font-normal text-[#6d6d6d] text-[14px] mt-[40px] mb-[20px]",
                 "총 5개 자료 업로드"
             }
             div { class: "flex flex-row w-full justify-start items-center gap-[20px]",
-                div { class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
+                button {
+                    class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
+                    onclick: move |_| async move {
+                        onupload.call((title(), metadata_urls()));
+                    },
                     Edit { width: "24", height: "24" }
                     div { class: "text-white font-semibold text-[#16px]", "{translate.update}" }
                 }
-                div { class: "flex flex-row w-[60px] h-[40px] justify-center items-center bg-white font-semibold text-[#222222] text-[16px]",
+                button {
+                    class: "flex flex-row w-[60px] h-[40px] justify-center items-center bg-white font-semibold text-[#222222] text-[16px]",
+                    onclick: move |e: Event<MouseData>| {
+                        onclose.call(e);
+                    },
                     "{translate.cancel}"
                 }
             }
@@ -377,10 +392,15 @@ pub fn UpdateMaterialModal(
 
 #[component]
 pub fn CreateMaterialModal(
-    ctrl: Controller,
     lang: Language,
-    onupload: EventHandler<MouseEvent>,
+    onupload: EventHandler<CreateMetadataRequest>,
     onclose: EventHandler<MouseEvent>,
+
+    total_types: Vec<String>,
+    total_fields: Vec<String>,
+    total_purposes: Vec<String>,
+    total_resources: Vec<String>,
+    total_authorities: Vec<String>,
 ) -> Element {
     let translate: CreateMaterialModalTranslate = translate(&lang);
 
@@ -390,11 +410,8 @@ pub fn CreateMaterialModal(
     let mut selected_source = use_signal(|| translate.no_selection.to_string());
     let mut selected_authority = use_signal(|| translate.no_selection.to_string());
 
-    let total_types: Vec<String> = ctrl.get_total_types();
-    let total_fields: Vec<String> = ctrl.get_total_fields();
-    let total_purposes: Vec<String> = ctrl.get_total_purposes();
-    let total_resources: Vec<String> = ctrl.get_total_resources();
-    let total_authorities: Vec<String> = ctrl.get_total_authorities();
+    let metadata_urls: Signal<Vec<String>> = use_signal(|| vec![]);
+    let mut name: Signal<String> = use_signal(|| "".to_string());
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -414,8 +431,11 @@ pub fn CreateMaterialModal(
                             input {
                                 class: "flex flex-row w-full h-full bg-transparent focus:outline-none placeholder:text-[#b4b4b4] placeholder:font-medium placeholder:text-[15px] font-medium text-[15px] text-[#222222]",
                                 r#type: "text",
+                                value: name(),
                                 placeholder: translate.input_hint,
-                                oninput: move |_e| {},
+                                oninput: move |e| {
+                                    name.set(e.value());
+                                },
                             }
                         }
                         div { class: "font-normal text-[#222222] text-[13px]", "{translate.input_info}" }
@@ -425,7 +445,7 @@ pub fn CreateMaterialModal(
                         div { class: "font-semibold text-[#222222] text-[14px] mb-[10px]",
                             "{translate.classification}"
                         }
-                        DirectUpload { lang }
+                        DirectUpload { lang, metadata_urls }
                     }
                 }
 
@@ -609,12 +629,52 @@ pub fn CreateMaterialModal(
             div { class: "flex flex-row w-full justify-start items-start font-normal text-[#6d6d6d] text-[14px] mt-[40px] mb-[20px]",
                 "총 5개 자료 업로드"
             }
+            //FIXME: fix to connect project
             div { class: "flex flex-row w-full justify-start items-center gap-[20px]",
-                div { class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
+                button {
+                    class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
+                    onclick: move |_| {
+                        onupload
+                            .call(CreateMetadataRequest {
+                                name: name(),
+                                urls: metadata_urls(),
+                                metadata_type: if selected_type() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_type().parse().unwrap())
+                                },
+                                metadata_field: if selected_field() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_field().parse().unwrap())
+                                },
+                                metadata_purpose: if selected_purpose() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_purpose().parse().unwrap())
+                                },
+                                metadata_source: if selected_source() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_source().parse().unwrap())
+                                },
+                                metadata_authority: if selected_authority() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_authority().parse().unwrap())
+                                },
+                                public_opinion_projects: None,
+                                public_survey_projects: None,
+                            });
+                    },
                     Upload { width: "24", height: "24" }
                     div { class: "text-white font-semibold text-[#16px]", "{translate.upload}" }
                 }
-                div { class: "flex flex-row w-[60px] h-[40px] justify-center items-center bg-white font-semibold text-[#222222] text-[16px]",
+                button {
+                    class: "flex flex-row w-[60px] h-[40px] justify-center items-center bg-white font-semibold text-[#222222] text-[16px]",
+                    onclick: move |e: Event<MouseData>| {
+                        onclose.call(e);
+                    },
                     "{translate.cancel}"
                 }
             }
@@ -623,7 +683,7 @@ pub fn CreateMaterialModal(
 }
 
 #[component]
-pub fn DirectUpload(lang: Language) -> Element {
+pub fn DirectUpload(lang: Language, metadata_urls: Signal<Vec<String>>) -> Element {
     let mut indragzone = use_signal(|| false);
     let translate: DirectUploadedTranslate = translate(&lang);
 
@@ -652,6 +712,7 @@ pub fn DirectUpload(lang: Language) -> Element {
                     tracing::debug!("leave drop zone");
                     indragzone.set(false);
                 },
+                //TODO: add file upload code
                 ondrop: move |ev: Event<DragData>| async move {
                     tracing::debug!("drop files");
                     ev.prevent_default();
@@ -673,6 +734,7 @@ pub fn DirectUpload(lang: Language) -> Element {
                     div { class: "font-normal text-[#6d6d6d] text-sm mr-[12px]", "OR" }
                     div { class: "w-[80px] h-[1px] bg-[#e7e7e7] mr-[12px]" }
                 }
+                //TODO: add file upload code
                 UploadButton {
                     class: "flex flex-row w-[100px] h-[30px] justify-center items-center bg-white border border-[#1849d6] rounded-[4px] font-semibold text-[#1849d6] text-sm",
                     text: "{translate.load_file}",

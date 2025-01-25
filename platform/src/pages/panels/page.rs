@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{AttributeResponse, PanelResponse};
+use models::prelude::{
+    AttributeResponse, CreateAttributeRequest, CreatePanelRequest, PanelResponse,
+};
 
 use crate::{
     components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},
@@ -47,21 +49,27 @@ pub fn PanelPage(props: PanelProps) -> Element {
                 lang: props.lang,
                 panels,
                 attributes: attributes.clone(),
-                onupdate: move |index: usize| {
-                    ctrl.open_update_panel_name(props.lang, index);
+                onupdate: move |index: usize| async move {
+                    ctrl.open_update_panel_name(props.lang, index).await;
                 },
-                onremove: move |index: usize| {
-                    ctrl.open_remove_panel(props.lang, index);
+                oncreate: move |req: CreatePanelRequest| async move {
+                    ctrl.create_panel(req).await;
+                },
+                onremove: move |index: usize| async move {
+                    ctrl.open_remove_panel(props.lang, index).await;
                 },
             }
             AttributeList {
                 lang: props.lang,
                 attributes,
-                onupdate: move |index: usize| {
-                    ctrl.open_update_attribute_name(props.lang, index);
+                onupdate: move |index: usize| async move {
+                    ctrl.open_update_attribute_name(props.lang, index).await;
                 },
-                onremove: move |index: usize| {
-                    ctrl.open_remove_attribute(props.lang, index);
+                onremove: move |index: usize| async move {
+                    ctrl.open_remove_attribute(props.lang, index).await;
+                },
+                oncreate: move |req: CreateAttributeRequest| async move {
+                    ctrl.create_attribute(req).await;
                 },
             }
         }
@@ -74,6 +82,7 @@ pub fn AttributeList(
     attributes: Vec<AttributeResponse>,
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
+    oncreate: EventHandler<CreateAttributeRequest>,
 ) -> Element {
     let mut is_focused = use_signal(|| false);
     let mut attribute_name = use_signal(|| "".to_string());
@@ -136,7 +145,15 @@ pub fn AttributeList(
                             Switch { width: "19", height: "19" }
                         }
                         div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center gap-[10px]",
-                            button { class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                            button {
+                                class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                onclick: move |_e: Event<MouseData>| {
+                                    oncreate
+                                        .call(CreateAttributeRequest {
+                                            name: "".to_string(),
+                                            attribute_items: vec![],
+                                        });
+                                },
                                 "+"
                             }
                         }
@@ -197,6 +214,7 @@ pub fn PanelList(
     panels: Vec<PanelResponse>,
     attributes: Vec<AttributeResponse>,
     onupdate: EventHandler<usize>,
+    oncreate: EventHandler<CreatePanelRequest>,
     onremove: EventHandler<usize>,
 ) -> Element {
     let mut ctrl: Controller = use_context();
@@ -265,7 +283,7 @@ pub fn PanelList(
                             }
                             Switch { width: "19", height: "19" }
                         }
-                        for attribute in attributes {
+                        for attribute in attributes.clone() {
                             div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[10px]",
                                 div { class: "text-[#555462] font-semibold text-[14px]",
                                     "{attribute.name}"
@@ -274,7 +292,27 @@ pub fn PanelList(
                             }
                         }
                         div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center gap-[10px]",
-                            button { class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                            button {
+                                class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                onclick: {
+                                    let mut attribute = vec![];
+                                    for attr in attributes.clone() {
+                                        attribute
+                                            .push(AttributeResponse {
+                                                id: attr.id.clone(),
+                                                name: attr.name.clone(),
+                                                attribute: vec![],
+                                            });
+                                    }
+                                    move |_e: Event<MouseData>| {
+                                        oncreate
+                                            .call(CreatePanelRequest {
+                                                name: "".to_string(),
+                                                count: 0,
+                                                attribute: attribute.clone(),
+                                            });
+                                    }
+                                },
                                 "+"
                             }
                         }

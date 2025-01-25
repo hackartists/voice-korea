@@ -1,16 +1,16 @@
-use serde::{Deserialize, Serialize};
+use crate::attribute::AttributeResponse;
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
-use crate::attribute::AttributeResponse;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreatePanelRequest {
     pub name: String,
     pub count: i64,
-    pub attribute: Vec<PanelAttributeItem>,
+    pub attribute: Vec<AttributeResponse>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -18,7 +18,7 @@ pub struct CreatePanelRequest {
 pub struct UpdatePanelRequest {
     pub name: String,
     pub count: i64,
-    pub attribute: Vec<PanelAttributeItem>,
+    pub attribute: Vec<AttributeResponse>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -78,11 +78,7 @@ pub struct Panel {
 }
 
 impl Panel {
-    pub fn new(
-        organization_id: String, 
-        name: String,
-        count: i64
-    ) -> Self {
+    pub fn new(organization_id: String, name: String, count: i64) -> Self {
         let now = chrono::Utc::now().timestamp();
         Self {
             id: uuid::Uuid::new_v4().to_string(),

@@ -4,7 +4,8 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use models::prelude::{
-    AttributeActionRequest, AttributeByIdActionRequest, AttributeResponse, CreateAttributeRequest, UpdateAttributeRequest
+    AttributeActionRequest, AttributeByIdActionRequest, AttributeResponse, CreateAttributeRequest,
+    UpdateAttributeRequest,
 };
 
 use crate::{api::common::CommonQueryResponse, utils::api::ReqwestClient};
