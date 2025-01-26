@@ -115,7 +115,7 @@ impl AttributeItem {
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AttributeResponse {
     pub id: String,
-    pub name: String,
+    pub name: Option<String>,
     pub attribute: Vec<AttributeItemResponse>,
 }
 

@@ -100,7 +100,7 @@ impl AttributeControllerV1 {
 
         Ok(Json(AttributeResponse {
             id: "1".to_string(),
-            name: "name".to_string(),
+            name: Some("name".to_string()),
             attribute: vec![
                 AttributeItemResponse {
                     id: "1".to_string(),
@@ -131,8 +131,13 @@ impl AttributeControllerV1 {
         Ok(Json(CommonQueryResponse {
             items: vec![
                 AttributeResponse {
+                    id: "0".to_string(),
+                    name: None,
+                    attribute: vec![],
+                },
+                AttributeResponse {
                     id: "1".to_string(),
-                    name: "name".to_string(),
+                    name: Some("name".to_string()),
                     attribute: vec![
                         AttributeItemResponse {
                             id: "1".to_string(),
@@ -146,7 +151,7 @@ impl AttributeControllerV1 {
                 },
                 AttributeResponse {
                     id: "2".to_string(),
-                    name: "name".to_string(),
+                    name: Some("name".to_string()),
                     attribute: vec![
                         AttributeItemResponse {
                             id: "1".to_string(),

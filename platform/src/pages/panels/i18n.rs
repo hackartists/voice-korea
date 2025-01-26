@@ -32,6 +32,10 @@ translate! {
 translate! {
     PanelListTranslate;
 
+    panel_name_hint: {
+        ko: "패널명",
+        en: "Name"
+    }
     panel_list: {
         ko: "패널 목록",
         en: "Panel List"
@@ -86,6 +90,10 @@ translate! {
 translate! {
     AttributeListTranslate;
 
+    attribute_name_hint: {
+        ko: "속성명",
+        en: "Name"
+    }
     attribute_list: {
         ko: "속성 목록",
         en: "Attribute List"

@@ -233,7 +233,7 @@ impl Controller {
                             popup_service.close();
                         }
                     },
-                    initial_value: attributes[index].name.clone(),
+                    initial_value: attributes[index].name.clone().unwrap_or_default(),
                     onclose: move |_| {
                         popup_service.close();
                     },
@@ -290,7 +290,7 @@ impl Controller {
                     onupdate: move |name: String| {
                         let panel_id = panel.id.clone();
                         let name = name.clone();
-                        let count = panel.count;
+                        let count = panel.count.unwrap_or(0);
                         let attribute = panel.attribute.clone();
                         async move {
                             tracing::debug!("update panel clicked: {index} {name}");
@@ -308,7 +308,7 @@ impl Controller {
                             popup_service.close();
                         }
                     },
-                    initial_value: panels[index].name.clone(),
+                    initial_value: panels[index].name.clone().unwrap_or_default(),
                     onclose: move |_| {
                         popup_service.close();
                     },

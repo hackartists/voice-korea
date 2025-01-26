@@ -114,8 +114,8 @@ impl Panel {
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct PanelResponse {
     pub id: String,
-    pub name: String,
-    pub count: i64,
+    pub name: Option<String>,
+    pub count: Option<i64>,
     pub attribute: Vec<AttributeResponse>,
 }
 

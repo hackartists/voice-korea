@@ -88,6 +88,12 @@ pub fn AttributeList(
     let mut attribute_name = use_signal(|| "".to_string());
 
     let translate: AttributeListTranslate = translate(&lang);
+    let mut attribute_names = use_signal(|| vec![]);
+
+    use_effect(use_reactive(&attributes.len(), move |len| {
+        attribute_names.set(vec!["".to_string(); len]);
+    }));
+
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start mb-[40px]",
             div { class: "font-bold text-[#222222] text-[16px] mb-[10px]", "{translate.attribute_list}" }
@@ -158,16 +164,56 @@ pub fn AttributeList(
                             }
                         }
                     }
-                    for (ind , attribute) in attributes.clone().iter().enumerate() {
+                    for (index , attribute) in attributes.clone().iter().enumerate() {
                         div { class: "flex flex-col w-full justify-start items-start",
                             div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
                             div { class: "flex flex-row w-full h-[55px]",
                                 div { class: "flex flex-row w-[185px] min-w-[185px] h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
-                                        "{attribute.name}"
+                                    if attribute.name.is_none() && attribute_names.len() != 0 {
+                                        input {
+                                            id: "input_attribute {index}",
+                                            class: "w-full text-black text-base placeholder-gray-500 focus:outline-none text-center",
+                                            r#type: "text",
+                                            placeholder: translate.attribute_name_hint,
+                                            value: attribute_names()[index].clone(),
+                                            onmounted: move |_| {
+                                                #[cfg(feature = "web")]
+                                                {
+                                                    use wasm_bindgen::JsCast;
+                                                    if let Some(input) = web_sys::window()
+                                                        .unwrap()
+                                                        .document()
+                                                        .unwrap()
+                                                        .get_element_by_id(format!("input_attribute {index}").as_str())
+                                                    {
+                                                        input.dyn_ref::<web_sys::HtmlInputElement>().unwrap().focus().unwrap();
+                                                    }
+                                                }
+                                            },
+                                            onblur: move |_| {
+                                                tracing::debug!("attribute index: {:?}", index);
+                                            },
+                                            onkeydown: move |e: KeyboardEvent| {
+                                                let key = e.key();
+                                                if key == Key::Enter {
+                                                    let value = attribute_names()[index].clone();
+                                                    tracing::debug!("Enter key pressed! {value}");
+                                                }
+                                            },
+                                            oninput: move |e| {
+                                                let value = e.value();
+                                                let mut names = attribute_names();
+                                                names[index] = value;
+                                                attribute_names.set(names);
+                                            },
+                                        }
+                                    } else {
+                                        div { class: "font-medium text-[#222222] text-[14px]",
+                                            {format!("{}", attribute.name.clone().unwrap_or_default())}
+                                        }
                                     }
                                 }
-                                div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[10px]",
+                                div { class: "flex flex-row w-full h-full justify-center items-center gap-[10px]",
                                     for attr in attribute.attribute.clone() {
                                         PanelLabel { label: attr.name }
                                     }
@@ -184,14 +230,14 @@ pub fn AttributeList(
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                     onclick: move |_| {
-                                                        onupdate.call(ind);
+                                                        onupdate.call(index);
                                                     },
                                                     "{translate.update_attribute_name}"
                                                 }
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                     onclick: move |_| {
-                                                        onremove.call(ind);
+                                                        onremove.call(index);
                                                     },
                                                     "{translate.remove_attribute}"
                                                 }
@@ -222,7 +268,20 @@ pub fn PanelList(
     let mut panel_name = use_signal(|| "".to_string());
     let translate: PanelListTranslate = translate(&lang);
 
-    tracing::debug!("panel list: {:?}", panels);
+    let mut panel_names = use_signal(|| vec![]);
+    let mut panel_name_width = use_signal(|| vec![]);
+
+    let mut panel_counts = use_signal(|| vec![]);
+    let mut panel_count_width = use_signal(|| vec![]);
+
+    use_effect(use_reactive(&panels.len(), move |len| {
+        panel_names.set(vec!["".to_string(); len]);
+        panel_name_width.set(vec!["80px".to_string(); len]);
+
+        panel_counts.set(vec!["".to_string(); len]);
+        panel_count_width.set(vec!["50px".to_string(); len]);
+    }));
+
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start mb-[40px]",
             div { class: "font-bold text-[#222222] text-[16px] mb-[10px]", "{translate.panel_list}" }
@@ -286,7 +345,7 @@ pub fn PanelList(
                         for attribute in attributes.clone() {
                             div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[10px]",
                                 div { class: "text-[#555462] font-semibold text-[14px]",
-                                    "{attribute.name}"
+                                    {format!("{}", attribute.name.unwrap_or_default())}
                                 }
                                 Switch { width: "19", height: "19" }
                             }
@@ -322,19 +381,122 @@ pub fn PanelList(
                             div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
                             div { class: "flex flex-row w-full h-[55px]",
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
-                                        "{panel.name}"
+                                    if panel.name.is_none() && panel_names.len() != 0 {
+                                        input {
+                                            id: "input_panel {index}",
+                                            class: "text-black text-base placeholder-gray-500 focus:outline-none",
+                                            style: "width: {panel_name_width()[index]}; min-width: 80px; max-width: 200px;",
+                                            r#type: "text",
+                                            placeholder: translate.panel_name_hint,
+                                            value: panel_names()[index].clone(),
+                                            onmounted: move |_| {
+                                                #[cfg(feature = "web")]
+                                                {
+                                                    use wasm_bindgen::JsCast;
+                                                    if let Some(input) = web_sys::window()
+                                                        .unwrap()
+                                                        .document()
+                                                        .unwrap()
+                                                        .get_element_by_id(format!("input_panel {index}").as_str())
+                                                    {
+                                                        input.dyn_ref::<web_sys::HtmlInputElement>().unwrap().focus().unwrap();
+                                                    }
+                                                }
+                                            },
+                                            onblur: move |_| {
+                                                tracing::debug!("panel index: {:?}", index);
+                                            },
+                                            onkeydown: move |e: KeyboardEvent| {
+                                                let key = e.key();
+                                                if key == Key::Enter {
+                                                    let value = panel_names()[index].clone();
+                                                    tracing::debug!("Enter key pressed! {value}");
+                                                }
+                                            },
+                                            oninput: move |e| {
+                                                let value = e.value();
+                                                let new_width = format!("{}px", 10 + value.len() * 10);
+                                                let mut names = panel_names();
+                                                let mut widths = panel_name_width();
+                                                names[index] = value;
+                                                widths[index] = new_width;
+                                                panel_names.set(names);
+                                                panel_name_width.set(widths);
+                                            },
+                                        }
+                                    } else {
+                                        div { class: "font-medium text-[#222222] text-[14px]",
+                                            {format!("{}", panel.name.clone().unwrap_or_default())}
+                                        }
                                     }
                                 }
                                 div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
-                                        "{panel.count}"
+                                    if panel.count.is_none() && panel_counts.len() != 0 {
+                                        input {
+                                            id: "input_panel_count {index}",
+                                            class: "text-black text-base placeholder-gray-500 focus:outline-none",
+                                            style: "width: {panel_count_width()[index]}; min-width: 50px; max-width: 100%;",
+                                            r#type: "text",
+                                            placeholder: "0",
+                                            value: panel_counts()[index].clone(),
+                                            onkeydown: move |e: KeyboardEvent| {
+                                                let key = e.key();
+                                                if key == Key::Enter {
+                                                    let value = panel_counts()[index].clone();
+                                                    tracing::debug!("Enter key pressed! {value}");
+                                                    #[cfg(feature = "web")]
+                                                    {
+                                                        use wasm_bindgen::JsCast;
+                                                        if let Some(input) = web_sys::window()
+                                                            .unwrap()
+                                                            .document()
+                                                            .unwrap()
+                                                            .get_element_by_id(format!("input_panel_count {index}").as_str())
+                                                        {
+                                                            input
+                                                                .dyn_ref::<web_sys::HtmlInputElement>()
+                                                                .unwrap()
+                                                                .blur()
+                                                                .unwrap();
+                                                        }
+                                                    }
+                                                } else if key != Key::Backspace && key != Key::Delete {
+                                                    let s = match key {
+                                                        Key::Character(c) => c,
+                                                        _ => "".to_string(),
+                                                    };
+                                                    if !s.chars().all(|c| c.is_ascii_digit()) {
+                                                        e.prevent_default();
+                                                    }
+                                                }
+                                            },
+                                            oninput: move |e| {
+                                                let value = e.value();
+                                                let new_width = format!("{}px", 10 + value.len() * 12);
+                                                let mut counts = panel_counts();
+                                                let mut widths = panel_count_width();
+                                                counts[index] = value;
+                                                widths[index] = new_width;
+                                                panel_counts.set(counts);
+                                                panel_count_width.set(widths);
+                                            },
+                                        }
+                                    } else {
+                                        div { class: "font-medium text-[#222222] text-[14px]",
+                                            {format!("{}", panel.count.unwrap_or_default())}
+                                        }
                                     }
                                 }
                                 for attribute in panel.attribute.clone() {
                                     div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
-                                        for attr in attribute.attribute.clone() {
-                                            PanelLabel { label: attr.name }
+                                        if attribute.attribute.len() == 0 {
+                                            button { class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                                "+"
+                                            }
+                                        } else {
+                                            for attr in attribute.attribute.clone() {
+                                                PanelLabel { label: attr.name.clone() }
+                                            }
                                         }
                                     }
                                 }
