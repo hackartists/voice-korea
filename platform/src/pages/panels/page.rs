@@ -89,9 +89,14 @@ pub fn AttributeList(
 
     let translate: AttributeListTranslate = translate(&lang);
     let mut attribute_names = use_signal(|| vec![]);
+    let mut attribute_contents = use_signal(|| vec![]);
+
+    let mut clicked_attributes = use_signal(|| vec![]);
 
     use_effect(use_reactive(&attributes.len(), move |len| {
         attribute_names.set(vec!["".to_string(); len]);
+        attribute_contents.set(vec!["".to_string(); len]);
+        clicked_attributes.set(vec![false; len]);
     }));
 
     rsx! {
@@ -165,10 +170,21 @@ pub fn AttributeList(
                         }
                     }
                     for (index , attribute) in attributes.clone().iter().enumerate() {
-                        div { class: "flex flex-col w-full justify-start items-start",
+                        div {
+                            class: "flex flex-col w-full justify-start items-start",
+                            onclick: move |_| {
+                                let mut clicked = clicked_attributes();
+                                clicked[index] = !clicked[index];
+                                clicked_attributes.set(clicked);
+                            },
                             div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
                             div { class: "flex flex-row w-full h-[55px]",
-                                div { class: "flex flex-row w-[185px] min-w-[185px] h-full justify-center items-center",
+                                div {
+                                    class: "flex flex-row w-[185px] min-w-[185px] h-full justify-center items-center",
+                                    onclick: move |e| {
+                                        e.stop_propagation();
+                                        e.prevent_default();
+                                    },
                                     if attribute.name.is_none() && attribute_names.len() != 0 {
                                         input {
                                             id: "input_attribute {index}",
@@ -213,19 +229,58 @@ pub fn AttributeList(
                                         }
                                     }
                                 }
-                                div { class: "flex flex-row w-full h-full justify-center items-center gap-[10px]",
+                                button { class: "flex flex-wrap w-full h-full justify-center items-center gap-[10px]",
                                     for attr in attribute.attribute.clone() {
                                         PanelLabel { label: attr.name }
+                                    }
+
+                                    if clicked_attributes.len() != 0 && clicked_attributes()[index]
+                                        && attribute_contents.len() != 0
+                                    {
+                                        input {
+                                            id: "input_attribute_contents {index}",
+                                            class: "w-[100px] text-black text-base placeholder-gray-500 focus:outline-none",
+                                            r#type: "text",
+                                            placeholder: translate.input_contents,
+                                            value: attribute_contents()[index].clone(),
+                                            onclick: move |e: Event<MouseData>| {
+                                                e.stop_propagation();
+                                                e.prevent_default();
+                                            },
+                                            onblur: move |_| {
+                                                tracing::debug!("attribute contents index: {:?}", index);
+                                            },
+                                            onkeydown: move |e: KeyboardEvent| {
+                                                let key = e.key();
+                                                if key == Key::Enter {
+                                                    let value = attribute_contents()[index].clone();
+                                                    tracing::debug!("Enter key pressed! {value}");
+                                                }
+                                            },
+                                            oninput: move |e| {
+                                                let value = e.value();
+                                                let mut contents = attribute_contents();
+                                                contents[index] = value;
+                                                attribute_contents.set(contents);
+                                            },
+                                        }
                                     }
                                 }
                                 div { class: "group relative",
                                     div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
                                         button {
+                                            onclick: move |e: Event<MouseData>| {
+                                                e.stop_propagation();
+                                                e.prevent_default();
+                                            },
                                             RowOption { width: "24", height: "24" }
                                         }
                                         nav {
-                                            tabindex: "0",
                                             class: "border-2 bg-white invisible border-none shadow-lg rounded w-60 absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
+                                            onclick: move |e: Event<MouseData>| {
+                                                e.stop_propagation();
+                                                e.prevent_default();
+                                            },
                                             ul { class: "py-1",
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
@@ -274,13 +329,22 @@ pub fn PanelList(
     let mut panel_counts = use_signal(|| vec![]);
     let mut panel_count_width = use_signal(|| vec![]);
 
-    use_effect(use_reactive(&panels.len(), move |len| {
-        panel_names.set(vec!["".to_string(); len]);
-        panel_name_width.set(vec!["80px".to_string(); len]);
+    let mut clicked_panel_index = use_signal(|| panels.len());
+    let mut clicked_attribute_index = use_signal(|| attributes.len());
 
-        panel_counts.set(vec!["".to_string(); len]);
-        panel_count_width.set(vec!["50px".to_string(); len]);
-    }));
+    use_effect(use_reactive(
+        (&panels.len(), &attributes.len()),
+        move |(len, attribute_len)| {
+            panel_names.set(vec!["".to_string(); len]);
+            panel_name_width.set(vec!["80px".to_string(); len]);
+
+            panel_counts.set(vec!["".to_string(); len]);
+            panel_count_width.set(vec!["50px".to_string(); len]);
+
+            clicked_panel_index.set(len);
+            clicked_attribute_index.set(attribute_len);
+        },
+    ));
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start mb-[40px]",
@@ -379,7 +443,13 @@ pub fn PanelList(
                     for (index , panel) in panels.iter().enumerate() {
                         div { class: "flex flex-col w-full justify-start items-start",
                             div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
-                            div { class: "flex flex-row w-full h-[55px]",
+                            div {
+                                class: "flex flex-row w-full h-[55px]",
+                                onclick: {
+                                    move |_| {
+                                        clicked_panel_index.set(index);
+                                    }
+                                },
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
                                     if panel.name.is_none() && panel_names.len() != 0 {
                                         input {
@@ -487,15 +557,76 @@ pub fn PanelList(
                                         }
                                     }
                                 }
-                                for attribute in panel.attribute.clone() {
-                                    div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
+                                for (index2 , attribute) in panel.attribute.clone().iter().enumerate() {
+                                    div { class: "relative flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
                                         if attribute.attribute.len() == 0 {
-                                            button { class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                            button {
+                                                class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                                onclick: {
+                                                    let attributes = attributes.clone();
+                                                    move |_| {
+                                                        if clicked_attribute_index() == index2 {
+                                                            clicked_attribute_index.set(attributes.len());
+                                                        } else {
+                                                            clicked_attribute_index.set(index2);
+                                                        }
+                                                    }
+                                                },
                                                 "+"
                                             }
                                         } else {
                                             for attr in attribute.attribute.clone() {
-                                                PanelLabel { label: attr.name.clone() }
+                                                div {
+                                                    PanelLabel { label: attr.name.clone() }
+                                                }
+                                            }
+                                            button {
+                                                class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                                onclick: {
+                                                    let attributes = attributes.clone();
+                                                    move |_| {
+                                                        if clicked_attribute_index() == index2 {
+                                                            clicked_attribute_index.set(attributes.len());
+                                                        } else {
+                                                            clicked_attribute_index.set(index2);
+                                                        }
+                                                    }
+                                                },
+                                                "+"
+                                            }
+                                        }
+
+                                        if clicked_panel_index() != panels.len()
+                                            && clicked_attribute_index() != attributes.len()
+                                            && clicked_panel_index() == index && clicked_attribute_index() == index2
+                                        {
+                                            div {
+                                                class: "absolute top-full bg-white border border-[#bfc8d9] shadow-lg rounded-lg w-full z-50",
+                                                onclick: move |event| {
+                                                    event.stop_propagation();
+                                                    event.prevent_default();
+                                                },
+                                                div { class: "flex flex-col w-full justify-start items-start",
+                                                    div { class: format!("flex flex-col w-full justify-start items-center bg-white"),
+                                                        input {
+                                                            class: "flex flex-row w-full h-full bg-transparent focus:outline-none px-[10px] py-[15px]",
+                                                            r#type: "text",
+                                                            placeholder: translate.input_name,
+                                                        }
+                                                    }
+
+                                                    if attributes.len() != 0 {
+                                                        for (_j , attr) in attributes[index2].attribute.clone().iter().enumerate() {
+                                                            if !attribute.attribute.iter().any(|m| m.name == attr.name) {
+                                                                button { class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
+                                                                    div { class: "font-medium text-[#222222] text-[10px]",
+                                                                        "{attr.name}"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }

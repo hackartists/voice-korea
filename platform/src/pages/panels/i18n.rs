@@ -32,6 +32,10 @@ translate! {
 translate! {
     PanelListTranslate;
 
+    input_name: {
+        ko: "이름 입력",
+        en: "Input Name"
+    }
     panel_name_hint: {
         ko: "패널명",
         en: "Name"
@@ -90,6 +94,10 @@ translate! {
 translate! {
     AttributeListTranslate;
 
+    input_contents: {
+        ko: "내용 입력",
+        en: "Input Contents"
+    }
     attribute_name_hint: {
         ko: "속성명",
         en: "Name"

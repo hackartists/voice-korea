@@ -38,6 +38,18 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
     let mut resource_name = use_signal(|| "".to_string());
     let resources = ctrl.get_resources();
 
+    let total_types = ctrl.get_total_types();
+    let total_fields = ctrl.get_total_fields();
+    let total_resources = ctrl.get_total_resources();
+    let total_authorities = ctrl.get_total_authorities();
+    let total_purposes = ctrl.get_total_purposes();
+
+    let mut clicked_resources = use_signal(|| resources.len());
+
+    use_effect(use_reactive(&resources.len(), move |len| {
+        clicked_resources.set(len);
+    }));
+
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "flex flex-col w-full justify-start items-start",
@@ -156,42 +168,124 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                         for (index , resource) in resources.clone().iter().enumerate() {
                             div { class: "flex flex-col w-full justify-start items-start",
                                 div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
-                                div { class: "flex flex-row w-full h-[55px]",
+                                div {
+                                    class: "flex flex-row w-full h-[55px]",
+                                    onclick: move |_| {
+                                        clicked_resources.set(index);
+                                    },
                                     div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_type.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_type(props.lang, resource.metadata_type.clone().unwrap())
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                //TODO: update resource type
+                                                onchange: |_evt| {},
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_type.is_none(),
+                                                    "{translate.select_type}"
+                                                }
+                                                for res in total_types.clone() {
+                                                    option {
+                                                        value: res.clone(),
+                                                        selected: res.clone()
+                                                            == ctrl
+                                                                .translate_metadata_type(
+                                                                    props.lang,
+                                                                    resource.metadata_type.clone().unwrap(),
+                                                                ),
+                                                        "{res}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_type.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_type(props.lang, resource.metadata_type.clone().unwrap())
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                     div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_field.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_field(
-                                                        props.lang,
-                                                        resource.metadata_field.clone().unwrap(),
-                                                    )
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                //TODO: update resource field
+                                                onchange: |_evt| {},
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_field.is_none(),
+                                                    "{translate.select_field}"
+                                                }
+                                                for field in total_fields.clone() {
+                                                    option {
+                                                        value: field.clone(),
+                                                        selected: field.clone()
+                                                            == ctrl
+                                                                .translate_metadata_field(
+                                                                    props.lang,
+                                                                    resource.metadata_field.clone().unwrap(),
+                                                                ),
+                                                        "{field}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_field.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_field(
+                                                            props.lang,
+                                                            resource.metadata_field.clone().unwrap(),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                     div { class: "flex flex-row w-[180px] min-w-[180px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_purpose.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_purpose(
-                                                        props.lang,
-                                                        resource.metadata_purpose.clone().unwrap(),
-                                                    )
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                //TODO: update resource object
+                                                onchange: |_evt| {},
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_purpose.is_none(),
+                                                    "{translate.select_purpose}"
+                                                }
+                                                for purpose in total_purposes.clone() {
+                                                    option {
+                                                        value: purpose.clone(),
+                                                        selected: purpose.clone()
+                                                            == ctrl
+                                                                .translate_metadata_purpose(
+                                                                    props.lang,
+                                                                    resource.metadata_purpose.clone().unwrap(),
+                                                                ),
+                                                        "{purpose}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_purpose.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_purpose(
+                                                            props.lang,
+                                                            resource.metadata_purpose.clone().unwrap(),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -210,29 +304,81 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         }
                                     }
                                     div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_source.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_source(
-                                                        props.lang,
-                                                        resource.metadata_source.clone().unwrap(),
-                                                    )
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                //TODO: update resource object
+                                                onchange: |_evt| {},
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_source.is_none(),
+                                                    "{translate.select_source}"
+                                                }
+                                                for source in total_resources.clone() {
+                                                    option {
+                                                        value: source.clone(),
+                                                        selected: source.clone()
+                                                            == ctrl
+                                                                .translate_metadata_source(
+                                                                    props.lang,
+                                                                    resource.metadata_source.clone().unwrap(),
+                                                                ),
+                                                        "{source}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_source.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_source(
+                                                            props.lang,
+                                                            resource.metadata_source.clone().unwrap(),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                     div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_authority.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_authority(
-                                                        props.lang,
-                                                        resource.metadata_authority.clone().unwrap(),
-                                                    )
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                //TODO: update resource object
+                                                onchange: |_evt| {},
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_authority.is_none(),
+                                                    "{translate.select_authority}"
+                                                }
+                                                for authority in total_authorities.clone() {
+                                                    option {
+                                                        value: authority.clone(),
+                                                        selected: authority.clone()
+                                                            == ctrl
+                                                                .translate_metadata_authority(
+                                                                    props.lang,
+                                                                    resource.metadata_authority.clone().unwrap(),
+                                                                ),
+                                                        "{authority}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_authority.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_authority(
+                                                            props.lang,
+                                                            resource.metadata_authority.clone().unwrap(),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -242,7 +388,12 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                             {ctrl.convert_timestamp_to_date(resource.updated_at)}
                                         }
                                     }
-                                    div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
+                                    div {
+                                        class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
+                                        onclick: move |event: Event<MouseData>| {
+                                            event.stop_propagation();
+                                            event.prevent_default();
+                                        },
                                         button {
                                             class: "text-[#2a60d3] font-semibold text-[14px]",
                                             onclick: {
@@ -266,7 +417,12 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         }
                                     }
                                     div { class: "group relative",
-                                        div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
+                                        div {
+                                            class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
+                                            onclick: move |event: Event<MouseData>| {
+                                                event.stop_propagation();
+                                                event.prevent_default();
+                                            },
                                             button {
                                                 RowOption { width: "24", height: "24" }
                                             }

@@ -203,7 +203,7 @@ impl PanelControllerV1 {
                             attribute: vec![
                                 AttributeItemResponse {
                                     id: "attribute_item_id".to_string(),
-                                    name: "Attribute Item Name".to_string(),
+                                    name: "속성1".to_string(),
                                 },
                                 AttributeItemResponse {
                                     id: "attribute_item_id".to_string(),
