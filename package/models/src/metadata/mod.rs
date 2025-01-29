@@ -1,12 +1,12 @@
 use std::str::FromStr;
 
-use dioxus_translate::Language;
-use serde::{Deserialize, Serialize};
 use crate::field::Field;
 #[cfg(feature = "server")]
 use by_axum::aide;
+use dioxus_translate::Language;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -49,6 +49,22 @@ pub struct UpdateMetadataRequest {
 
     pub public_opinion_projects: Option<Vec<PublicOpinion>>,
     pub public_survey_projects: Option<Vec<PublicSurvey>>,
+}
+
+impl From<MetadataSummary> for UpdateMetadataRequest {
+    fn from(resource: MetadataSummary) -> Self {
+        Self {
+            name: resource.name.clone(),
+            urls: resource.urls.clone(),
+            metadata_type: resource.metadata_type.clone(),
+            metadata_field: resource.metadata_field.clone(),
+            metadata_purpose: resource.metadata_purpose.clone(),
+            metadata_source: resource.metadata_source.clone(),
+            metadata_authority: resource.metadata_authority.clone(),
+            public_opinion_projects: resource.public_opinion_projects.clone(),
+            public_survey_projects: resource.public_survey_projects.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -116,8 +132,8 @@ impl MetadataAuthority {
             },
             Language::Ko => match self {
                 MetadataAuthority::Public => "공개 자료",
-                MetadataAuthority::Private => "제한 자료",
-                MetadataAuthority::Restricted => "기밀 자료",
+                MetadataAuthority::Private => "기밀 자료",
+                MetadataAuthority::Restricted => "제한 자료",
             },
         }
     }
@@ -127,8 +143,8 @@ impl FromStr for MetadataAuthority {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "공개 자료" | "Public Material" => Ok(MetadataAuthority::Public),
-            "제한 자료" | "Private Material" => Ok(MetadataAuthority::Private),
-            "기밀 자료" | "Restricted Material" => Ok(MetadataAuthority::Restricted),
+            "기밀 자료" | "Private Material" => Ok(MetadataAuthority::Private),
+            "제한 자료" | "Restricted Material" => Ok(MetadataAuthority::Restricted),
             _ => Err(format!("invalid field")),
         }
     }

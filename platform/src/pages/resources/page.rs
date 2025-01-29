@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::CreateMetadataRequest;
+use models::prelude::{CreateMetadataRequest, UpdateMetadataRequest};
 
 use crate::{
     components::{
@@ -177,8 +177,18 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         if clicked_resources() == index {
                                             select {
                                                 class: "bg-transparent focus:outline-none",
-                                                //TODO: update resource type
-                                                onchange: |_evt| {},
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_type = ctrl.metadata_type_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
                                                 option {
                                                     value: "",
                                                     disabled: true,
@@ -214,8 +224,18 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         if clicked_resources() == index {
                                             select {
                                                 class: "bg-transparent focus:outline-none",
-                                                //TODO: update resource field
-                                                onchange: |_evt| {},
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_field = ctrl.metadata_field_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
                                                 option {
                                                     value: "",
                                                     disabled: true,
@@ -254,8 +274,18 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         if clicked_resources() == index {
                                             select {
                                                 class: "bg-transparent focus:outline-none",
-                                                //TODO: update resource object
-                                                onchange: |_evt| {},
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_purpose = ctrl.metadata_purpose_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
                                                 option {
                                                     value: "",
                                                     disabled: true,
@@ -307,8 +337,18 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         if clicked_resources() == index {
                                             select {
                                                 class: "bg-transparent focus:outline-none",
-                                                //TODO: update resource object
-                                                onchange: |_evt| {},
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_source = ctrl.metadata_source_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
                                                 option {
                                                     value: "",
                                                     disabled: true,
@@ -347,8 +387,18 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         if clicked_resources() == index {
                                             select {
                                                 class: "bg-transparent focus:outline-none",
-                                                //TODO: update resource object
-                                                onchange: |_evt| {},
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_authority = ctrl.metadata_authority_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
                                                 option {
                                                     value: "",
                                                     disabled: true,
@@ -430,14 +480,14 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                                 ul { class: "py-1",
                                                     li {
                                                         class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                        onclick: move |_| {
+                                                        onclick: move |_event| {
                                                             ctrl.open_update_material(props.lang, index);
                                                         },
                                                         "{translate.update_material_li}"
                                                     }
                                                     li {
                                                         class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                        onclick: move |_| {
+                                                        onclick: move |_event| {
                                                             ctrl.open_remove_material(props.lang, index);
                                                         },
                                                         "{translate.remove_material_li}"

@@ -2,7 +2,8 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::prelude::{
-    AttributeResponse, CreateAttributeRequest, CreatePanelRequest, PanelResponse,
+    AttributeItemResponse, AttributeResponse, CreateAttributeRequest, CreatePanelRequest,
+    PanelResponse,
 };
 
 use crate::{
@@ -58,6 +59,10 @@ pub fn PanelPage(props: PanelProps) -> Element {
                 onremove: move |index: usize| async move {
                     ctrl.open_remove_panel(props.lang, index).await;
                 },
+
+                update_panel_name: move |(index, name): (usize, String)| async move {
+                    ctrl.update_panel_name(index, name).await;
+                },
             }
             AttributeList {
                 lang: props.lang,
@@ -71,6 +76,13 @@ pub fn PanelPage(props: PanelProps) -> Element {
                 oncreate: move |req: CreateAttributeRequest| async move {
                     ctrl.create_attribute(req).await;
                 },
+
+                update_attribute: move |(index, attributes): (usize, Vec<AttributeItemResponse>)| async move {
+                    ctrl.update_attribute(index, attributes).await;
+                },
+                update_attribute_name: move |(index, name): (usize, String)| async move {
+                    ctrl.update_attribute_name(index, name).await;
+                },
             }
         }
     }
@@ -83,6 +95,9 @@ pub fn AttributeList(
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
     oncreate: EventHandler<CreateAttributeRequest>,
+
+    update_attribute: EventHandler<(usize, Vec<AttributeItemResponse>)>,
+    update_attribute_name: EventHandler<(usize, String)>,
 ) -> Element {
     let mut is_focused = use_signal(|| false);
     let mut attribute_name = use_signal(|| "".to_string());
@@ -209,11 +224,12 @@ pub fn AttributeList(
                                             onblur: move |_| {
                                                 tracing::debug!("attribute index: {:?}", index);
                                             },
+
                                             onkeydown: move |e: KeyboardEvent| {
                                                 let key = e.key();
                                                 if key == Key::Enter {
                                                     let value = attribute_names()[index].clone();
-                                                    tracing::debug!("Enter key pressed! {value}");
+                                                    update_attribute_name.call((index, value));
                                                 }
                                             },
                                             oninput: move |e| {
@@ -250,11 +266,19 @@ pub fn AttributeList(
                                             onblur: move |_| {
                                                 tracing::debug!("attribute contents index: {:?}", index);
                                             },
-                                            onkeydown: move |e: KeyboardEvent| {
-                                                let key = e.key();
-                                                if key == Key::Enter {
-                                                    let value = attribute_contents()[index].clone();
-                                                    tracing::debug!("Enter key pressed! {value}");
+                                            onkeydown: {
+                                                let attrs = attribute.attribute.clone();
+                                                move |e: KeyboardEvent| {
+                                                    let mut attrs = attrs.clone();
+                                                    let key = e.key();
+                                                    if key == Key::Enter {
+                                                        attrs
+                                                            .push(AttributeItemResponse {
+                                                                id: "".to_string(),
+                                                                name: attribute_contents()[index].clone(),
+                                                            });
+                                                        update_attribute.call((index, attrs));
+                                                    }
                                                 }
                                             },
                                             oninput: move |e| {
@@ -317,6 +341,8 @@ pub fn PanelList(
     onupdate: EventHandler<usize>,
     oncreate: EventHandler<CreatePanelRequest>,
     onremove: EventHandler<usize>,
+
+    update_panel_name: EventHandler<(usize, String)>,
 ) -> Element {
     let mut ctrl: Controller = use_context();
     let mut is_focused = use_signal(|| false);
@@ -480,7 +506,7 @@ pub fn PanelList(
                                                 let key = e.key();
                                                 if key == Key::Enter {
                                                     let value = panel_names()[index].clone();
-                                                    tracing::debug!("Enter key pressed! {value}");
+                                                    update_panel_name.call((index, value));
                                                 }
                                             },
                                             oninput: move |e| {
@@ -618,7 +644,29 @@ pub fn PanelList(
                                                     if attributes.len() != 0 {
                                                         for (_j , attr) in attributes[index2].attribute.clone().iter().enumerate() {
                                                             if !attribute.attribute.iter().any(|m| m.name == attr.name) {
-                                                                button { class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
+                                                                button {
+                                                                    class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
+                                                                    onclick: {
+                                                                        let attribute_len = attributes.len();
+                                                                        let mut attribute_vec: Vec<AttributeResponse> = panels[index]
+                                                                            .clone()
+                                                                            .attribute
+                                                                            .clone();
+                                                                        attribute_vec[index2]
+                                                                            .attribute
+                                                                            .push(AttributeItemResponse {
+                                                                                id: attr.id.clone(),
+                                                                                name: attr.name.clone(),
+                                                                            });
+                                                                        move |_| {
+                                                                            let attrs = attribute_vec.clone();
+                                                                            let ctrl = ctrl.clone();
+                                                                            async move {
+                                                                                let _ = ctrl.update_panel_attribute(index, attrs).await;
+                                                                                clicked_attribute_index.set(attribute_len);
+                                                                            }
+                                                                        }
+                                                                    },
                                                                     div { class: "font-medium text-[#222222] text-[10px]",
                                                                         "{attr.name}"
                                                                     }

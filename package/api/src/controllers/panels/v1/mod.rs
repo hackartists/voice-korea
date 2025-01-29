@@ -116,33 +116,28 @@ impl PanelControllerV1 {
 
         Ok(Json(CommonQueryResponse {
             items: vec![
-                // PanelResponse {
-                //     id: "0".to_string(),
-                //     name: None,
-                //     count: None,
-                //     attribute: vec![
-                //         AttributeResponse {
-                //             id: "attribute_id".to_string(),
-                //             name: Some("Attribute Name".to_string()),
-                //             attribute: vec![],
-                //         },
-                //         AttributeResponse {
-                //             id: "attribute_id".to_string(),
-                //             name: Some("Attribute Name".to_string()),
-                //             attribute: vec![],
-                //         },
-                //     ],
-                // },
+                PanelResponse {
+                    id: "0".to_string(),
+                    name: None,
+                    count: None,
+                    attribute: vec![
+                        AttributeResponse {
+                            id: "attribute_id".to_string(),
+                            name: Some("Attribute Name".to_string()),
+                            attribute: vec![],
+                        },
+                        AttributeResponse {
+                            id: "attribute_id".to_string(),
+                            name: Some("Attribute Name".to_string()),
+                            attribute: vec![],
+                        },
+                    ],
+                },
                 PanelResponse {
                     id: "1".to_string(),
                     name: Some("Panel Name".to_string()),
                     count: Some(10),
                     attribute: vec![
-                        AttributeResponse {
-                            id: "0".to_string(),
-                            name: None,
-                            attribute: vec![],
-                        },
                         AttributeResponse {
                             id: "attribute_id".to_string(),
                             name: Some("Attribute Name".to_string()),
@@ -178,11 +173,6 @@ impl PanelControllerV1 {
                     name: Some("Panel Name".to_string()),
                     count: Some(10),
                     attribute: vec![
-                        AttributeResponse {
-                            id: "0".to_string(),
-                            name: None,
-                            attribute: vec![],
-                        },
                         AttributeResponse {
                             id: "attribute_id".to_string(),
                             name: Some("Attribute Name".to_string()),

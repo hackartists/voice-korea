@@ -122,7 +122,7 @@ pub struct AttributeResponse {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AttributeItemResponse {
-    pub id: String,
+    pub id: String, //id가 ""일 경우 내부에서 즉각적인 id 추가
     pub name: String,
 }
 

@@ -2,8 +2,8 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::prelude::{
-    AttributeResponse, CreateAttributeRequest, CreatePanelRequest, PanelResponse,
-    UpdateAttributeRequest, UpdatePanelRequest,
+    AttributeItemResponse, AttributeResponse, CreateAttributeRequest, CreatePanelRequest,
+    PanelResponse, UpdateAttributeRequest, UpdatePanelRequest,
 };
 
 use crate::{
@@ -316,5 +316,99 @@ impl Controller {
             })
             .with_id("update_panel_name")
             .with_title(translate.update_panel_name);
+    }
+
+    pub async fn update_attribute(
+        &self,
+        index: usize,
+        attribute_items: Vec<AttributeItemResponse>,
+    ) {
+        tracing::debug!("update attribute: {} {:?}", index, attribute_items);
+        let api: AttributeApi = self.attribute_api;
+        let attributes = self.get_attributes();
+        let attr = attributes[index].clone();
+
+        let mut attribute_resource = self.attribute_resource;
+
+        let _ = api
+            .update_attribute(
+                attr.id.clone(),
+                UpdateAttributeRequest {
+                    name: attr.name.clone().unwrap_or_default(),
+                    attribute_items,
+                },
+            )
+            .await;
+
+        attribute_resource.restart();
+    }
+
+    pub async fn update_panel_name(&self, index: usize, name: String) {
+        tracing::debug!("update update_panel_name: {} {:?}", index, name);
+        let api: PanelApi = self.panel_api;
+        let panels = self.get_panels();
+        let panel = panels[index].clone();
+
+        let mut panel_resource = self.panel_resource;
+
+        let _ = api
+            .update_panel(
+                panel.id.clone(),
+                UpdatePanelRequest {
+                    name,
+                    count: panel.count.unwrap_or_default(),
+                    attribute: panel.attribute,
+                },
+            )
+            .await;
+
+        panel_resource.restart();
+    }
+
+    pub async fn update_attribute_name(&self, index: usize, name: String) {
+        tracing::debug!("update update_attribute_name: {} {:?}", index, name);
+        let api: AttributeApi = self.attribute_api;
+        let attributes = self.get_attributes();
+        let attr = attributes[index].clone();
+
+        let mut attribute_resource = self.attribute_resource;
+
+        let _ = api
+            .update_attribute(
+                attr.id.clone(),
+                UpdateAttributeRequest {
+                    name,
+                    attribute_items: attr.attribute,
+                },
+            )
+            .await;
+
+        attribute_resource.restart();
+    }
+
+    pub async fn update_panel_attribute(&self, index: usize, attribute: Vec<AttributeResponse>) {
+        tracing::debug!("update panel attribute: {} {:?}", index, attribute);
+        let api: PanelApi = self.panel_api;
+        let panels = self.get_panels();
+        let panel = panels[index].clone();
+
+        let mut panel_resource = self.panel_resource;
+
+        let panel_id = panel.id.clone();
+        let name = panel.name.clone();
+        let count = panel.count.unwrap_or(0);
+        let attribute = attribute.clone();
+
+        let _ = api
+            .update_panel(
+                panel_id,
+                UpdatePanelRequest {
+                    name: name.unwrap_or_default(),
+                    count,
+                    attribute,
+                },
+            )
+            .await;
+        panel_resource.restart();
     }
 }

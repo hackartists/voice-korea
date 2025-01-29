@@ -342,6 +342,18 @@ impl Controller {
             .with_title(translate.update_material_li);
     }
 
+    pub async fn update_metadata(&self, index: usize, req: UpdateMetadataRequest) {
+        tracing::debug!("update metadata: {index} {:?}", req);
+        let api: ResourceApi = self.resource_api;
+
+        let materials = self.get_resources();
+        let material = materials[index].clone();
+        let mut metadata_resource = self.metadata_resource;
+
+        let _ = api.update_metadata(material.id.clone(), req).await;
+        metadata_resource.restart();
+    }
+
     pub fn open_remove_material(&self, lang: Language, index: usize) {
         let mut popup_service = (self.popup_service)().clone();
         let translate = (self.translate)().clone();
