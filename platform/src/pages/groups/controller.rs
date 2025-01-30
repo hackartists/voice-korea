@@ -20,6 +20,16 @@ pub struct GroupMemberSummary {
     pub email: String,
 }
 
+impl From<&models::prelude::GroupMemberResponse> for GroupMemberSummary {
+    fn from(response: &models::prelude::GroupMemberResponse) -> Self {
+        GroupMemberSummary {
+            id: response.id.clone(),
+            name: response.user_name.clone(),
+            email: response.user_email.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct GroupSummary {
     pub group_id: String,
@@ -85,11 +95,7 @@ impl Controller {
                         member_list: group
                             .members
                             .iter()
-                            .map(|v| GroupMemberSummary {
-                                id: v.id.clone(),
-                                name: v.user_name.clone(),
-                                email: v.user_email.clone(),
-                            })
+                            .map(|v: &models::prelude::GroupMemberResponse| v.into())
                             .collect(),
                     })
                     .collect(),
