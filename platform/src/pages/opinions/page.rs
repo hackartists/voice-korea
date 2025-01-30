@@ -235,6 +235,8 @@ pub fn OpinionPage(props: OpinionProps) -> Element {
                                                         label_name: opinions[index].panels[0].name.clone(),
                                                         label_color: if opinions[index].status == "마감" { "bg-[#b4b4b4]".to_string() } else { "bg-[#35343f]".to_string() },
                                                         is_delete: false,
+                                                        //FIXME: implement onremove logic
+                                                        onremove: move |_| {},
                                                     }
                                                 }
                                                 if clicked_panel() == index as i64 {
@@ -262,6 +264,8 @@ pub fn OpinionPage(props: OpinionProps) -> Element {
                                                             Label {
                                                                 label_name: panel.name.clone(),
                                                                 label_color: if opinions[index].status == "마감" { "bg-[#b4b4b4]".to_string() } else { "bg-[#35343f]".to_string() },
+                                                                //FIXME: implement onremove logic
+                                                                onremove: move |_| {},
                                                             }
                                                         }
                                                         div { class: "flex flex-row w-[24px] h-[24px] bg-[#d1d1d1] opacity-50 justify-center items-center rounded-lg font-bold text-[#35343f] text-[15px]",

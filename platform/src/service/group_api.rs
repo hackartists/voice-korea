@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use dioxus::prelude::*;
 use models::prelude::{
     CreateGroupRequest, GroupActionRequest, GroupByIdActionRequest, GroupResponse,
+    TeamMemberRequest,
 };
 
 use crate::{api::common::CommonQueryResponse, utils::api::ReqwestClient};
@@ -45,6 +46,42 @@ impl GroupApi {
             .header("Authorization", token)
             .header("x-organization", id)
             .json(&GroupActionRequest::Create(req))
+            .send()
+            .await?;
+
+        let _res = res.error_for_status();
+
+        Ok(())
+    }
+
+    pub async fn add_team_member(&self, group_id: String, req: TeamMemberRequest) -> Result<()> {
+        let token = self.get_token();
+        let id = self.get_organization_id();
+        let client = ReqwestClient::new()?;
+
+        let res = client
+            .post(&format!("/groups/v1/{group_id}"))
+            .header("Authorization", token)
+            .header("x-organization", id)
+            .json(&GroupByIdActionRequest::AddTeamMember(req))
+            .send()
+            .await?;
+
+        let _res = res.error_for_status();
+
+        Ok(())
+    }
+
+    pub async fn remove_team_member(&self, group_id: String, member_id: String) -> Result<()> {
+        let token = self.get_token();
+        let id = self.get_organization_id();
+        let client = ReqwestClient::new()?;
+
+        let res = client
+            .post(&format!("/groups/v1/{group_id}"))
+            .header("Authorization", token)
+            .header("x-organization", id)
+            .json(&GroupByIdActionRequest::RemoveTeamMember(member_id))
             .send()
             .await?;
 

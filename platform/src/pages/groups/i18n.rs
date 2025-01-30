@@ -3,6 +3,10 @@ use dioxus_translate::translate;
 translate! {
     GroupTranslate;
 
+    input_name_hint: {
+        ko: "이름을 검색하세요.",
+        en: "Please Search the Name",
+    }
     organization_management: {
         ko: "조직관리",
         en: "Organization Management",
@@ -171,6 +175,10 @@ translate! {
 translate! {
     CreateGroupModalTranslate;
 
+    input_name_hint: {
+        ko: "이름을 검색하세요.",
+        en: "Please Input the Name",
+    },
     group_name: {
         ko: "그룹명",
         en: "Group Name"
@@ -179,7 +187,7 @@ translate! {
         ko: "내용 입력",
         en: "Input Contents"
     },
-    create_group_hint: {
+    create_group_description: {
         ko: "중복 입력은 허용되지 않으며, 최소 2글자 이상 입력해야 합니다.",
         en: "Duplicate entries are not allowed, and you must enter at least 2 characters."
     },
