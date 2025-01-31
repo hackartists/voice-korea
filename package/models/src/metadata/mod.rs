@@ -26,11 +26,11 @@ pub struct GetPutObjectUriResponse {
 pub struct CreateMetadataRequest {
     pub name: String,
     pub urls: Vec<String>,
-    pub metadata_type: Option<MetadataType>,
-    pub metadata_field: Option<Field>,
-    pub metadata_purpose: Option<MetadataPurpose>,
-    pub metadata_source: Option<MetadataSource>,
-    pub metadata_authority: Option<MetadataAuthority>,
+    pub data_type: Option<MetadataType>,
+    pub field: Option<Field>,
+    pub purpose: Option<MetadataPurpose>,
+    pub source: Option<MetadataSource>,
+    pub authority: Option<MetadataAuthority>,
 
     pub public_opinion_projects: Option<Vec<PublicOpinion>>,
     pub public_survey_projects: Option<Vec<PublicSurvey>>,
@@ -41,11 +41,11 @@ pub struct CreateMetadataRequest {
 pub struct UpdateMetadataRequest {
     pub name: String,
     pub urls: Vec<String>,
-    pub metadata_type: Option<MetadataType>,
-    pub metadata_field: Option<Field>,
-    pub metadata_purpose: Option<MetadataPurpose>,
-    pub metadata_source: Option<MetadataSource>,
-    pub metadata_authority: Option<MetadataAuthority>,
+    pub data_type: Option<MetadataType>,
+    pub field: Option<Field>,
+    pub purpose: Option<MetadataPurpose>,
+    pub source: Option<MetadataSource>,
+    pub authority: Option<MetadataAuthority>,
 }
 
 impl From<ResourceMetadata> for UpdateMetadataRequest {
@@ -53,11 +53,11 @@ impl From<ResourceMetadata> for UpdateMetadataRequest {
         Self {
             name: resource.name.clone(),
             urls: resource.urls.clone(),
-            metadata_type: resource.metadata_type.clone(),
-            metadata_field: resource.metadata_field.clone(),
-            metadata_purpose: resource.metadata_purpose.clone(),
-            metadata_source: resource.metadata_source.clone(),
-            metadata_authority: resource.metadata_authority.clone(),
+            data_type: resource.data_type.clone(),
+            field: resource.field.clone(),
+            purpose: resource.purpose.clone(),
+            source: resource.source.clone(),
+            authority: resource.authority.clone(),
         }
     }
 }
@@ -70,11 +70,11 @@ pub struct ResourceMetadata {
     pub id: String,
     pub name: String,
     pub urls: Vec<String>,
-    pub metadata_type: Option<MetadataType>,
-    pub metadata_field: Option<Field>,
-    pub metadata_purpose: Option<MetadataPurpose>,
-    pub metadata_source: Option<MetadataSource>,
-    pub metadata_authority: Option<MetadataAuthority>,
+    pub data_type: Option<MetadataType>,
+    pub field: Option<Field>,
+    pub purpose: Option<MetadataPurpose>,
+    pub source: Option<MetadataSource>,
+    pub authority: Option<MetadataAuthority>,
 
     // #[api_model(summary, auto = [insert])]
     pub created_at: i64,
@@ -87,27 +87,29 @@ impl ResourceMetadata {
     pub fn new(
         name: String,
         urls: Vec<String>,
-        metadata_type: Option<MetadataType>,
-        metadata_field: Option<Field>,
-        metadata_purpose: Option<MetadataPurpose>,
-        metadata_source: Option<MetadataSource>,
-        metadata_authority: Option<MetadataAuthority>,
+        data_type: Option<MetadataType>,
+        field: Option<Field>,
+        purpose: Option<MetadataPurpose>,
+        source: Option<MetadataSource>,
+        authority: Option<MetadataAuthority>,
     ) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             name,
             urls,
-            metadata_type,
-            metadata_field,
-            metadata_purpose,
-            metadata_source,
-            metadata_authority,
+            data_type,
+            field,
+            purpose,
+            source,
+            authority,
             created_at: chrono::Utc::now().timestamp(),
             updated_at: chrono::Utc::now().timestamp(),
             deleted_at: None,
         }
     }
 }
+
+// TODO: implement metadata - projects linking table
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

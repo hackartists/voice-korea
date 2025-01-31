@@ -108,11 +108,11 @@ impl MetadataControllerV1 {
                 "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
                     .to_string(),
             ],
-            metadata_type: Some(MetadataType::Report),
-            metadata_field: Some(Field::Economy),
-            metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
-            metadata_source: Some(MetadataSource::Internal),
-            metadata_authority: Some(MetadataAuthority::Public),
+            data_type: Some(MetadataType::Report),
+            field: Some(Field::Economy),
+            purpose: Some(MetadataPurpose::PublicDiscussion),
+            source: Some(MetadataSource::Internal),
+            authority: Some(MetadataAuthority::Public),
             created_at: 1759276800,
             updated_at: 1759276800,
             deleted_at: None,
@@ -157,11 +157,11 @@ impl MetadataControllerV1 {
         let resource = ResourceMetadata::new(
             req.name,
             req.urls,
-            req.metadata_type,
-            req.metadata_field,
-            req.metadata_purpose,
-            req.metadata_source,
-            req.metadata_authority,
+            req.data_type,
+            req.field,
+            req.purpose,
+            req.source,
+            req.authority,
         );
 
         // TODO: linking metadata - projects
