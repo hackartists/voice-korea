@@ -88,7 +88,7 @@ impl PanelControllerV1 {
                 AttributeResponse {
                     id: "attribute_id".to_string(),
                     name: Some("Attribute Name".to_string()),
-                    attribute: vec![AttributeItemResponse {
+                    attribute: vec![AttributeItemInfo {
                         id: "attribute_item_id".to_string(),
                         name: "Attribute Item Name".to_string(),
                     }],
@@ -96,7 +96,7 @@ impl PanelControllerV1 {
                 AttributeResponse {
                     id: "attribute_id".to_string(),
                     name: Some("Attribute Name".to_string()),
-                    attribute: vec![AttributeItemResponse {
+                    attribute: vec![AttributeItemInfo {
                         id: "attribute_item_id".to_string(),
                         name: "Attribute Item Name".to_string(),
                     }],
@@ -142,11 +142,11 @@ impl PanelControllerV1 {
                             id: "attribute_id".to_string(),
                             name: Some("Attribute Name".to_string()),
                             attribute: vec![
-                                AttributeItemResponse {
+                                AttributeItemInfo {
                                     id: "attribute_item_id".to_string(),
                                     name: "Attribute Item Name".to_string(),
                                 },
-                                AttributeItemResponse {
+                                AttributeItemInfo {
                                     id: "attribute_item_id".to_string(),
                                     name: "Attribute Item Name".to_string(),
                                 },
@@ -156,11 +156,11 @@ impl PanelControllerV1 {
                             id: "attribute_id".to_string(),
                             name: Some("Attribute Name".to_string()),
                             attribute: vec![
-                                AttributeItemResponse {
+                                AttributeItemInfo {
                                     id: "attribute_item_id".to_string(),
                                     name: "Attribute Item Name".to_string(),
                                 },
-                                AttributeItemResponse {
+                                AttributeItemInfo {
                                     id: "attribute_item_id".to_string(),
                                     name: "Attribute Item Name".to_string(),
                                 },
@@ -177,11 +177,11 @@ impl PanelControllerV1 {
                             id: "attribute_id".to_string(),
                             name: Some("Attribute Name".to_string()),
                             attribute: vec![
-                                AttributeItemResponse {
+                                AttributeItemInfo {
                                     id: "attribute_item_id".to_string(),
                                     name: "Attribute Item Name".to_string(),
                                 },
-                                AttributeItemResponse {
+                                AttributeItemInfo {
                                     id: "attribute_item_id".to_string(),
                                     name: "Attribute Item Name".to_string(),
                                 },
@@ -191,11 +191,11 @@ impl PanelControllerV1 {
                             id: "attribute_id".to_string(),
                             name: Some("Attribute Name".to_string()),
                             attribute: vec![
-                                AttributeItemResponse {
+                                AttributeItemInfo {
                                     id: "attribute_item_id".to_string(),
                                     name: "속성1".to_string(),
                                 },
-                                AttributeItemResponse {
+                                AttributeItemInfo {
                                     id: "attribute_item_id".to_string(),
                                     name: "Attribute Item Name".to_string(),
                                 },
