@@ -69,7 +69,7 @@ pub struct ResourceMetadata {
     // #[api_model(summary, primary_key)]
     pub id: String,
     pub name: String,
-    pub urls: Vec<String>,
+    pub urls: Vec<String>, // need to be divide table when postgre db implemented (resource url couldn't be name)
     pub data_type: Option<MetadataType>,
     pub field: Option<Field>,
     pub purpose: Option<MetadataPurpose>,
