@@ -1691,21 +1691,8 @@ dependencies = [
 name = "dioxus-translate"
 version = "0.1.2"
 dependencies = [
- "dioxus-translate-macro 0.1.0",
- "dioxus-translate-types 0.1.1",
- "schemars",
- "serde",
- "web-sys",
-]
-
-[[package]]
-name = "dioxus-translate"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8ca1aba9b70282030d9c3e343933ab95f0673e93789faf42ff044970a81a581"
-dependencies = [
- "dioxus-translate-macro 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "dioxus-translate-types 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dioxus-translate-macro",
+ "dioxus-translate-types",
  "schemars",
  "serde",
  "web-sys",
@@ -1715,19 +1702,7 @@ dependencies = [
 name = "dioxus-translate-macro"
 version = "0.1.0"
 dependencies = [
- "dioxus-translate-types 0.1.1",
- "proc-macro2",
- "quote",
- "syn 2.0.96",
-]
-
-[[package]]
-name = "dioxus-translate-macro"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aebf71c2957c420b7a403f3db1df5d00358b8ca9edfc541bf9ee0cfcc16527f8"
-dependencies = [
- "dioxus-translate-types 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dioxus-translate-types",
  "proc-macro2",
  "quote",
  "syn 2.0.96",
@@ -1736,12 +1711,6 @@ dependencies = [
 [[package]]
 name = "dioxus-translate-types"
 version = "0.1.1"
-
-[[package]]
-name = "dioxus-translate-types"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e927ba603954941700a6186f2a75ddbee0d0a99d4d44b5bace54a1980cee4a56"
 
 [[package]]
 name = "dioxus-web"
@@ -3097,7 +3066,7 @@ dependencies = [
  "dioxus",
  "dioxus-aws",
  "dioxus-logger 0.5.1",
- "dioxus-translate 0.1.2",
+ "dioxus-translate",
  "easy-dynamodb",
  "getrandom 0.2.15",
  "models",
@@ -3231,7 +3200,7 @@ dependencies = [
  "by-axum",
  "by-macros",
  "chrono",
- "dioxus-translate 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dioxus-translate",
  "schemars",
  "serde",
  "serde_json",

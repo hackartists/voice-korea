@@ -3,21 +3,21 @@
 use dioxus_logger::tracing::{self, Level};
 
 use dioxus::prelude::*;
-use platform::service::attribute_api::AttributeApi;
-use platform::service::auth_api::AuthApi;
-use platform::service::group_api::GroupApi;
-use platform::service::member_api::MemberApi;
-use platform::service::opinion_api::OpinionApi;
-use platform::service::organization_api::OrganizationApi;
-use platform::service::panel_api::PanelApi;
-use platform::service::popup_service::PopupService;
+use main_ui::service::attribute_api::AttributeApi;
+use main_ui::service::auth_api::AuthApi;
+use main_ui::service::group_api::GroupApi;
+use main_ui::service::member_api::MemberApi;
+use main_ui::service::opinion_api::OpinionApi;
+use main_ui::service::organization_api::OrganizationApi;
+use main_ui::service::panel_api::PanelApi;
+use main_ui::service::popup_service::PopupService;
 
-use platform::service::metadata_api::ResourceApi;
-use platform::service::prev_survey_api::PrevSurveyApi;
-use platform::service::survey_api::SurveyApi;
-use platform::service::theme::Theme;
-use platform::service::user_api::UserApi;
-use platform::{
+use main_ui::service::metadata_api::ResourceApi;
+use main_ui::service::prev_survey_api::PrevSurveyApi;
+use main_ui::service::survey_api::SurveyApi;
+use main_ui::service::theme::Theme;
+use main_ui::service::user_api::UserApi;
+use main_ui::{
     routes::Route, service::login_service::LoginService, utils::context::use_iitp_context_provider,
 };
 
@@ -35,7 +35,7 @@ fn main() {
     #[cfg(feature = "server")]
     {
         easy_dynamodb::init(
-            platform::utils::logger::root(),
+            main_ui::utils::logger::root(),
             option_env!("AWS_ACCESS_KEY_ID")
                 .expect("AWS_ACCESS_KEY_ID is required")
                 .to_string(),

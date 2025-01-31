@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  dx-check:
+  main-ui:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -26,7 +26,7 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dioxus-cli
         run: |
-          cargo binstall dioxus-cli --version 0.6.1 --force
+          cargo binstall dioxus-cli
 
       - name: Dioxus Lint
         env:
@@ -34,9 +34,17 @@ jobs:
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          dx check -p platform
+          dx check -p main-ui
+      - name: Dioxus Lint
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SERVICE: main-ui
+        run: |
+          make build
 
-  build-deployment:
+  api:
     runs-on: ubuntu-22.04
     needs: [dx-check]
     steps:
@@ -53,7 +61,39 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dioxus-cli
         run: |
-          cargo binstall dioxus-cli --version 0.6.1 --force
+          cargo binstall dioxus-cli
+
+      - name: Cache builder
+        id: api-build-cache-builder
+        uses: actions/cache@v3
+        with:
+          key: api-build-cache-builder
+          path: |
+            target
+
+      - name: Testing
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SERIVCE: api
+        run: |
+          make build
+
+  test:
+    runs-on: ubuntu-22.04
+    needs: [dx-check]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
 
       - name: Cache builder
         id: test-cache-builder
