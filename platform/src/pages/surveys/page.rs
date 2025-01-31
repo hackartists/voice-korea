@@ -8,6 +8,7 @@ use crate::{
         controller::Controller,
         i18n::{RemoveSurveyModalTranslate, SurveyTranslate},
     },
+    routes::Route,
     service::popup_service::PopupService,
 };
 
@@ -75,7 +76,10 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                             }
                             Search { width: "18", height: "18", color: "#7c8292" }
                         }
-                        button { onclick: move |_| {},
+                        Link {
+                            to: Route::SurveyCreatePage {
+                                lang: props.lang,
+                            },
                             div { class: "flex flex-row justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px]",
                                 div { class: "text-white font-semibold text-[#16px]",
                                     "{translate.start_survey}"
