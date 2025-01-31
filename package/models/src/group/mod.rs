@@ -1,9 +1,9 @@
-use serde::{Deserialize, Serialize};
 use crate::member::GroupInfo;
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -18,7 +18,7 @@ pub struct GroupMember {
     pub id: String,
     pub r#type: String,
     pub gsi1: String, // group#member#{group_id}
-    pub gsi2: String, // group#member#{org_member_id}
+    pub gsi2: String, // group#member#{group_id}#{org_member_id}
     pub created_at: i64,
     pub updated_at: i64,
     pub deleted_at: Option<i64>,
@@ -28,13 +28,13 @@ pub struct GroupMember {
 }
 
 impl GroupMember {
-    pub fn new(id: String, group_id: String, org_member_id: String) -> Self {
+    pub fn new(group_id: String, org_member_id: String) -> Self {
         let now = chrono::Utc::now().timestamp_millis();
         Self {
-            id,
+            id: uuid::Uuid::new_v4().to_string(),
             r#type: GroupMember::get_type(),
             gsi1: GroupMember::get_gsi1(&group_id),
-            gsi2: GroupMember::get_gsi2(&org_member_id),
+            gsi2: GroupMember::get_gsi2(&group_id, &org_member_id),
             created_at: now,
             updated_at: now,
             deleted_at: None,
@@ -47,16 +47,16 @@ impl GroupMember {
         format!("{}#{}", Self::get_type(), group_id)
     }
 
-    pub fn get_gsi2(user_id: &str) -> String {
-        format!("{}#{}", Self::get_type(), user_id)
+    pub fn get_gsi2(group_id: &str, user_id: &str) -> String {
+        format!("{}#{}#{}", Self::get_type(), group_id, user_id)
     }
 
     pub fn get_gsi1_deleted(group_id: &str) -> String {
         format!("{}#{}", Self::get_deleted_type(), group_id)
     }
 
-    pub fn get_gsi2_deleted(user_id: &str) -> String {
-        format!("{}#{}", Self::get_deleted_type(), user_id)
+    pub fn get_gsi2_deleted(group_id: &str, user_id: &str) -> String {
+        format!("{}#{}#{}", Self::get_deleted_type(), group_id, user_id)
     }
 
     pub fn get_deleted_type() -> String {
@@ -111,7 +111,7 @@ pub struct GroupResponse {
 pub struct Group {
     pub id: String,
     pub r#type: String,
-    pub gsi1: String,
+    pub gsi1: String, // group#{user_id}
     pub creator: String,
     pub created_at: i64,
     pub updated_at: i64,
@@ -124,11 +124,7 @@ pub struct Group {
 }
 
 impl Group {
-    pub fn new(
-        user_id: String,
-        organization_id: String,
-        name: String,
-    ) -> Self {
+    pub fn new(user_id: String, organization_id: String, name: String) -> Self {
         let now: i64 = chrono::Utc::now().timestamp_millis();
         Group {
             id: uuid::Uuid::new_v4().to_string(),
