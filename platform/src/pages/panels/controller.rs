@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::prelude::{
-    AttributeItemResponse, AttributeResponse, CreateAttributeRequest, CreatePanelRequest,
+    AttributeItemInfo, AttributeResponse, CreateAttributeRequest, CreatePanelRequest,
     PanelResponse, UpdateAttributeRequest, UpdatePanelRequest,
 };
 
@@ -321,7 +321,7 @@ impl Controller {
     pub async fn update_attribute(
         &self,
         index: usize,
-        attribute_items: Vec<AttributeItemResponse>,
+        attribute_items: Vec<AttributeItemInfo>,
     ) {
         tracing::debug!("update attribute: {} {:?}", index, attribute_items);
         let api: AttributeApi = self.attribute_api;

@@ -102,11 +102,11 @@ impl AttributeControllerV1 {
             id: "1".to_string(),
             name: Some("name".to_string()),
             attribute: vec![
-                AttributeItemResponse {
+                AttributeItemInfo {
                     id: "1".to_string(),
                     name: "속성1".to_string(),
                 },
-                AttributeItemResponse {
+                AttributeItemInfo {
                     id: "2".to_string(),
                     name: "속성2".to_string(),
                 },
@@ -134,11 +134,11 @@ impl AttributeControllerV1 {
                     id: "1".to_string(),
                     name: Some("name".to_string()),
                     attribute: vec![
-                        AttributeItemResponse {
+                        AttributeItemInfo {
                             id: "1".to_string(),
                             name: "속성1".to_string(),
                         },
-                        AttributeItemResponse {
+                        AttributeItemInfo {
                             id: "2".to_string(),
                             name: "속성2".to_string(),
                         },
@@ -148,11 +148,11 @@ impl AttributeControllerV1 {
                     id: "2".to_string(),
                     name: Some("name".to_string()),
                     attribute: vec![
-                        AttributeItemResponse {
+                        AttributeItemInfo {
                             id: "1".to_string(),
                             name: "속성1".to_string(),
                         },
-                        AttributeItemResponse {
+                        AttributeItemInfo {
                             id: "2".to_string(),
                             name: "속성2".to_string(),
                         },

@@ -2,8 +2,7 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::prelude::{
-    AttributeItemResponse, AttributeResponse, CreateAttributeRequest, CreatePanelRequest,
-    PanelResponse,
+    AttributeItemInfo, AttributeResponse, CreateAttributeRequest, CreatePanelRequest, PanelResponse,
 };
 
 use crate::{
@@ -77,7 +76,7 @@ pub fn PanelPage(props: PanelProps) -> Element {
                     ctrl.create_attribute(req).await;
                 },
 
-                update_attribute: move |(index, attributes): (usize, Vec<AttributeItemResponse>)| async move {
+                update_attribute: move |(index, attributes): (usize, Vec<AttributeItemInfo>)| async move {
                     ctrl.update_attribute(index, attributes).await;
                 },
                 update_attribute_name: move |(index, name): (usize, String)| async move {
@@ -96,7 +95,7 @@ pub fn AttributeList(
     onremove: EventHandler<usize>,
     oncreate: EventHandler<CreateAttributeRequest>,
 
-    update_attribute: EventHandler<(usize, Vec<AttributeItemResponse>)>,
+    update_attribute: EventHandler<(usize, Vec<AttributeItemInfo>)>,
     update_attribute_name: EventHandler<(usize, String)>,
 ) -> Element {
     let mut is_focused = use_signal(|| false);
@@ -273,7 +272,7 @@ pub fn AttributeList(
                                                     let key = e.key();
                                                     if key == Key::Enter {
                                                         attrs
-                                                            .push(AttributeItemResponse {
+                                                            .push(AttributeItemInfo {
                                                                 id: "".to_string(),
                                                                 name: attribute_contents()[index].clone(),
                                                             });
@@ -654,7 +653,7 @@ pub fn PanelList(
                                                                             .clone();
                                                                         attribute_vec[index2]
                                                                             .attribute
-                                                                            .push(AttributeItemResponse {
+                                                                            .push(AttributeItemInfo {
                                                                                 id: attr.id.clone(),
                                                                                 name: attr.name.clone(),
                                                                             });
