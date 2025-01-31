@@ -1,3 +1,4 @@
+use crate::{common::CommonQueryResponse, middleware::auth::authorization_middleware};
 use by_axum::{
     axum::{
         extract::{Path, Query, State},
@@ -7,12 +8,8 @@ use by_axum::{
     },
     log::root,
 };
-use slog::o;
-use crate::{
-    common::CommonQueryResponse, 
-    middleware::auth::authorization_middleware
-};
 use models::prelude::*;
+use slog::o;
 
 #[derive(Clone, Debug)]
 pub struct PanelControllerV1 {
@@ -83,31 +80,29 @@ impl PanelControllerV1 {
         let log = ctrl.log.new(o!("api" => "get_panel"));
         slog::debug!(log, "get_panel: {:?} {:?}", organization_id, panel_id);
 
-        Ok(Json(
-            PanelResponse {
-                id: panel_id,
-                name: "Panel Name".to_string(),
-                count: 10,
-                attribute: vec![
-                    AttributeResponse {
-                        id: "attribute_id".to_string(),
-                        name: "Attribute Name".to_string(),
-                        attribute: vec![AttributeItemResponse {
-                            id: "attribute_item_id".to_string(),
-                            name: "Attribute Item Name".to_string(),
-                        }],
-                    },
-                    AttributeResponse {
-                        id: "attribute_id".to_string(),
-                        name: "Attribute Name".to_string(),
-                        attribute: vec![AttributeItemResponse {
-                            id: "attribute_item_id".to_string(),
-                            name: "Attribute Item Name".to_string(),
-                        }],
-                    },
-                ],
-            },
-        ))
+        Ok(Json(PanelResponse {
+            id: panel_id,
+            name: Some("Panel Name".to_string()),
+            count: Some(10),
+            attribute: vec![
+                AttributeResponse {
+                    id: "attribute_id".to_string(),
+                    name: Some("Attribute Name".to_string()),
+                    attribute: vec![AttributeItemInfo {
+                        id: "attribute_item_id".to_string(),
+                        name: "Attribute Item Name".to_string(),
+                    }],
+                },
+                AttributeResponse {
+                    id: "attribute_id".to_string(),
+                    name: Some("Attribute Name".to_string()),
+                    attribute: vec![AttributeItemInfo {
+                        id: "attribute_item_id".to_string(),
+                        name: "Attribute Item Name".to_string(),
+                    }],
+                },
+            ],
+        }))
     }
 
     pub async fn list_panels(
@@ -122,30 +117,91 @@ impl PanelControllerV1 {
         Ok(Json(CommonQueryResponse {
             items: vec![
                 PanelResponse {
+                    id: "0".to_string(),
+                    name: None,
+                    count: None,
+                    attribute: vec![
+                        AttributeResponse {
+                            id: "attribute_id".to_string(),
+                            name: Some("Attribute Name".to_string()),
+                            attribute: vec![],
+                        },
+                        AttributeResponse {
+                            id: "attribute_id".to_string(),
+                            name: Some("Attribute Name".to_string()),
+                            attribute: vec![],
+                        },
+                    ],
+                },
+                PanelResponse {
                     id: "1".to_string(),
-                    name: "Panel Name".to_string(),
-                    count: 10,
-                    attribute: vec![AttributeResponse {
-                        id: "attribute_id".to_string(),
-                        name: "Attribute Name".to_string(),
-                        attribute: vec![AttributeItemResponse {
-                            id: "attribute_item_id".to_string(),
-                            name: "Attribute Item Name".to_string(),
-                        }],
-                    }],
+                    name: Some("Panel Name".to_string()),
+                    count: Some(10),
+                    attribute: vec![
+                        AttributeResponse {
+                            id: "attribute_id".to_string(),
+                            name: Some("Attribute Name".to_string()),
+                            attribute: vec![
+                                AttributeItemInfo {
+                                    id: "attribute_item_id".to_string(),
+                                    name: "Attribute Item Name".to_string(),
+                                },
+                                AttributeItemInfo {
+                                    id: "attribute_item_id".to_string(),
+                                    name: "Attribute Item Name".to_string(),
+                                },
+                            ],
+                        },
+                        AttributeResponse {
+                            id: "attribute_id".to_string(),
+                            name: Some("Attribute Name".to_string()),
+                            attribute: vec![
+                                AttributeItemInfo {
+                                    id: "attribute_item_id".to_string(),
+                                    name: "Attribute Item Name".to_string(),
+                                },
+                                AttributeItemInfo {
+                                    id: "attribute_item_id".to_string(),
+                                    name: "Attribute Item Name".to_string(),
+                                },
+                            ],
+                        },
+                    ],
                 },
                 PanelResponse {
                     id: "2".to_string(),
-                    name: "Panel Name".to_string(),
-                    count: 10,
-                    attribute: vec![AttributeResponse {
-                        id: "attribute_id".to_string(),
-                        name: "Attribute Name".to_string(),
-                        attribute: vec![AttributeItemResponse {
-                            id: "attribute_item_id".to_string(),
-                            name: "Attribute Item Name".to_string(),
-                        }],
-                    }],
+                    name: Some("Panel Name".to_string()),
+                    count: Some(10),
+                    attribute: vec![
+                        AttributeResponse {
+                            id: "attribute_id".to_string(),
+                            name: Some("Attribute Name".to_string()),
+                            attribute: vec![
+                                AttributeItemInfo {
+                                    id: "attribute_item_id".to_string(),
+                                    name: "Attribute Item Name".to_string(),
+                                },
+                                AttributeItemInfo {
+                                    id: "attribute_item_id".to_string(),
+                                    name: "Attribute Item Name".to_string(),
+                                },
+                            ],
+                        },
+                        AttributeResponse {
+                            id: "attribute_id".to_string(),
+                            name: Some("Attribute Name".to_string()),
+                            attribute: vec![
+                                AttributeItemInfo {
+                                    id: "attribute_item_id".to_string(),
+                                    name: "속성1".to_string(),
+                                },
+                                AttributeItemInfo {
+                                    id: "attribute_item_id".to_string(),
+                                    name: "Attribute Item Name".to_string(),
+                                },
+                            ],
+                        },
+                    ],
                 },
             ],
             bookmark: None,
@@ -161,30 +217,23 @@ impl PanelControllerV1 {
     ) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "create_panel"));
         slog::debug!(log, "create_panel {:?} {:?}", organization_id, body);
-        let cli = easy_dynamodb::get_client(&log);
+        // let cli = easy_dynamodb::get_client(&log);
 
-        let panel = Panel::new(
-            organization_id.to_string(), 
-            body.name, 
-            body.count
-        );
+        // let panel = Panel::new(organization_id.to_string(), body.name, body.count);
 
-        let _ = cli
-            .upsert(&panel)
-            .await
-            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+        // let _ = cli
+        //     .upsert(&panel)
+        //     .await
+        //     .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
 
-        for item in body.attribute {
-            let attribute = PanelAttributeItem::new(
-                panel.id.clone(),
-                item.attribute_id
-            );
+        // for item in body.attribute {
+        //     let attribute = PanelAttributeItem::new(panel.id.clone(), item.attribute_id);
 
-            let _ = cli
-                .upsert(&attribute)
-                .await
-                .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
-        }
+        //     let _ = cli
+        //         .upsert(&attribute)
+        //         .await
+        //         .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+        // }
 
         Ok(())
     }

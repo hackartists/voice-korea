@@ -140,7 +140,7 @@ pub fn CreateNewPanelModal(
                 for (i , attribute) in attributes().iter().enumerate() {
                     div { class: "flex flex-row w-full justify-start items-center h-[45px] mb-[10px]",
                         div { class: "flex flex-row w-[50px] justify-start items-center font-medium text-[#222222] text-[15px]",
-                            "{attribute.name}"
+                            {format!("{}", attribute.name.clone().unwrap_or_default())}
                         }
                         div { class: "flex flex-row w-full h-[45px] justify-between items-center bg-[#f7f7f7] rounded-[4px]",
                             div { class: "flex flex-between w-full h-[55px] justify-start items-center p-[15px]",

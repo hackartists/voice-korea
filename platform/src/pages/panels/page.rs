@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{AttributeResponse, PanelResponse};
+use models::prelude::{
+    AttributeItemInfo, AttributeResponse, CreateAttributeRequest, CreatePanelRequest, PanelResponse,
+};
 
 use crate::{
     components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},
@@ -47,21 +49,38 @@ pub fn PanelPage(props: PanelProps) -> Element {
                 lang: props.lang,
                 panels,
                 attributes: attributes.clone(),
-                onupdate: move |index: usize| {
-                    ctrl.open_update_panel_name(props.lang, index);
+                onupdate: move |index: usize| async move {
+                    ctrl.open_update_panel_name(props.lang, index).await;
                 },
-                onremove: move |index: usize| {
-                    ctrl.open_remove_panel(props.lang, index);
+                oncreate: move |req: CreatePanelRequest| async move {
+                    ctrl.create_panel(req).await;
+                },
+                onremove: move |index: usize| async move {
+                    ctrl.open_remove_panel(props.lang, index).await;
+                },
+
+                update_panel_name: move |(index, name): (usize, String)| async move {
+                    ctrl.update_panel_name(index, name).await;
                 },
             }
             AttributeList {
                 lang: props.lang,
                 attributes,
-                onupdate: move |index: usize| {
-                    ctrl.open_update_attribute_name(props.lang, index);
+                onupdate: move |index: usize| async move {
+                    ctrl.open_update_attribute_name(props.lang, index).await;
                 },
-                onremove: move |index: usize| {
-                    ctrl.open_remove_attribute(props.lang, index);
+                onremove: move |index: usize| async move {
+                    ctrl.open_remove_attribute(props.lang, index).await;
+                },
+                oncreate: move |req: CreateAttributeRequest| async move {
+                    ctrl.create_attribute(req).await;
+                },
+
+                update_attribute: move |(index, attributes): (usize, Vec<AttributeItemInfo>)| async move {
+                    ctrl.update_attribute(index, attributes).await;
+                },
+                update_attribute_name: move |(index, name): (usize, String)| async move {
+                    ctrl.update_attribute_name(index, name).await;
                 },
             }
         }
@@ -74,11 +93,26 @@ pub fn AttributeList(
     attributes: Vec<AttributeResponse>,
     onupdate: EventHandler<usize>,
     onremove: EventHandler<usize>,
+    oncreate: EventHandler<CreateAttributeRequest>,
+
+    update_attribute: EventHandler<(usize, Vec<AttributeItemInfo>)>,
+    update_attribute_name: EventHandler<(usize, String)>,
 ) -> Element {
     let mut is_focused = use_signal(|| false);
     let mut attribute_name = use_signal(|| "".to_string());
 
     let translate: AttributeListTranslate = translate(&lang);
+    let mut attribute_names = use_signal(|| vec![]);
+    let mut attribute_contents = use_signal(|| vec![]);
+
+    let mut clicked_attributes = use_signal(|| vec![]);
+
+    use_effect(use_reactive(&attributes.len(), move |len| {
+        attribute_names.set(vec!["".to_string(); len]);
+        attribute_contents.set(vec!["".to_string(); len]);
+        clicked_attributes.set(vec![false; len]);
+    }));
+
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start mb-[40px]",
             div { class: "font-bold text-[#222222] text-[16px] mb-[10px]", "{translate.attribute_list}" }
@@ -136,45 +170,152 @@ pub fn AttributeList(
                             Switch { width: "19", height: "19" }
                         }
                         div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center gap-[10px]",
-                            button { class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                            button {
+                                class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                onclick: move |_e: Event<MouseData>| {
+                                    oncreate
+                                        .call(CreateAttributeRequest {
+                                            name: "".to_string(),
+                                            attribute_items: vec![],
+                                        });
+                                },
                                 "+"
                             }
                         }
                     }
-                    for (ind , attribute) in attributes.clone().iter().enumerate() {
-                        div { class: "flex flex-col w-full justify-start items-start",
+                    for (index , attribute) in attributes.clone().iter().enumerate() {
+                        div {
+                            class: "flex flex-col w-full justify-start items-start",
+                            onclick: move |_| {
+                                let mut clicked = clicked_attributes();
+                                clicked[index] = !clicked[index];
+                                clicked_attributes.set(clicked);
+                            },
                             div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
                             div { class: "flex flex-row w-full h-[55px]",
-                                div { class: "flex flex-row w-[185px] min-w-[185px] h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
-                                        "{attribute.name}"
+                                div {
+                                    class: "flex flex-row w-[185px] min-w-[185px] h-full justify-center items-center",
+                                    onclick: move |e| {
+                                        e.stop_propagation();
+                                        e.prevent_default();
+                                    },
+                                    if attribute.name.is_none() && attribute_names.len() != 0 {
+                                        input {
+                                            id: "input_attribute {index}",
+                                            class: "w-full text-black text-base placeholder-gray-500 focus:outline-none text-center",
+                                            r#type: "text",
+                                            placeholder: translate.attribute_name_hint,
+                                            value: attribute_names()[index].clone(),
+                                            onmounted: move |_| {
+                                                #[cfg(feature = "web")]
+                                                {
+                                                    use wasm_bindgen::JsCast;
+                                                    if let Some(input) = web_sys::window()
+                                                        .unwrap()
+                                                        .document()
+                                                        .unwrap()
+                                                        .get_element_by_id(format!("input_attribute {index}").as_str())
+                                                    {
+                                                        input.dyn_ref::<web_sys::HtmlInputElement>().unwrap().focus().unwrap();
+                                                    }
+                                                }
+                                            },
+                                            onblur: move |_| {
+                                                tracing::debug!("attribute index: {:?}", index);
+                                            },
+
+                                            onkeydown: move |e: KeyboardEvent| {
+                                                let key = e.key();
+                                                if key == Key::Enter {
+                                                    let value = attribute_names()[index].clone();
+                                                    update_attribute_name.call((index, value));
+                                                }
+                                            },
+                                            oninput: move |e| {
+                                                let value = e.value();
+                                                let mut names = attribute_names();
+                                                names[index] = value;
+                                                attribute_names.set(names);
+                                            },
+                                        }
+                                    } else {
+                                        div { class: "font-medium text-[#222222] text-[14px]",
+                                            {format!("{}", attribute.name.clone().unwrap_or_default())}
+                                        }
                                     }
                                 }
-                                div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[10px]",
+                                button { class: "flex flex-wrap w-full h-full justify-center items-center gap-[10px]",
                                     for attr in attribute.attribute.clone() {
                                         PanelLabel { label: attr.name }
+                                    }
+
+                                    if clicked_attributes.len() != 0 && clicked_attributes()[index]
+                                        && attribute_contents.len() != 0
+                                    {
+                                        input {
+                                            id: "input_attribute_contents {index}",
+                                            class: "w-[100px] text-black text-base placeholder-gray-500 focus:outline-none",
+                                            r#type: "text",
+                                            placeholder: translate.input_contents,
+                                            value: attribute_contents()[index].clone(),
+                                            onclick: move |e: Event<MouseData>| {
+                                                e.stop_propagation();
+                                                e.prevent_default();
+                                            },
+                                            onblur: move |_| {
+                                                tracing::debug!("attribute contents index: {:?}", index);
+                                            },
+                                            onkeydown: {
+                                                let attrs = attribute.attribute.clone();
+                                                move |e: KeyboardEvent| {
+                                                    let mut attrs = attrs.clone();
+                                                    let key = e.key();
+                                                    if key == Key::Enter {
+                                                        attrs
+                                                            .push(AttributeItemInfo {
+                                                                id: "".to_string(),
+                                                                name: attribute_contents()[index].clone(),
+                                                            });
+                                                        update_attribute.call((index, attrs));
+                                                    }
+                                                }
+                                            },
+                                            oninput: move |e| {
+                                                let value = e.value();
+                                                let mut contents = attribute_contents();
+                                                contents[index] = value;
+                                                attribute_contents.set(contents);
+                                            },
+                                        }
                                     }
                                 }
                                 div { class: "group relative",
                                     div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
                                         button {
+                                            onclick: move |e: Event<MouseData>| {
+                                                e.stop_propagation();
+                                                e.prevent_default();
+                                            },
                                             RowOption { width: "24", height: "24" }
                                         }
                                         nav {
-                                            tabindex: "0",
                                             class: "border-2 bg-white invisible border-none shadow-lg rounded w-60 absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
+                                            onclick: move |e: Event<MouseData>| {
+                                                e.stop_propagation();
+                                                e.prevent_default();
+                                            },
                                             ul { class: "py-1",
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                     onclick: move |_| {
-                                                        onupdate.call(ind);
+                                                        onupdate.call(index);
                                                     },
                                                     "{translate.update_attribute_name}"
                                                 }
                                                 li {
                                                     class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                     onclick: move |_| {
-                                                        onremove.call(ind);
+                                                        onremove.call(index);
                                                     },
                                                     "{translate.remove_attribute}"
                                                 }
@@ -197,14 +338,39 @@ pub fn PanelList(
     panels: Vec<PanelResponse>,
     attributes: Vec<AttributeResponse>,
     onupdate: EventHandler<usize>,
+    oncreate: EventHandler<CreatePanelRequest>,
     onremove: EventHandler<usize>,
+
+    update_panel_name: EventHandler<(usize, String)>,
 ) -> Element {
     let mut ctrl: Controller = use_context();
     let mut is_focused = use_signal(|| false);
     let mut panel_name = use_signal(|| "".to_string());
     let translate: PanelListTranslate = translate(&lang);
 
-    tracing::debug!("panel list: {:?}", panels);
+    let mut panel_names = use_signal(|| vec![]);
+    let mut panel_name_width = use_signal(|| vec![]);
+
+    let mut panel_counts = use_signal(|| vec![]);
+    let mut panel_count_width = use_signal(|| vec![]);
+
+    let mut clicked_panel_index = use_signal(|| panels.len());
+    let mut clicked_attribute_index = use_signal(|| attributes.len());
+
+    use_effect(use_reactive(
+        (&panels.len(), &attributes.len()),
+        move |(len, attribute_len)| {
+            panel_names.set(vec!["".to_string(); len]);
+            panel_name_width.set(vec!["80px".to_string(); len]);
+
+            panel_counts.set(vec!["".to_string(); len]);
+            panel_count_width.set(vec!["50px".to_string(); len]);
+
+            clicked_panel_index.set(len);
+            clicked_attribute_index.set(attribute_len);
+        },
+    ));
+
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start mb-[40px]",
             div { class: "font-bold text-[#222222] text-[16px] mb-[10px]", "{translate.panel_list}" }
@@ -265,16 +431,36 @@ pub fn PanelList(
                             }
                             Switch { width: "19", height: "19" }
                         }
-                        for attribute in attributes {
+                        for attribute in attributes.clone() {
                             div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[10px]",
                                 div { class: "text-[#555462] font-semibold text-[14px]",
-                                    "{attribute.name}"
+                                    {format!("{}", attribute.name.unwrap_or_default())}
                                 }
                                 Switch { width: "19", height: "19" }
                             }
                         }
                         div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center gap-[10px]",
-                            button { class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                            button {
+                                class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                onclick: {
+                                    let mut attribute = vec![];
+                                    for attr in attributes.clone() {
+                                        attribute
+                                            .push(AttributeResponse {
+                                                id: attr.id.clone(),
+                                                name: attr.name.clone(),
+                                                attribute: vec![],
+                                            });
+                                    }
+                                    move |_e: Event<MouseData>| {
+                                        oncreate
+                                            .call(CreatePanelRequest {
+                                                name: "".to_string(),
+                                                count: 0,
+                                                attribute: attribute.clone(),
+                                            });
+                                    }
+                                },
                                 "+"
                             }
                         }
@@ -282,21 +468,213 @@ pub fn PanelList(
                     for (index , panel) in panels.iter().enumerate() {
                         div { class: "flex flex-col w-full justify-start items-start",
                             div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
-                            div { class: "flex flex-row w-full h-[55px]",
+                            div {
+                                class: "flex flex-row w-full h-[55px]",
+                                onclick: {
+                                    move |_| {
+                                        clicked_panel_index.set(index);
+                                    }
+                                },
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
-                                        "{panel.name}"
+                                    if panel.name.is_none() && panel_names.len() != 0 {
+                                        input {
+                                            id: "input_panel {index}",
+                                            class: "text-black text-base placeholder-gray-500 focus:outline-none",
+                                            style: "width: {panel_name_width()[index]}; min-width: 80px; max-width: 200px;",
+                                            r#type: "text",
+                                            placeholder: translate.panel_name_hint,
+                                            value: panel_names()[index].clone(),
+                                            onmounted: move |_| {
+                                                #[cfg(feature = "web")]
+                                                {
+                                                    use wasm_bindgen::JsCast;
+                                                    if let Some(input) = web_sys::window()
+                                                        .unwrap()
+                                                        .document()
+                                                        .unwrap()
+                                                        .get_element_by_id(format!("input_panel {index}").as_str())
+                                                    {
+                                                        input.dyn_ref::<web_sys::HtmlInputElement>().unwrap().focus().unwrap();
+                                                    }
+                                                }
+                                            },
+                                            onblur: move |_| {
+                                                tracing::debug!("panel index: {:?}", index);
+                                            },
+                                            onkeydown: move |e: KeyboardEvent| {
+                                                let key = e.key();
+                                                if key == Key::Enter {
+                                                    let value = panel_names()[index].clone();
+                                                    update_panel_name.call((index, value));
+                                                }
+                                            },
+                                            oninput: move |e| {
+                                                let value = e.value();
+                                                let new_width = format!("{}px", 10 + value.len() * 10);
+                                                let mut names = panel_names();
+                                                let mut widths = panel_name_width();
+                                                names[index] = value;
+                                                widths[index] = new_width;
+                                                panel_names.set(names);
+                                                panel_name_width.set(widths);
+                                            },
+                                        }
+                                    } else {
+                                        div { class: "font-medium text-[#222222] text-[14px]",
+                                            {format!("{}", panel.name.clone().unwrap_or_default())}
+                                        }
                                     }
                                 }
                                 div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
-                                        "{panel.count}"
+                                    if panel.count.is_none() && panel_counts.len() != 0 {
+                                        input {
+                                            id: "input_panel_count {index}",
+                                            class: "text-black text-base placeholder-gray-500 focus:outline-none",
+                                            style: "width: {panel_count_width()[index]}; min-width: 50px; max-width: 100%;",
+                                            r#type: "text",
+                                            placeholder: "0",
+                                            value: panel_counts()[index].clone(),
+                                            onkeydown: move |e: KeyboardEvent| {
+                                                let key = e.key();
+                                                if key == Key::Enter {
+                                                    let value = panel_counts()[index].clone();
+                                                    tracing::debug!("Enter key pressed! {value}");
+                                                    #[cfg(feature = "web")]
+                                                    {
+                                                        use wasm_bindgen::JsCast;
+                                                        if let Some(input) = web_sys::window()
+                                                            .unwrap()
+                                                            .document()
+                                                            .unwrap()
+                                                            .get_element_by_id(format!("input_panel_count {index}").as_str())
+                                                        {
+                                                            input
+                                                                .dyn_ref::<web_sys::HtmlInputElement>()
+                                                                .unwrap()
+                                                                .blur()
+                                                                .unwrap();
+                                                        }
+                                                    }
+                                                } else if key != Key::Backspace && key != Key::Delete {
+                                                    let s = match key {
+                                                        Key::Character(c) => c,
+                                                        _ => "".to_string(),
+                                                    };
+                                                    if !s.chars().all(|c| c.is_ascii_digit()) {
+                                                        e.prevent_default();
+                                                    }
+                                                }
+                                            },
+                                            oninput: move |e| {
+                                                let value = e.value();
+                                                let new_width = format!("{}px", 10 + value.len() * 12);
+                                                let mut counts = panel_counts();
+                                                let mut widths = panel_count_width();
+                                                counts[index] = value;
+                                                widths[index] = new_width;
+                                                panel_counts.set(counts);
+                                                panel_count_width.set(widths);
+                                            },
+                                        }
+                                    } else {
+                                        div { class: "font-medium text-[#222222] text-[14px]",
+                                            {format!("{}", panel.count.unwrap_or_default())}
+                                        }
                                     }
                                 }
-                                for attribute in panel.attribute.clone() {
-                                    div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
-                                        for attr in attribute.attribute.clone() {
-                                            PanelLabel { label: attr.name }
+                                for (index2 , attribute) in panel.attribute.clone().iter().enumerate() {
+                                    div { class: "relative flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
+                                        if attribute.attribute.len() == 0 {
+                                            button {
+                                                class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                                onclick: {
+                                                    let attributes = attributes.clone();
+                                                    move |_| {
+                                                        if clicked_attribute_index() == index2 {
+                                                            clicked_attribute_index.set(attributes.len());
+                                                        } else {
+                                                            clicked_attribute_index.set(index2);
+                                                        }
+                                                    }
+                                                },
+                                                "+"
+                                            }
+                                        } else {
+                                            for attr in attribute.attribute.clone() {
+                                                div {
+                                                    PanelLabel { label: attr.name.clone() }
+                                                }
+                                            }
+                                            button {
+                                                class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
+                                                onclick: {
+                                                    let attributes = attributes.clone();
+                                                    move |_| {
+                                                        if clicked_attribute_index() == index2 {
+                                                            clicked_attribute_index.set(attributes.len());
+                                                        } else {
+                                                            clicked_attribute_index.set(index2);
+                                                        }
+                                                    }
+                                                },
+                                                "+"
+                                            }
+                                        }
+
+                                        if clicked_panel_index() != panels.len()
+                                            && clicked_attribute_index() != attributes.len()
+                                            && clicked_panel_index() == index && clicked_attribute_index() == index2
+                                        {
+                                            div {
+                                                class: "absolute top-full bg-white border border-[#bfc8d9] shadow-lg rounded-lg w-full z-50",
+                                                onclick: move |event| {
+                                                    event.stop_propagation();
+                                                    event.prevent_default();
+                                                },
+                                                div { class: "flex flex-col w-full justify-start items-start",
+                                                    div { class: format!("flex flex-col w-full justify-start items-center bg-white"),
+                                                        input {
+                                                            class: "flex flex-row w-full h-full bg-transparent focus:outline-none px-[10px] py-[15px]",
+                                                            r#type: "text",
+                                                            placeholder: translate.input_name,
+                                                        }
+                                                    }
+
+                                                    if attributes.len() != 0 {
+                                                        for (_j , attr) in attributes[index2].attribute.clone().iter().enumerate() {
+                                                            if !attribute.attribute.iter().any(|m| m.name == attr.name) {
+                                                                button {
+                                                                    class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
+                                                                    onclick: {
+                                                                        let attribute_len = attributes.len();
+                                                                        let mut attribute_vec: Vec<AttributeResponse> = panels[index]
+                                                                            .clone()
+                                                                            .attribute
+                                                                            .clone();
+                                                                        attribute_vec[index2]
+                                                                            .attribute
+                                                                            .push(AttributeItemInfo {
+                                                                                id: attr.id.clone(),
+                                                                                name: attr.name.clone(),
+                                                                            });
+                                                                        move |_| {
+                                                                            let attrs = attribute_vec.clone();
+                                                                            let ctrl = ctrl.clone();
+                                                                            async move {
+                                                                                let _ = ctrl.update_panel_attribute(index, attrs).await;
+                                                                                clicked_attribute_index.set(attribute_len);
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    div { class: "font-medium text-[#222222] text-[10px]",
+                                                                        "{attr.name}"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }

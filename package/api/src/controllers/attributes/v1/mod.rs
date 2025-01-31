@@ -100,13 +100,13 @@ impl AttributeControllerV1 {
 
         Ok(Json(AttributeResponse {
             id: "1".to_string(),
-            name: "name".to_string(),
+            name: Some("name".to_string()),
             attribute: vec![
-                AttributeItemResponse {
+                AttributeItemInfo {
                     id: "1".to_string(),
                     name: "속성1".to_string(),
                 },
-                AttributeItemResponse {
+                AttributeItemInfo {
                     id: "2".to_string(),
                     name: "속성2".to_string(),
                 },
@@ -132,13 +132,13 @@ impl AttributeControllerV1 {
             items: vec![
                 AttributeResponse {
                     id: "1".to_string(),
-                    name: "name".to_string(),
+                    name: Some("name".to_string()),
                     attribute: vec![
-                        AttributeItemResponse {
+                        AttributeItemInfo {
                             id: "1".to_string(),
                             name: "속성1".to_string(),
                         },
-                        AttributeItemResponse {
+                        AttributeItemInfo {
                             id: "2".to_string(),
                             name: "속성2".to_string(),
                         },
@@ -146,13 +146,13 @@ impl AttributeControllerV1 {
                 },
                 AttributeResponse {
                     id: "2".to_string(),
-                    name: "name".to_string(),
+                    name: Some("name".to_string()),
                     attribute: vec![
-                        AttributeItemResponse {
+                        AttributeItemInfo {
                             id: "1".to_string(),
                             name: "속성1".to_string(),
                         },
-                        AttributeItemResponse {
+                        AttributeItemInfo {
                             id: "2".to_string(),
                             name: "속성2".to_string(),
                         },
@@ -172,23 +172,23 @@ impl AttributeControllerV1 {
     ) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "create_attribute"));
         slog::debug!(log, "create_attribute {:?} {:?}", organization_id, body);
-        let cli = easy_dynamodb::get_client(&log);
+        // let cli = easy_dynamodb::get_client(&log);
 
-        let attribute = Attribute::new(organization_id.to_string(), body.name);
+        // let attribute = Attribute::new(organization_id.to_string(), body.name);
 
-        let _ = cli
-            .upsert(&attribute)
-            .await
-            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+        // let _ = cli
+        //     .upsert(&attribute)
+        //     .await
+        //     .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
 
-        for item in body.attribute_items {
-            let attribute_item = AttributeItem::new(attribute.id.clone(), item.name);
+        // for item in body.attribute_items {
+        //     let attribute_item = AttributeItem::new(attribute.id.clone(), item.name);
 
-            let _ = cli
-                .upsert(&attribute_item)
-                .await
-                .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
-        }
+        //     let _ = cli
+        //         .upsert(&attribute_item)
+        //         .await
+        //         .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+        // }
 
         Ok(())
     }

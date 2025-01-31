@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use dioxus::prelude::*;
 use models::prelude::{
     CreateMetadataRequest, GetPutObjectUriRequest, GetPutObjectUriResponse, MetadataActionRequest,
-    MetadataByIdActionRequest, MetadataSummary, UpdateMetadataRequest,
+    MetadataByIdActionRequest, ResourceMetadata, UpdateMetadataRequest,
 };
 
 use crate::{api::common::CommonQueryResponse, utils::api::ReqwestClient};
@@ -80,7 +80,7 @@ impl ResourceApi {
         &self,
         size: Option<i64>,
         bookmark: Option<String>,
-    ) -> Result<CommonQueryResponse<MetadataSummary>> {
+    ) -> Result<CommonQueryResponse<ResourceMetadata>> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -148,7 +148,7 @@ impl ResourceApi {
         Ok(())
     }
 
-    pub async fn get_metadata(&self, metadata_id: String) -> Result<MetadataSummary> {
+    pub async fn get_metadata(&self, metadata_id: String) -> Result<ResourceMetadata> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
@@ -170,7 +170,7 @@ impl ResourceApi {
     pub async fn search_metadatas(
         &self,
         keyword: String,
-    ) -> Result<CommonQueryResponse<MetadataSummary>> {
+    ) -> Result<CommonQueryResponse<ResourceMetadata>> {
         let token = self.get_token();
         let id = self.get_organization_id();
 

@@ -3,15 +3,13 @@ use by_axum::{
         extract::{Path, Query, State},
         middleware,
         routing::post,
-        Extension, Json, Router
+        Extension, Json, Router,
     },
     log::root,
 };
 use slog::o;
 
-use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware,
-};
+use crate::{common::CommonQueryResponse, middleware::auth::authorization_middleware};
 
 use models::prelude::*;
 
@@ -98,26 +96,26 @@ impl MetadataControllerV1 {
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<MetadataControllerV1>,
         Path(metadata_id): Path<String>,
-    ) -> Result<Json<MetadataSummary>, ApiError> {
+    ) -> Result<Json<ResourceMetadata>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "get_metadata"));
         slog::debug!(log, "get_metadata: {:?} {:?}", organization_id, metadata_id);
 
-        Ok(Json(MetadataSummary {
+        Ok(Json(ResourceMetadata {
             id: "1".to_string(),
             name: "공론자료제목명".to_string(),
             urls: vec![
                 "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
                     .to_string(),
             ],
-            metadata_type: Some(MetadataType::Report),
-            metadata_field: Some(Field::Economy),
-            metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
-            metadata_source: Some(MetadataSource::Internal),
-            metadata_authority: Some(MetadataAuthority::Public),
-            public_opinion_projects: None,
-            public_survey_projects: None,
+            data_type: Some(MetadataType::Report),
+            field: Some(Field::Economy),
+            purpose: Some(MetadataPurpose::PublicDiscussion),
+            source: Some(MetadataSource::Internal),
+            authority: Some(MetadataAuthority::Public),
+            created_at: 1759276800,
             updated_at: 1759276800,
+            deleted_at: None,
         }))
     }
 
@@ -125,112 +123,24 @@ impl MetadataControllerV1 {
         Extension(organizations): Extension<OrganizationMiddlewareParams>,
         State(ctrl): State<MetadataControllerV1>,
         Query(pagination): Query<Pagination>,
-    ) -> Result<Json<CommonQueryResponse<MetadataSummary>>, ApiError> {
+    ) -> Result<Json<CommonQueryResponse<ResourceMetadata>>, ApiError> {
         let organization_id = organizations.id;
         let log = ctrl.log.new(o!("api" => "list_metadatas"));
         slog::debug!(log, "list_metadatas {:?} {:?}", organization_id, pagination);
 
-        Ok(Json(CommonQueryResponse {
-            items: vec![
-                MetadataSummary {
-                    id: "1".to_string(),
-                    name: "공론자료제목명".to_string(),
-                    urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
-                        .to_string(),
-                ],
-                    metadata_type: Some(MetadataType::Report),
-                    metadata_field: Some(Field::Economy),
-                    metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
-                    metadata_source: Some(MetadataSource::Internal),
-                    metadata_authority: Some(MetadataAuthority::Public),
-                    public_opinion_projects: None,
-                    public_survey_projects: None,
-                    updated_at: 1759276800,
-                },
-                MetadataSummary {
-                    id: "2".to_string(),
-                    name: "공론자료제목명".to_string(),
-                    urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
-                        .to_string(),
-                ],
-                    metadata_type: Some(MetadataType::Statistics),
-                    metadata_field: Some(Field::Society),
-                    metadata_purpose: Some(MetadataPurpose::AcademicResearch),
-                    metadata_source: Some(MetadataSource::External),
-                    metadata_authority: Some(MetadataAuthority::Restricted),
-                    public_opinion_projects: None,
-                    public_survey_projects: None,
-                    updated_at: 1759276800,
-                },
-                MetadataSummary {
-                    id: "3".to_string(),
-                    name: "공론자료제목명".to_string(),
-                    urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
-                        .to_string(),
-                ],
-                    metadata_type: Some(MetadataType::Statistics),
-                    metadata_field: Some(Field::Environment),
-                    metadata_purpose: Some(MetadataPurpose::DevelopmentPolicy),
-                    metadata_source: Some(MetadataSource::Government),
-                    metadata_authority: Some(MetadataAuthority::Private),
-                    public_opinion_projects: None,
-                    public_survey_projects: None,
-                    updated_at: 1759276800,
-                },
-                MetadataSummary {
-                    id: "4".to_string(),
-                    name: "공론자료제목명".to_string(),
-                    urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
-                        .to_string(),
-                ],
-                    metadata_type: Some(MetadataType::Thesis),
-                    metadata_field: Some(Field::Education),
-                    metadata_purpose: Some(MetadataPurpose::Education),
-                    metadata_source: Some(MetadataSource::Company),
-                    metadata_authority: Some(MetadataAuthority::Public),
-                    public_opinion_projects: None,
-                    public_survey_projects: None,
-                    updated_at: 1759276800,
-                },
-                MetadataSummary {
-                    id: "5".to_string(),
-                    name: "공론자료제목명".to_string(),
-                    urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
-                        .to_string(),
-                ],
-                    metadata_type: Some(MetadataType::Presentation),
-                    metadata_field: Some(Field::Technology),
-                    metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
-                    metadata_source: Some(MetadataSource::Internal),
-                    metadata_authority: Some(MetadataAuthority::Public),
-                    public_opinion_projects: None,
-                    public_survey_projects: None,
-                    updated_at: 1759276800,
-                },
-                MetadataSummary {
-                    id: "6".to_string(),
-                    name: "공론자료제목명".to_string(),
-                    urls: vec![
-                    "https://metadata.dagit.club/images/666e4e5b-fd92-40fb-b60e-111c82c6f914.png"
-                        .to_string(),
-                ],
-                    metadata_type: Some(MetadataType::Media),
-                    metadata_field: Some(Field::Health),
-                    metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
-                    metadata_source: Some(MetadataSource::Internal),
-                    metadata_authority: Some(MetadataAuthority::Public),
-                    public_opinion_projects: None,
-                    public_survey_projects: None,
-                    updated_at: 1759276800,
-                },
-            ],
-            bookmark: None,
-        }))
+        let size = pagination.size.unwrap_or(100) as i32;
+        let bookmark = pagination.bookmark.clone();
+
+        let res: CommonQueryResponse<ResourceMetadata> = CommonQueryResponse::query(
+            &log,
+            "type-index",
+            bookmark,
+            Some(size),
+            vec![("type", "metadata")],
+        )
+        .await?;
+
+        Ok(Json(res))
     }
 }
 
@@ -242,7 +152,27 @@ impl MetadataControllerV1 {
     ) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "create_metadata"));
         slog::debug!(log, "create_metadata {:?} {:?}", organization_id, req);
-        Ok(())
+        let cli = easy_dynamodb::get_client(&log);
+
+        let resource = ResourceMetadata::new(
+            req.name,
+            req.urls,
+            req.data_type,
+            req.field,
+            req.purpose,
+            req.source,
+            req.authority,
+        );
+
+        // TODO: linking metadata - projects
+
+        match cli.upsert(resource).await {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                slog::error!(log, "create_metadata error: {:?}", e);
+                return Err(ApiError::DynamoCreateException(e.to_string()));
+            }
+        }
     }
 }
 
@@ -259,7 +189,38 @@ impl MetadataControllerV1 {
             organization_id,
             metadata_id
         );
-        Ok(())
+        let cli = easy_dynamodb::get_client(&log);
+        let now = chrono::Utc::now().timestamp_millis();
+
+        let _ = match cli
+            .get::<ResourceMetadata>(metadata_id)
+            .await
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
+        {
+            Some(d) => d,
+            None => {
+                slog::error!(log, "remove_metadata error: not found");
+                return Err(ApiError::NotFound);
+            }
+        };
+
+        let res = cli
+            .update(
+                &metadata_id,
+                vec![
+                    ("deleted_at", UpdateField::I64(now)),
+                    ("updated_at", UpdateField::I64(now)),
+                ],
+            )
+            .await;
+
+        match res {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                slog::error!(log, "remove_metadata error: {:?}", e);
+                return Err(ApiError::DynamoUpdateException(e.to_string()));
+            }
+        }
     }
 
     pub async fn update_metadata(

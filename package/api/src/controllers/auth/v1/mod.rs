@@ -1,29 +1,28 @@
 use by_axum::{
     axum::{
         extract::State,
-        // middleware,
-        routing::post,
-        Json, Router,
         http::header::SET_COOKIE,
         response::Response,
+        // middleware,
+        routing::post,
+        Json,
+        Router,
     },
     log::root,
 };
-use slog::o;
-use models::prelude::{LoginParams, ResetParams, ApiError, AuthActionRequest, EmailVerifyParams,
-    Role, SignUpParams, User};
-
-use crate::{
-    utils::{
-        hash::get_hash_string,
-        jwt::generate_jwt,
-    },
-    common::CommonQueryResponse,
+use models::prelude::{
+    ApiError, AuthActionRequest, EmailVerifyParams, LoginParams, ResetParams, Role, SignUpParams,
+    User,
 };
+use slog::o;
+
 use crate::controllers::{
+    members::v1::MemberControllerV1, organizations::v1::OrganizationControllerV1,
     verification::v1::VerificationControllerV1,
-    members::v1::MemberControllerV1,
-    organizations::v1::OrganizationControllerV1,
+};
+use crate::{
+    common::CommonQueryResponse,
+    utils::{hash::get_hash_string, jwt::generate_jwt},
 };
 
 #[derive(Clone, Debug)]
@@ -109,12 +108,10 @@ impl AuthControllerV1 {
         slog::debug!(log, "reset {:?}", body);
         let cli = easy_dynamodb::get_client(&log);
 
-        VerificationControllerV1::verify_email(
-            EmailVerifyParams {
-                id: body.auth_id,
-                value: body.auth_value,
-            },
-        )
+        VerificationControllerV1::verify_email(EmailVerifyParams {
+            id: body.auth_id,
+            value: body.auth_value,
+        })
         .await?;
         let email = body.email.clone();
 
@@ -152,14 +149,12 @@ impl AuthControllerV1 {
         slog::debug!(log, "signup {:?}", body);
         let cli = easy_dynamodb::get_client(&log);
 
-        let auth_doc_id = VerificationControllerV1::verify_email(
-            EmailVerifyParams {
-                id: body.auth_id.clone(),
-                value: body.auth_value.clone(),
-            },
-        )
+        let auth_doc_id = VerificationControllerV1::verify_email(EmailVerifyParams {
+            id: body.auth_id.clone(),
+            value: body.auth_value.clone(),
+        })
         .await?;
-    
+
         let hashed_pw = get_hash_string(body.password.as_bytes());
         let user = User::new(
             uuid::Uuid::new_v4().to_string(),
@@ -194,16 +189,43 @@ impl AuthControllerV1 {
             .await
             .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
 
-        let org_id = OrganizationControllerV1::create_organization(user.id.clone(), body.clone()).await?;
+        let org_id =
+            OrganizationControllerV1::create_organization(user.id.clone(), body.clone()).await?;
 
         let _ = MemberControllerV1::create_member(
-            user.id, 
+            user.id,
             org_id,
             body.email.clone(),
             None,
             Some(Role::Admin),
-        ).await?; //FIXME: add to organization
+        )
+        .await?; //FIXME: add to organization
 
         Ok(())
-    }    
+    }
+}
+
+pub async fn find_user_id_by_email(email: String) -> Result<Option<String>, ApiError> {
+    let log = root();
+
+    let res: CommonQueryResponse<User> = CommonQueryResponse::query(
+        &log,
+        "gsi1-index",
+        None,
+        Some(1),
+        vec![("gsi1", User::gsi1(email.clone()))],
+    )
+    .await?;
+
+    if res.items.len() == 0 {
+        return Ok(None);
+    }
+
+    let user = res.items.first().unwrap();
+
+    if user.deleted_at.is_some() {
+        return Ok(None);
+    }
+
+    Ok(Some(user.id.clone()))
 }
