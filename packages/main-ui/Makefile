@@ -40,12 +40,13 @@ LOG_LEVEL ?= debug
 BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) LOG_LEVEL=$(LOG_LEVEL) AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_DYNAMODB_KEY=${AWS_DYNAMODB_KEY} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} TABLE_NAME=$(VOICE_KOREA_TABLE_NAME) BASE_URL=$(BASE_URL) API_URL=${API_URL} RUSTFLAGS="${RUSTFLAGS}"
 
 setup.tool:
-	cargo install dioxus-cli --version 0.6.0-rc.0
-	cargo install toml-cli
+	cargo install cargo-binstall
+	cargo binstall dioxus-cli
+	cargo binstall toml-cli
 	npm i -g tailwindcss@3
 
 run: public/tailwind.css
-	$(BUILD_ENV) dx serve -p platform
+	$(BUILD_ENV) dx serve
 
 clean:
 	rm -rf dist public/tailwind.css .aws-sam
@@ -54,7 +55,7 @@ public/tailwind.css:
 	npx tailwindcss -i ./input.css -o ./public/tailwind.css
 
 build: public/tailwind.css
-	$(BUILD_ENV) dx build -p platform --release
+	$(BUILD_ENV) dx build --release
 
 .ONESHELL:
 build-lambda: clean public/tailwind.css

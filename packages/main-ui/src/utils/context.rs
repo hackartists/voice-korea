@@ -1,7 +1,6 @@
-use std::{fmt::Display, str::FromStr};
-
 use dioxus::prelude::*;
 
+pub use dioxus_translate::Language;
 use serde::{Deserialize, Serialize};
 
 use crate::routes::Route;
@@ -9,44 +8,6 @@ use crate::routes::Route;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IitpContext {
     pub lang: Language,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Copy)]
-pub enum Language {
-    #[serde(rename = "ko")]
-    Ko,
-    #[serde(rename = "en")]
-    En,
-}
-
-impl Display for Language {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Language::Ko => write!(f, "ko"),
-            Language::En => write!(f, "en"),
-        }
-    }
-}
-
-impl FromStr for Language {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "ko" => Ok(Language::Ko),
-            "en" => Ok(Language::En),
-            _ => Err(format!("Invalid language: {}", s)),
-        }
-    }
-}
-
-impl Language {
-    pub fn to_string(&self) -> String {
-        match self {
-            Language::Ko => "ko".to_string(),
-            Language::En => "en".to_string(),
-        }
-    }
 }
 
 pub fn use_iitp_context_provider() {
@@ -61,10 +22,6 @@ pub fn use_iitp_context() -> Signal<IitpContext> {
 
 pub fn use_iitp_context_lang() -> Language {
     use_iitp_context().cloned().lang
-}
-
-pub fn default_lang() -> Language {
-    Language::Ko
 }
 
 #[derive(Clone)]

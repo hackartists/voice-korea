@@ -26,11 +26,11 @@ pub struct GetPutObjectUriResponse {
 pub struct CreateMetadataRequest {
     pub name: String,
     pub urls: Vec<String>,
-    pub data_type: Option<MetadataType>,
-    pub field: Option<Field>,
-    pub purpose: Option<MetadataPurpose>,
-    pub source: Option<MetadataSource>,
-    pub authority: Option<MetadataAuthority>,
+    pub metadata_type: Option<MetadataType>,
+    pub metadata_field: Option<Field>,
+    pub metadata_purpose: Option<MetadataPurpose>,
+    pub metadata_source: Option<MetadataSource>,
+    pub metadata_authority: Option<MetadataAuthority>,
 
     pub public_opinion_projects: Option<Vec<PublicOpinion>>,
     pub public_survey_projects: Option<Vec<PublicSurvey>>,
@@ -41,11 +41,13 @@ pub struct CreateMetadataRequest {
 pub struct UpdateMetadataRequest {
     pub name: String,
     pub urls: Vec<String>,
-    pub data_type: Option<MetadataType>,
-    pub field: Option<Field>,
-    pub purpose: Option<MetadataPurpose>,
-    pub source: Option<MetadataSource>,
-    pub authority: Option<MetadataAuthority>,
+    pub metadata_type: Option<MetadataType>,
+    pub metadata_field: Option<Field>,
+    pub metadata_purpose: Option<MetadataPurpose>,
+    pub metadata_source: Option<MetadataSource>,
+    pub metadata_authority: Option<MetadataAuthority>,
+    pub public_opinion_projects: Option<Vec<PublicOpinion>>,
+    pub public_survey_projects: Option<Vec<PublicSurvey>>,
 }
 
 impl From<ResourceMetadata> for UpdateMetadataRequest {
@@ -53,11 +55,13 @@ impl From<ResourceMetadata> for UpdateMetadataRequest {
         Self {
             name: resource.name.clone(),
             urls: resource.urls.clone(),
-            data_type: resource.data_type.clone(),
-            field: resource.field.clone(),
-            purpose: resource.purpose.clone(),
-            source: resource.source.clone(),
-            authority: resource.authority.clone(),
+            metadata_type: resource.metadata_type.clone(),
+            metadata_field: resource.metadata_field.clone(),
+            metadata_purpose: resource.metadata_purpose.clone(),
+            metadata_source: resource.metadata_source.clone(),
+            metadata_authority: resource.metadata_authority.clone(),
+            public_opinion_projects: resource.public_opinion_projects.clone(),
+            public_survey_projects: resource.public_survey_projects.clone(),
         }
     }
 }
@@ -70,17 +74,20 @@ pub struct ResourceMetadata {
     pub id: String,
     pub name: String,
     pub urls: Vec<String>, // need to be divide table when postgre db implemented (resource url couldn't be name)
-    pub data_type: Option<MetadataType>,
-    pub field: Option<Field>,
-    pub purpose: Option<MetadataPurpose>,
-    pub source: Option<MetadataSource>,
-    pub authority: Option<MetadataAuthority>,
+    pub metadata_type: Option<MetadataType>,
+    pub metadata_field: Option<Field>,
+    pub metadata_purpose: Option<MetadataPurpose>,
+    pub metadata_source: Option<MetadataSource>,
+    pub metadata_authority: Option<MetadataAuthority>,
 
     // #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     // #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
     pub deleted_at: Option<i64>,
+
+    pub public_opinion_projects: Option<Vec<PublicOpinion>>,
+    pub public_survey_projects: Option<Vec<PublicSurvey>>,
 }
 
 impl ResourceMetadata {
@@ -97,14 +104,16 @@ impl ResourceMetadata {
             id: uuid::Uuid::new_v4().to_string(),
             name,
             urls,
-            data_type,
-            field,
-            purpose,
-            source,
-            authority,
+            metadata_type: data_type,
+            metadata_field: field,
+            metadata_purpose: purpose,
+            metadata_source: source,
+            metadata_authority: authority,
             created_at: chrono::Utc::now().timestamp(),
             updated_at: chrono::Utc::now().timestamp(),
             deleted_at: None,
+            public_opinion_projects: None,
+            public_survey_projects: None,
         }
     }
 }
