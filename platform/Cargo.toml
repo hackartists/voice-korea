@@ -7,13 +7,22 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# Rust Sdk Dependencies
+by-components.workspace = true
+dioxus-translate.workspace = true
+dioxus-aws.workspace = true
+easy-dynamodb = { workspace = true, optional = true }
+
+# This Repo Dependencies
+models.workspace = true
+
+# Dioxus Dependencies
+dioxus = { workspace = true, features = ["default", "fullstack", "router"] }
+
 serde = { version = "1.0.197", features = ["derive"] }
-dioxus = { version = "0.6.0", features = ["default", "fullstack", "router"] }
 chrono = "0.4"
-dioxus-aws = { version = "0.6.13" }
 reqwest = { version = "0.12.5", features = ["blocking", "json"] }
 dioxus-logger = "0.5.1"
-easy-dynamodb = { version = "0.1.7", optional = true }
 slog = { version = "2.7.0" }
 slog-term = { version = "2.9.1", optional = true }
 aws-config = { version = "1.1.7", features = [
@@ -27,15 +36,12 @@ regex = "1.3.9"
 rand = { version = "0.8.5", optional = true }
 static_str_ops = { version = "0.1.2", optional = true }
 sha3 = "0.10.8"
-models.workspace = true
 urlencoding = { version = "2.1.3", optional = true }
 axum = { version = "0.7.9", optional = true }
 wasm-bindgen = { version = "0.2.100", optional = true }
 wasm-bindgen-futures = { version = "0.4.49", optional = true }
 web-sys = { version = "0.3.74", optional = true }
-dioxus-translate = { version = "0.1.0", features = ["ko"] }
 getrandom = { version = "0.2", features = ["js"] }
-by-components.workspace = true
 
 [features]
 default = []
@@ -50,14 +56,15 @@ server = [
   "static_str_ops",
   "urlencoding",
   "axum",
+  "models/server",
 ]
 lambda = ["dioxus-aws/lambda", "server"]
 web = [
   "dioxus-aws/web",
-  "web-only",
+  "dioxus-translate/web",
   "web-sys",
   "wasm-bindgen",
   "wasm-bindgen-futures",
+  "models/web",
 ]
-web-only = ["dioxus-translate/web"]
 static_str_ops = ["dep:static_str_ops"]

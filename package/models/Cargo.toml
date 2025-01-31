@@ -9,16 +9,17 @@ edition.workspace = true
 chrono.workspace = true
 serde = { workspace = true, features = ["derive"] }
 dioxus-translate = { version = "0.1.0", features = ["ko"] }
-by-axum = { workspace = true, optional = true }
-by-macros = { workspace = true, optional = true }
+by-macros.workspace = true
 schemars = "0.8.21"
 thiserror = "2.0.11"
-serde_json = "1.0.137"
+serde_json.workspace = true
 uuid = { version = "1.12.1", features = ["v4"] }
-sqlx = { workspace = true, optional = true }
 serde_urlencoded = "0.7.1"
 
+# Server dependencies
+sqlx = { workspace = true, optional = true }
+by-axum = { workspace = true, optional = true }
+
 [features]
-web = ["web-only"]
-web-only = ["dioxus-translate/web"]
+web = ["dioxus-translate/web"]
 server = ["by-axum", "by-macros/server"]
