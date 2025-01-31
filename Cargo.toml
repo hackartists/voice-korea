@@ -1,6 +1,7 @@
 [workspace]
-members = ["package/models", "package/api", "platform", "package/watcher"]
+members = ["packages/models", "packages/api", "packages/main-ui", "packages/watcher"]
 resolver = "2"
+exclude = ["deps"]
 
 [workspace.package]
 version = "1.0.0"
@@ -10,18 +11,22 @@ edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-models = { version = "1.0.0", path = "package/models" }
-easy-dynamodb = "0.1.7"
+by-axum = { path = "deps/rust-sdk/packages/by-axum" }
+easy-dynamodb = { path = "deps/rust-sdk/packages/easy-dynamodb" }
+by-components = { path = "deps/rust-sdk/packages/by-components" }
+by-macros = { path = "deps/rust-sdk/packages/by-macros" }
+by-types = { path = "deps/rust-sdk/packages/by-types" }
+dioxus-translate = { path = "deps/rust-sdk/packages/dioxus-translate", features = ["ko"] }
+dioxus-aws = { path = "deps/rust-sdk/packages/dioxus-aws" }
+
+models = { version = "1.0.0", path = "packages/models" }
 slog = "2.7.0"
-by-axum = { version = "0.2.5" }
 chrono = "0.4.38"
-serde = "1.0.215"
-reqwest = "0.12.9"
-by-components = { path = "./deps/rust-sdk/packages/by-components" }
+serde = { version="1.0.215", features = ["derive"] }
+serde_json = "1.0.137"
+reqwest = { version = "0.12.9", features = ["json"] }
 dioxus = { version = "0.6.*" }
 
-by-macros = { version = "0.6.7" }
-by-types = { version = "0.3.5" }
 sqlx = { version = "0.8.3", features = [
     "sqlite",
     "postgres",

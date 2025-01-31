@@ -6,9 +6,20 @@ description.workspace = true
 edition.workspace = true
 
 [dependencies]
+easy-dynamodb.workspace = true
+by-axum.workspace = true
+by-types.workspace = true
+
+models = { workspace = true, features = ["server"] }
+
+serde_json.workspace = true
+serde.workspace = true
+chrono = { workspace = true, features = ["now"] }
+reqwest.workspace = true
+slog.workspace = true
+sqlx.workspace = true
+
 tokio = { version = "1.41.1", features = ["full"] }
-listenfd = { version = "1.0.1", optional = true }
-serde_json = "1.0.133"
 thiserror = "2.0.3"
 jsonwebtoken = "9.3.0"
 sha3 = "0.10.8"
@@ -18,20 +29,9 @@ aws-config = "1.5.10"
 rand = "0.8.5"
 lazy_static = "1.5.0"
 
-serde = { workspace = true, features = ["derive"] }
-chrono = { workspace = true, features = ["now"] }
-reqwest = { workspace = true, features = ["json"] }
-
-easy-dynamodb.workspace = true
-slog.workspace = true
-models = { workspace = true, features = ["server"] }
-by-axum.workspace = true
 futures = "0.3.31"
 schemars = "0.8.21"
-sqlx.workspace = true
-by-types.workspace = true
 
 [features]
 default = []
-reload = ["listenfd"]
 lambda = ["by-axum/lambda"]

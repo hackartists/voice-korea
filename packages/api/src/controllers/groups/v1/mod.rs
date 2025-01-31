@@ -324,9 +324,17 @@ impl GroupControllerV1 {
             Err(ApiError::NotFound)
         }
     }
+}
 
-    pub async fn upsert_group_member(group_id: String, member_id: String) -> Result<(), ApiError> {
-        let log = root().new(o!("api" => "upsert_group_member"));
+impl GroupControllerV1 {
+    pub async fn upsert_group_member(
+        &self,
+        ctrl: GroupControllerV1,
+        group_id: String,
+        group_name: String,
+        member_id: String,
+    ) -> Result<(), ApiError> {
+        let log = ctrl.log.new(o!("api" => "update_member"));
         slog::debug!(log, "upsert_group_member");
         let cli = easy_dynamodb::get_client(&log);
 
@@ -340,15 +348,25 @@ impl GroupControllerV1 {
             None => return Err(ApiError::NotFound),
         };
 
+        let user = match cli
+            .get::<User>(&member.user_id)
+            .await
+            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
+        {
+            Some(u) => u,
+            None => return Err(ApiError::NotFound),
+        };
+
         // check member in group
         let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
             &log,
             "gsi2-index",
             None,
             Some(1),
-            vec![("gsi2", GroupMember::get_gsi2(&group_id, &member_id))],
+            vec![("gsi2", GroupMember::get_gsi2(&member_id))],
         )
         .await?;
+        let now = chrono::Utc::now().timestamp_millis();
 
         if res.items.len() == 0 {
             //group member not exists
@@ -423,10 +441,24 @@ impl GroupControllerV1 {
                 cli.update(&item.id, update_data)
                     .await
                     .map_err(|e| ApiError::DynamoUpdateException(e.to_string()))?;
+
+                let _ = cli
+                    .update(
+                        &member.id,
+                        vec![
+                            ("group", UpdateField::String(group_name)),
+                            ("updated_at", UpdateField::I64(now)),
+                        ],
+                    )
+                    .await
+                    .map_err(|e| ApiError::DynamoUpdateException(e.to_string()));
+            }
         }
         Ok(())
     }
+}
 
+impl GroupControllerV1 {
     pub async fn add_team_member(
         &self,
         group_id: &str,
@@ -449,7 +481,7 @@ impl GroupControllerV1 {
             "gsi2-index",
             None,
             Some(1),
-            vec![("gsi2", GroupMember::get_gsi2(&group_id, &member.id))],
+            vec![("gsi2", GroupMember::get_gsi2(&member.id))],
         )
         .await?;
 
@@ -488,9 +520,13 @@ impl GroupControllerV1 {
         }
 
         // add member to group
-        cli.create(GroupMember::new(group_id.to_string(), member_id.clone()))
-            .await
-            .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+        cli.create(GroupMember::new(
+            uuid::Uuid::new_v4().to_string(),
+            group_id.to_string(),
+            member_id.clone(),
+        ))
+        .await
+        .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
 
         // update member role
         if let Some(role) = req.role {
@@ -652,7 +688,6 @@ impl GroupControllerV1 {
                             (
                                 "gsi2",
                                 UpdateField::String(GroupMember::get_gsi2_deleted(
-                                    &group_id,
                                     &member.org_member_id,
                                 )),
                             ),
