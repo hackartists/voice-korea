@@ -7,6 +7,7 @@ version = "1.0.0"
 authors = ["Biyard"]
 description = "iitp"
 edition = "2021"
+license = "Apache-2.0"
 
 [workspace.dependencies]
 models = { version = "1.0.0", path = "package/models" }
@@ -17,6 +18,8 @@ chrono = "0.4.38"
 serde = "1.0.215"
 reqwest = "0.12.9"
 by-macros = { version = "0.5.0" }
+by-components = { path = "./deps/rust-sdk/packages/by-components" }
+dioxus = { version = "0.6.*" }
 
 [profile]
 
