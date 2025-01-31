@@ -1,6 +1,7 @@
 use chrono::Local;
 use dioxus::prelude::*;
 use dioxus_translate::translate;
+use models::prelude::{PublicSurveyQuestion, PublicSurveyQuestionType};
 
 use super::i18n::SurveyNewTranslate;
 
@@ -12,6 +13,9 @@ pub struct Controller {
     description: Signal<String>,
     start_date: Signal<i64>,
     end_date: Signal<i64>,
+
+    surveys: Signal<Vec<PublicSurveyQuestion>>,
+    total_survey_types: Signal<Vec<String>>,
 }
 
 impl Controller {
@@ -41,9 +45,23 @@ impl Controller {
             end_date: use_signal(|| timestamp),
 
             description: use_signal(|| "".to_string()),
+            surveys: use_signal(|| vec![]),
+
+            total_survey_types: use_signal(|| {
+                vec![
+                    translates.dropdown.to_string(),
+                    translates.checkbox.to_string(),
+                    translates.subjective.to_string(),
+                    translates.rating.to_string(),
+                ]
+            }),
         };
 
         ctrl
+    }
+
+    pub fn get_total_survey_types(&self) -> Vec<String> {
+        (self.total_survey_types)()
     }
 
     pub fn get_total_fields(&self) -> Vec<String> {
@@ -88,5 +106,32 @@ impl Controller {
 
     pub fn change_end_date(&mut self, end_date: i64) {
         self.end_date.set(end_date);
+    }
+
+    pub fn get_surveys(&self) -> Vec<PublicSurveyQuestion> {
+        (self.surveys)()
+    }
+
+    pub fn change_survey(&mut self, index: usize, survey: PublicSurveyQuestion) {
+        let mut surveys = (self.surveys)();
+        surveys[index] = survey;
+        self.surveys.set(surveys);
+    }
+
+    pub fn add_survey(&mut self) {
+        let mut surveys = (self.surveys)();
+        surveys.push(PublicSurveyQuestion {
+            id: None,
+            title: "".to_string(),
+            description: None,
+            question_type: PublicSurveyQuestionType::Subjective,
+            image_url: None,
+            answer_start_range: None,
+            answer_end_range: None,
+            options: None,
+            multiple_choice_enable: None,
+            necessary_answer_enable: None,
+        });
+        self.surveys.set(surveys);
     }
 }

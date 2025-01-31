@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::{field::Field, prelude::PanelInfo};
 #[cfg(feature = "server")]
 use by_axum::aide;
@@ -228,7 +230,10 @@ pub struct PublicSurveyQuestion {
 
     pub answer_start_range: Option<i64>, //1~10 까지 그렇다~아니다일 경우 다음 필드 활용
     pub answer_end_range: Option<i64>,
-    pub options: Option<Vec<String>>, //다음 필드도 함께 활용
+    pub options: Option<Vec<String>>, //체크박스, 드롭다운인 경우 선택지 입력, 평가척도의 경우 1, 10이 어느 구간에 해당하는지 입력
+
+    pub multiple_choice_enable: Option<bool>, //복수 응답 유무
+    pub necessary_answer_enable: Option<bool>, //필수 입력 유무
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
@@ -236,11 +241,43 @@ pub struct PublicSurveyQuestion {
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PublicSurveyQuestionType {
     #[default]
-    MultipleChoice,
-    SingleChoice,
-    LongAnswer,
-    ShortAnswer,
-    Optional,
+    Subjective, //주관식 답변
+    Dropdown, //드롭다운
+    Checkbox, //체크박스
+    Optional, //평가 척도
+}
+
+impl PublicSurveyQuestionType {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                PublicSurveyQuestionType::Dropdown => "Dropdown",
+                PublicSurveyQuestionType::Checkbox => "Checkbox",
+                PublicSurveyQuestionType::Subjective => "Subjective",
+                PublicSurveyQuestionType::Optional => "Rating",
+            },
+            Language::Ko => match self {
+                PublicSurveyQuestionType::Dropdown => "드랍다운 선택",
+                PublicSurveyQuestionType::Checkbox => "체크박스 선택",
+                PublicSurveyQuestionType::Subjective => "주관식 답변",
+                PublicSurveyQuestionType::Optional => "평가 척도",
+            },
+        }
+    }
+}
+
+impl FromStr for PublicSurveyQuestionType {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Dropdown" | "드랍다운 선택" => Ok(PublicSurveyQuestionType::Dropdown),
+            "Checkbox" | "체크박스 선택" => Ok(PublicSurveyQuestionType::Checkbox),
+            "Subjective" | "주관식 답변" => Ok(PublicSurveyQuestionType::Subjective),
+            "Rating" | "평가 척도" => Ok(PublicSurveyQuestionType::Optional),
+            _ => Err(format!("invalid field")),
+        }
+    }
+
+    type Err = String;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]

@@ -1,6 +1,19 @@
 use dioxus_translate::translate;
 
 translate! {
+    SubjectiveTranslate;
+
+    input_title_hint: {
+        ko: "제목을 입력해주세요",
+        en: "Please enter a title"
+    }
+    input_description_hint: {
+        ko: "내용을 입력해주세요",
+        en: "Please enter a description"
+    }
+}
+
+translate! {
     SurveyTranslate;
 
     survey_title: {

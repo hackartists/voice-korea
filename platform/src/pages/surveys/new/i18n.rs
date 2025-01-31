@@ -61,4 +61,21 @@ translate! {
         ko: "정치",
         en: "Politic"
     }
+
+    dropdown: {
+        ko: "드랍다운 선택",
+        en: "Select Dropdown"
+    }
+    checkbox: {
+        ko: "체크박스 선택",
+        en: "Select Checkbox"
+    }
+    subjective: {
+        ko: "주관식 답변",
+        en: "Subjective Answer"
+    }
+    rating: {
+        ko: "평가 척도",
+        en: "Evaluation Rating"
+    }
 }

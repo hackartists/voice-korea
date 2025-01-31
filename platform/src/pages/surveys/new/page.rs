@@ -1,10 +1,11 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
+use models::prelude::PublicSurveyQuestion;
 
 use crate::{
     components::icons::{ArrowLeft, Plus},
     pages::surveys::{
-        components::introduction::InputIntroduction,
+        components::{introduction::InputIntroduction, survey::ListSurvey},
         new::{
             controller::Controller,
             i18n::{AddQuestionTranslate, SurveyNewTranslate},
@@ -40,6 +41,7 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                         "{translates.start_survey}"
                     }
                 }
+
                 InputIntroduction {
                     lang: props.lang,
                     selected_field: ctrl.get_selected_field(),
@@ -69,7 +71,22 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                     },
                 }
 
-                AddQuestion { lang: props.lang }
+                ListSurvey {
+                    lang: props.lang,
+                    surveys: ctrl.get_surveys(),
+                    types: ctrl.get_total_survey_types(),
+                    change_survey: move |(index, survey): (usize, PublicSurveyQuestion)| {
+                        ctrl.change_survey(index, survey);
+                    },
+                }
+
+                button {
+                    class: "flex flex-row w-full",
+                    onclick: move |_| {
+                        ctrl.add_survey();
+                    },
+                    AddQuestion { lang: props.lang }
+                }
             }
 
             div { class: "absolute right-[0px] bottom-[40px]",
@@ -87,7 +104,7 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
 pub fn AddQuestion(lang: Language) -> Element {
     let translates: AddQuestionTranslate = translate(&lang);
     rsx! {
-        button { class: "flex flex-col w-full h-[200px] rounded-[8px] justify-center items-center border border-dashed border-[#b4b4b4] mt-[20px]",
+        div { class: "flex flex-col w-full h-[200px] rounded-[8px] justify-center items-center border border-dashed border-[#b4b4b4] mt-[20px]",
             div { class: "flex flex-row w-[45px] h-[45px] justify-center items-center rounded-[100px] border border-[#b4b4b4]",
                 Plus { width: "12", height: "12", color: "#b4b4b4" }
             }
