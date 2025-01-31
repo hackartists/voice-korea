@@ -1,6 +1,15 @@
 use dioxus_translate::translate;
 
 translate! {
+    AddQuestionTranslate;
+
+    add_description: {
+        ko: "새로운 질문을 추가해주세요.",
+        en: "Please add a new question."
+    }
+}
+
+translate! {
     SurveyNewTranslate;
 
     survey_title: {
