@@ -43,6 +43,7 @@ pub mod service {
     pub mod popup_service;
     pub mod prev_survey_api;
     pub mod survey_api;
+    pub mod theme;
     pub mod user_api;
 }
 

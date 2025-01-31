@@ -15,6 +15,7 @@ use platform::service::popup_service::PopupService;
 use platform::service::metadata_api::ResourceApi;
 use platform::service::prev_survey_api::PrevSurveyApi;
 use platform::service::survey_api::SurveyApi;
+use platform::service::theme::Theme;
 use platform::service::user_api::UserApi;
 use platform::{
     routes::Route, service::login_service::LoginService, utils::context::use_iitp_context_provider,
@@ -59,6 +60,7 @@ fn main() {
 
 fn App() -> Element {
     use_iitp_context_provider();
+    Theme::init();
     LoginService::init();
     PopupService::init();
 
