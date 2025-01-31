@@ -2,8 +2,7 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::prelude::{
-    AttributeItemResponse, AttributeResponse, Field, OpinionInfo, OpinionInformation,
-    PublicOpinionType,
+    AttributeItemInfo, AttributeResponse, Field, OpinionInfo, OpinionInformation, PublicOpinionType,
 };
 
 use crate::service::popup_service::PopupService;
@@ -117,7 +116,7 @@ impl Controller {
                     AttributeResponse {
                         id: "1".to_string(),
                         name: Some("직업".to_string()),
-                        attribute: vec![AttributeItemResponse {
+                        attribute: vec![AttributeItemInfo {
                             id: "1".to_string(),
                             name: "개발자".to_string(),
                         }],
@@ -125,7 +124,7 @@ impl Controller {
                     AttributeResponse {
                         id: "2".to_string(),
                         name: Some("성별".to_string()),
-                        attribute: vec![AttributeItemResponse {
+                        attribute: vec![AttributeItemInfo {
                             id: "1".to_string(),
                             name: "여성".to_string(),
                         }],
@@ -134,23 +133,23 @@ impl Controller {
                         id: "3".to_string(),
                         name: Some("나이".to_string()),
                         attribute: vec![
-                            AttributeItemResponse {
+                            AttributeItemInfo {
                                 id: "1".to_string(),
                                 name: "20대".to_string(),
                             },
-                            AttributeItemResponse {
+                            AttributeItemInfo {
                                 id: "2".to_string(),
                                 name: "30대".to_string(),
                             },
-                            AttributeItemResponse {
+                            AttributeItemInfo {
                                 id: "3".to_string(),
                                 name: "40대".to_string(),
                             },
-                            AttributeItemResponse {
+                            AttributeItemInfo {
                                 id: "4".to_string(),
                                 name: "50대".to_string(),
                             },
-                            AttributeItemResponse {
+                            AttributeItemInfo {
                                 id: "5".to_string(),
                                 name: "60대".to_string(),
                             },
@@ -159,7 +158,7 @@ impl Controller {
                     AttributeResponse {
                         id: "4".to_string(),
                         name: Some("학력".to_string()),
-                        attribute: vec![AttributeItemResponse {
+                        attribute: vec![AttributeItemInfo {
                             id: "1".to_string(),
                             name: "대학원".to_string(),
                         }],
@@ -167,7 +166,7 @@ impl Controller {
                     AttributeResponse {
                         id: "5".to_string(),
                         name: Some("거주지".to_string()),
-                        attribute: vec![AttributeItemResponse {
+                        attribute: vec![AttributeItemInfo {
                             id: "1".to_string(),
                             name: "서울".to_string(),
                         }],
@@ -175,7 +174,7 @@ impl Controller {
                     AttributeResponse {
                         id: "6".to_string(),
                         name: Some("국적".to_string()),
-                        attribute: vec![AttributeItemResponse {
+                        attribute: vec![AttributeItemInfo {
                             id: "1".to_string(),
                             name: "국내".to_string(),
                         }],

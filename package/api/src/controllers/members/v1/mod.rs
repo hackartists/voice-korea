@@ -104,9 +104,9 @@ impl MemberControllerV1 {
                 match cli.upsert(member.clone()).await {
                     Ok(()) => {
                         if let Some(group) = req.group.clone() {
-                            let _ = ctrl
-                                .upsert_group_member(group.id, group.name, member.id.clone())
-                                .await?;
+                            let _ =
+                                GroupControllerV1::upsert_group_member(group.id, member.id.clone())
+                                    .await?;
                         }
                         return Ok(());
                     }
@@ -201,9 +201,8 @@ impl MemberControllerV1 {
             Ok(()) => {
                 // invite member to group
                 if let Some(group) = body.group.clone() {
-                    let _ = ctrl
-                        .upsert_group_member(group.id, group.name, id.to_string())
-                        .await?;
+                    let _ =
+                        GroupControllerV1::upsert_group_member(group.id, id.to_string()).await?;
                 }
 
                 // TODO: add invite member to project
@@ -306,10 +305,10 @@ impl MemberControllerV1 {
 
             let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
                 &log,
-                "gsi2-index",
+                "type-index",
                 None,
                 Some(100),
-                vec![("gsi2", GroupMember::get_gsi2(&item.id.clone()))],
+                vec![("type", GroupMember::get_type())],
             )
             .await?;
 
@@ -371,15 +370,19 @@ impl MemberControllerV1 {
 
         let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
             &log,
-            "gsi2-index",
+            "type-index",
             None,
             Some(100),
-            vec![("gsi2", GroupMember::get_gsi2(&member.id.clone()))],
+            vec![("type", GroupMember::get_type())],
         )
         .await?;
 
         for item in res.items {
             if item.deleted_at.is_some() {
+                continue;
+            }
+
+            if item.org_member_id != member.id {
                 continue;
             }
 
@@ -414,12 +417,12 @@ impl MemberControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
 
         //check member
-        let _ = match cli
+        let group_member: GroupMember = match cli
             .get::<GroupMember>(&member_id)
             .await
             .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
         {
-            Some(_) => (),
+            Some(v) => v,
             None => return Err(ApiError::NotFound),
         };
 
@@ -429,7 +432,10 @@ impl MemberControllerV1 {
             "gsi2-index",
             None,
             Some(1),
-            vec![("gsi2", GroupMember::get_gsi2(&member_id))],
+            vec![(
+                "gsi2",
+                GroupMember::get_gsi2(&group_member.group_id, &member_id),
+            )],
         )
         .await?;
 
@@ -453,6 +459,7 @@ impl MemberControllerV1 {
                     (
                         "gsi2",
                         UpdateField::String(GroupMember::get_gsi2_deleted(
+                            &group_member.group_id,
                             &group_member.org_member_id,
                         )),
                     ),
@@ -467,137 +474,6 @@ impl MemberControllerV1 {
                 Err(ApiError::DynamoUpdateException(e.to_string()))
             }
         }
-    }
-
-    // TODO: refactor group member update logic
-    pub async fn upsert_group_member(
-        &self,
-        group_id: String,
-        group_name: String,
-        member_id: String,
-    ) -> Result<(), ApiError> {
-        let log = self.log.new(o!("api" => "update_member"));
-        slog::debug!(log, "upsert_group_member");
-        let cli = easy_dynamodb::get_client(&log);
-
-        //check member
-        let member = match cli
-            .get::<OrganizationMember>(&member_id)
-            .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
-        {
-            Some(v) => v,
-            None => return Err(ApiError::NotFound),
-        };
-
-        let user = match cli
-            .get::<User>(&member.user_id)
-            .await
-            .map_err(|e| ApiError::DynamoQueryException(e.to_string()))?
-        {
-            Some(v) => v,
-            None => return Err(ApiError::NotFound),
-        };
-
-        // check member in group
-        let res: CommonQueryResponse<GroupMember> = CommonQueryResponse::query(
-            &log,
-            "gsi2-index",
-            None,
-            Some(1),
-            vec![("gsi2", GroupMember::get_gsi2(&member_id))],
-        )
-        .await?;
-        let now = chrono::Utc::now().timestamp_millis();
-
-        if res.items.len() == 0 {
-            //group member not exists
-            let id = uuid::Uuid::new_v4().to_string();
-            let group_member = GroupMember::new(id, group_id, member.organization_id.clone());
-
-            match cli.upsert(group_member.clone()).await {
-                Ok(()) => {
-                    let _ = cli
-                        .update(
-                            &member.id,
-                            vec![
-                                ("group", UpdateField::String(group_name)),
-                                ("updated_at", UpdateField::I64(now)),
-                            ],
-                        )
-                        .await
-                        .map_err(|e| ApiError::DynamoUpdateException(e.to_string()));
-                    return Ok(());
-                }
-                Err(e) => {
-                    slog::error!(log, "Create Group Member Failed {e:?}");
-                    return Err(ApiError::DynamoCreateException(e.to_string()));
-                }
-            }
-        } else {
-            //group member exists
-            let item = res.items.first().unwrap();
-
-            if item.deleted_at.is_some() {
-                let group_member =
-                    GroupMember::new(item.id.clone(), group_id, member.organization_id.clone());
-
-                match cli.upsert(group_member.clone()).await {
-                    Ok(()) => {
-                        let _ = cli
-                            .update(
-                                &member.id,
-                                vec![
-                                    ("group", UpdateField::String(group_name)),
-                                    ("updated_at", UpdateField::I64(now)),
-                                ],
-                            )
-                            .await
-                            .map_err(|e| ApiError::DynamoUpdateException(e.to_string()));
-                        return Ok(());
-                    }
-                    Err(e) => {
-                        slog::error!(log, "Create Group Member Failed {e:?}");
-                        return Err(ApiError::DynamoCreateException(e.to_string()));
-                    }
-                }
-            } else {
-                let mut update_data: Vec<(&str, UpdateField)> = vec![];
-                let now = chrono::Utc::now().timestamp_millis();
-                update_data.push((
-                    "gsi1",
-                    UpdateField::String(GroupMember::get_gsi1(&group_id)),
-                ));
-                update_data.push((
-                    "gsi2",
-                    UpdateField::String(GroupMember::get_gsi2(&member.id)),
-                ));
-                update_data.push(("group_id", UpdateField::String(group_id)));
-                update_data.push(("org_member_id", UpdateField::String(member.id.clone())));
-                update_data.push((
-                    "user_name",
-                    UpdateField::String(member.name.unwrap_or_default()),
-                ));
-                update_data.push(("user_email", UpdateField::String(user.email)));
-                update_data.push(("updated_at", UpdateField::I64(now)));
-
-                cli.update(&item.id, update_data)
-                    .await
-                    .map_err(|e| ApiError::DynamoUpdateException(e.to_string()))?;
-
-                let _ = cli
-                    .update(
-                        &member.id.clone(),
-                        vec![
-                            ("group", UpdateField::String(group_name)),
-                            ("updated_at", UpdateField::I64(now)),
-                        ],
-                    )
-                    .await
-                    .map_err(|e| ApiError::DynamoUpdateException(e.to_string()));
-            }
-        }
-        Ok(())
     }
 }
 
@@ -650,13 +526,11 @@ impl MemberControllerV1 {
         match res {
             Ok(()) => {
                 if req.group.is_some() {
-                    let _ = self
-                        .upsert_group_member(
-                            req.group.clone().unwrap().id,
-                            req.group.unwrap().name,
-                            member_id.to_string(),
-                        )
-                        .await?;
+                    let _ = GroupControllerV1::upsert_group_member(
+                        req.group.clone().unwrap().id,
+                        member_id.to_string(),
+                    )
+                    .await?;
                 }
 
                 Ok(())
@@ -753,6 +627,31 @@ impl MemberControllerV1 {
     }
 }
 
+pub async fn find_user_id_by_email(email: String) -> Result<Option<String>, ApiError> {
+    let log = root();
+
+    let res: CommonQueryResponse<User> = CommonQueryResponse::query(
+        &log,
+        "gsi1-index",
+        None,
+        Some(1),
+        vec![("gsi1", User::gsi1(email.clone()))],
+    )
+    .await?;
+
+    if res.items.len() == 0 {
+        return Ok(None);
+    }
+
+    let user = res.items.first().unwrap();
+
+    if user.deleted_at.is_some() {
+        return Ok(None);
+    }
+
+    Ok(Some(user.id.clone()))
+}
+
 pub async fn find_member_by_email(
     email: String,
     organization_id: String,
@@ -761,7 +660,7 @@ pub async fn find_member_by_email(
 
     let res: CommonQueryResponse<OrganizationMember> = CommonQueryResponse::query(
         &log,
-        "gsi1-index",
+        "gsi2-index",
         None,
         Some(1),
         vec![(
