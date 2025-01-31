@@ -11,7 +11,8 @@ use easy_dynamodb::error::DynamoException;
 use slog::o;
 
 use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware,
+    common::CommonQueryResponse, controllers::auth::v1::find_user_id_by_email,
+    middleware::auth::authorization_middleware,
 };
 
 use models::prelude::*;
@@ -94,7 +95,8 @@ impl MemberControllerV1 {
                     }
                 } else {
                     let id = uuid::Uuid::new_v4().to_string();
-                    let mem: OrganizationMember = (req.clone(), id, user_id.clone(), organization_id.clone()).into();
+                    let mem: OrganizationMember =
+                        (req.clone(), id, user_id.clone(), organization_id.clone()).into();
 
                     mem
                 };
@@ -168,7 +170,10 @@ impl MemberControllerV1 {
             "gsi2-index",
             None,
             Some(1),
-            vec![("gsi2", OrganizationMember::get_gsi2(&body.email.clone(), &organization_id.clone()))],
+            vec![(
+                "gsi2",
+                OrganizationMember::get_gsi2(&body.email.clone(), &organization_id.clone()),
+            )],
         )
         .await?;
 
@@ -201,14 +206,14 @@ impl MemberControllerV1 {
                         .await?;
                 }
 
-                // TODO: add invite member to project 
+                // TODO: add invite member to project
                 Ok(())
             }
             Err(e) => {
                 slog::error!(log, "Create Member Failed {e:?}");
                 Err(ApiError::DynamoCreateException(e.to_string()))
             }
-        }        
+        }
     }
 
     //TODO: implement search projects in organization
@@ -399,15 +404,11 @@ impl MemberControllerV1 {
             groups,
             project: vec![], // TODO: implement projects
         }))
-        
     }
 }
 
 impl MemberControllerV1 {
-    pub async fn remove_group_member(
-        &self,
-        member_id: String
-    ) -> Result<(), ApiError> {
+    pub async fn remove_group_member(&self, member_id: String) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "remove_group_member"));
         slog::debug!(log, "remove_group_member");
         let cli = easy_dynamodb::get_client(&log);
@@ -673,7 +674,8 @@ impl MemberControllerV1 {
         let cli = easy_dynamodb::get_client(&log);
         let now = chrono::Utc::now().timestamp_millis();
 
-        let d: Result<Option<OrganizationMember>, DynamoException> = match cli.get(member_id).await {
+        let d: Result<Option<OrganizationMember>, DynamoException> = match cli.get(member_id).await
+        {
             Ok(v) => Ok(v),
             Err(e) => {
                 slog::error!(log, "Member Query Failed {e:?}");
@@ -690,10 +692,15 @@ impl MemberControllerV1 {
                 member_id,
                 vec![
                     ("deleted_at", UpdateField::I64(now)),
-                    ("type", UpdateField::String(OrganizationMember::get_deleted_type())),
+                    (
+                        "type",
+                        UpdateField::String(OrganizationMember::get_deleted_type()),
+                    ),
                     (
                         "gsi1",
-                        UpdateField::String(OrganizationMember::get_gsi1_deleted(&d.clone().unwrap().unwrap().email)),
+                        UpdateField::String(OrganizationMember::get_gsi1_deleted(
+                            &d.clone().unwrap().unwrap().email,
+                        )),
                     ),
                     (
                         "gsi2",
@@ -720,7 +727,7 @@ impl MemberControllerV1 {
 
     pub async fn create_member(
         user_id: String,
-        org_id:String, 
+        org_id: String,
         email: String,
         name: Option<String>,
         role: Option<Role>,
@@ -728,14 +735,13 @@ impl MemberControllerV1 {
         let log = root();
         let cli = easy_dynamodb::get_client(&log);
 
-        let organization_member: OrganizationMember =
-            OrganizationMember::new(
-                user_id.clone(), 
-                org_id.clone(), 
-                email.clone(),
-                name.clone(),
-                role,
-            );
+        let organization_member: OrganizationMember = OrganizationMember::new(
+            user_id.clone(),
+            org_id.clone(),
+            email.clone(),
+            name.clone(),
+            role,
+        );
 
         match cli.upsert(organization_member.clone()).await {
             Ok(()) => Ok(()),
@@ -745,33 +751,6 @@ impl MemberControllerV1 {
             }
         }
     }
-}
-
-pub async fn find_user_id_by_email(
-    email: String,
-) -> Result<Option<String>, ApiError> {
-    let log = root();
-
-    let res: CommonQueryResponse<User> = CommonQueryResponse::query(
-        &log,
-        "gsi1-index",
-        None,
-        Some(1),
-        vec![("gsi1", User::gsi1(email.clone()))],
-    )
-    .await?;
-
-    if res.items.len() == 0 {
-        return Ok(None);
-    }
-
-    let user = res.items.first().unwrap();
-
-    if user.deleted_at.is_some() {
-        return Ok(None);
-    }
-
-    Ok(Some(user.id.clone()))
 }
 
 pub async fn find_member_by_email(
@@ -785,7 +764,10 @@ pub async fn find_member_by_email(
         "gsi1-index",
         None,
         Some(1),
-        vec![("gsi2", OrganizationMember::get_gsi2(&email, &organization_id))],
+        vec![(
+            "gsi2",
+            OrganizationMember::get_gsi2(&email, &organization_id),
+        )],
     )
     .await?;
 

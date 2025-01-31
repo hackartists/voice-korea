@@ -325,14 +325,7 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                             "{resource.name.clone()}"
                                         }
                                     }
-                                    div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                        //FIXME: fix to real public opinion name
-                                        if resource.public_opinion_projects.clone().unwrap_or_default().len() > 1 {
-                                            MetadataLabel { label: resource.public_opinion_projects.clone().unwrap()[0].name.clone() }
-                                        } else if resource.public_survey_projects.clone().unwrap_or_default().len() > 1 {
-                                            MetadataLabel { label: resource.public_survey_projects.clone().unwrap()[0].name.clone() }
-                                        }
-                                    }
+                                    div { class: "flex flex-row flex-1 h-full justify-center items-center" }
                                     div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
                                         if clicked_resources() == index {
                                             select {

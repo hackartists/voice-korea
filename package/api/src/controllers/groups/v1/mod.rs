@@ -10,7 +10,8 @@ use by_axum::{
 use slog::o;
 
 use crate::{
-    common::CommonQueryResponse, controllers::members::v1::find_member_by_email, middleware::auth::authorization_middleware, utils::jwt::Claims
+    common::CommonQueryResponse, controllers::members::v1::find_member_by_email,
+    middleware::auth::authorization_middleware, utils::jwt::Claims,
 };
 
 use models::prelude::*;
@@ -75,7 +76,8 @@ impl GroupControllerV1 {
                 ctrl.remove_group(&claims.id, &group_id).await?;
             }
             GroupByIdActionRequest::AddTeamMember(req) => {
-                ctrl.add_team_member(&group_id, &organization_id, req).await?;
+                ctrl.add_team_member(&group_id, &organization_id, req)
+                    .await?;
             }
             GroupByIdActionRequest::RemoveTeamMember(group_member_id) => {
                 ctrl.remove_team_member(&group_id, &group_member_id).await?;
@@ -279,7 +281,7 @@ impl GroupControllerV1 {
                 if member.deleted_at.is_some() {
                     continue;
                 }
-    
+
                 let user = match cli
                     .get::<User>(&member.user_id)
                     .await
@@ -395,8 +397,7 @@ impl GroupControllerV1 {
             let item = res.items.first().unwrap();
 
             if item.deleted_at.is_some() {
-                let group_member =
-                    GroupMember::new(item.id.clone(), group_id, member.id.clone());
+                let group_member = GroupMember::new(item.id.clone(), group_id, member.id.clone());
 
                 match cli.upsert(group_member.clone()).await {
                     Ok(()) => {
@@ -533,7 +534,10 @@ impl GroupControllerV1 {
                 &member_id,
                 vec![
                     ("role", UpdateField::String(role)),
-                    ("updated_at", UpdateField::I64(chrono::Utc::now().timestamp_millis())),
+                    (
+                        "updated_at",
+                        UpdateField::I64(chrono::Utc::now().timestamp_millis()),
+                    ),
                 ],
             )
             .await
@@ -640,11 +644,7 @@ impl GroupControllerV1 {
         }
     }
 
-    pub async fn remove_group(
-        &self, 
-        user_id: &str, 
-        group_id: &str
-    ) -> Result<(), ApiError> {
+    pub async fn remove_group(&self, user_id: &str, group_id: &str) -> Result<(), ApiError> {
         let log = self.log.new(o!("api" => "remove group"));
         slog::debug!(log, "remove group {:?}", group_id);
         let cli = easy_dynamodb::get_client(&log);
@@ -724,7 +724,9 @@ impl GroupControllerV1 {
         let log = self.log.new(o!("api" => "create_group"));
 
         if req.name.trim().is_empty() {
-            return Err(ApiError::ValidationError("Group name is required".to_string()));
+            return Err(ApiError::ValidationError(
+                "Group name is required".to_string(),
+            ));
         }
 
         slog::debug!(log, "create_group {:?}", req.clone());
@@ -738,20 +740,17 @@ impl GroupControllerV1 {
                     let member_id = match find_member_by_email(
                         member.member_email.clone(),
                         organization_id.clone(),
-                    ).await? {
+                    )
+                    .await?
+                    {
                         Some(m) => m.id,
                         None => {
                             slog::error!(log, "Member not found");
                             return Err(ApiError::NotFound);
                         }
                     };
-                    self.upsert_group_member(
-                        self.clone(),
-                        id.clone(),
-                        req.name.clone(),
-                        member_id,
-                    )
-                    .await?;
+                    self.upsert_group_member(self.clone(), id.clone(), req.name.clone(), member_id)
+                        .await?;
                 }
 
                 return Ok(());

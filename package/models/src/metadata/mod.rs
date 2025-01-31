@@ -1,12 +1,12 @@
-use std::str::FromStr;
-
 use crate::field::Field;
 #[cfg(feature = "server")]
 use by_axum::aide;
+// use by_macros::api_model;
 use dioxus_translate::Language;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -46,13 +46,10 @@ pub struct UpdateMetadataRequest {
     pub metadata_purpose: Option<MetadataPurpose>,
     pub metadata_source: Option<MetadataSource>,
     pub metadata_authority: Option<MetadataAuthority>,
-
-    pub public_opinion_projects: Option<Vec<PublicOpinion>>,
-    pub public_survey_projects: Option<Vec<PublicSurvey>>,
 }
 
-impl From<MetadataSummary> for UpdateMetadataRequest {
-    fn from(resource: MetadataSummary) -> Self {
+impl From<ResourceMetadata> for UpdateMetadataRequest {
+    fn from(resource: ResourceMetadata) -> Self {
         Self {
             name: resource.name.clone(),
             urls: resource.urls.clone(),
@@ -61,15 +58,15 @@ impl From<MetadataSummary> for UpdateMetadataRequest {
             metadata_purpose: resource.metadata_purpose.clone(),
             metadata_source: resource.metadata_source.clone(),
             metadata_authority: resource.metadata_authority.clone(),
-            public_opinion_projects: resource.public_opinion_projects.clone(),
-            public_survey_projects: resource.public_survey_projects.clone(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct MetadataSummary {
+// #[api_model(base = "/metadatas/v2", read_action = [get_resource] , table = resource, iter_type=QueryResponse)]
+pub struct ResourceMetadata {
+    // #[api_model(summary, primary_key)]
     pub id: String,
     pub name: String,
     pub urls: Vec<String>,
@@ -79,9 +76,35 @@ pub struct MetadataSummary {
     pub metadata_source: Option<MetadataSource>,
     pub metadata_authority: Option<MetadataAuthority>,
 
-    pub public_opinion_projects: Option<Vec<PublicOpinion>>,
-    pub public_survey_projects: Option<Vec<PublicSurvey>>,
+    // #[api_model(summary, auto = [insert])]
+    pub created_at: i64,
+    // #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
+}
+
+impl ResourceMetadata {
+    pub fn new(
+        name: String,
+        urls: Vec<String>,
+        metadata_type: Option<MetadataType>,
+        metadata_field: Option<Field>,
+        metadata_purpose: Option<MetadataPurpose>,
+        metadata_source: Option<MetadataSource>,
+        metadata_authority: Option<MetadataAuthority>,
+    ) -> Self {
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            name,
+            urls,
+            metadata_type,
+            metadata_field,
+            metadata_purpose,
+            metadata_source,
+            metadata_authority,
+            created_at: chrono::Utc::now().timestamp(),
+            updated_at: chrono::Utc::now().timestamp(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
