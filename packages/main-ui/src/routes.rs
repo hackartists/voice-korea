@@ -12,7 +12,6 @@ use crate::pages::id::select_response::SelectResponsePage;
 use crate::pages::id::survey_summary::SurveySummaryPage;
 use crate::pages::id::write_question::WriteQuestionPage;
 use crate::pages::id::write_title::WriteTitlePage;
-use crate::pages::login::LoginPage;
 use crate::pages::members::_id::page::MemberDetailPage;
 use crate::pages::members::page::MemberPage;
 use crate::pages::opinions::new::page::OpinionCreatePage;
@@ -22,6 +21,7 @@ use crate::pages::reset_password::ResetPasswordPage;
 use crate::pages::resources::page::ResourcePage;
 use crate::pages::surveys::new::page::SurveyCreatePage;
 use crate::pages::surveys::page::SurveyPage;
+use crate::pages::*;
 use crate::prelude::*;
 use dioxus_translate::Language;
 
