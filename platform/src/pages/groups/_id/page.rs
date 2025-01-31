@@ -4,9 +4,10 @@ use super::i18n::GroupDetailTranslate;
 use dioxus::prelude::*;
 use dioxus_translate::translate;
 use dioxus_translate::Language;
-use models::prelude::{GroupMemberResponse, TeamMemberRequest};
+use models::prelude::{GroupInfo, GroupMemberResponse, TeamMemberRequest};
 
 use crate::components::icons::Plus;
+use crate::models::role_field::RoleField;
 use crate::pages::groups::_id::i18n::{
     AddDetailMemberModalTranslate, RemoveDetailGroupMemberModalTranslate,
     RemoveDetailGroupModalTranslate, RemoveDetailProjectModalTranslate,
@@ -115,7 +116,7 @@ pub struct AddMemberTranslate {
 #[component]
 pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
     let popup: PopupService = use_context();
-    let ctrl = Controller::init(props.lang, popup, props.group_id.clone());
+    let mut ctrl = Controller::init(props.lang, popup, props.group_id.clone());
     let group = ctrl.get_group();
     let total_groups = ctrl.get_groups();
     let total_roles = ctrl.get_roles();
@@ -127,6 +128,7 @@ pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
 
     let group_name = group.group.clone();
     let group_name_copy = group_name.clone();
+    let group_name_copy2 = group_name.clone();
 
     let translates: GroupDetailTranslate = translate(&props.lang);
 
@@ -206,8 +208,15 @@ pub fn GroupDetailPage(props: GroupDetailPageProps) -> Element {
                     },
                     onadd: move |_e: MouseEvent| {
                         let group_id = group_id_copy3.clone();
+                        let group_name = group_name_copy2.clone();
                         async move {
-                            ctrl.open_add_member_modal(props.lang, group_id.clone()).await;
+                            ctrl.open_add_member_modal(props.lang, group_id.clone(), group_name.clone())
+                                .await;
+                        }
+                    },
+                    onupdate: move |(index, role): (usize, String)| {
+                        async move {
+                            ctrl.update_role(index, role).await;
                         }
                     },
                     onremove: move |member_id: String| {
@@ -360,6 +369,8 @@ pub fn GroupCommonProject(
                                             label_name: project.panels[0].clone(),
                                             label_color: "bg-[#35343f]",
                                             is_delete: false,
+                                            //FIXME: implement onremove logic
+                                            onremove: move |_| {},
                                         }
                                     }
                                     Expand { width: "18", height: "18" }
@@ -407,9 +418,10 @@ pub fn GroupCommonProject(
 pub fn GroupParticipant(
     members: Vec<GroupMemberResponse>,
     total_groups: Vec<String>,
-    total_roles: Vec<String>,
+    total_roles: Vec<RoleField>,
     onadd: EventHandler<MouseEvent>,
     onremove: EventHandler<String>,
+    onupdate: EventHandler<(usize, String)>,
     group_name: String,
     i18n: GroupParticipantTranslate,
 ) -> Element {
@@ -492,7 +504,7 @@ pub fn GroupParticipant(
                         }
                         div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center gap-[10px]" }
                     }
-                    for member in members {
+                    for (index , member) in members.iter().enumerate() {
                         div { class: "flex flex-col w-full justify-start items-start",
                             div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
                             div { class: "flex flex-row w-full h-[55px] justify-start items-center text-[#3a3a3a] font-medium text-[14px]",
@@ -508,23 +520,8 @@ pub fn GroupParticipant(
                                     }
                                 }
                                 div { class: "flex flex-row w-[310px] min-w-[310px] h-full justify-center items-center gap-[10px]",
-                                    select {
-                                        class: "bg-transparent focus:outline-none",
-                                        value: group_name.clone(),
-                                        //TODO: update member group
-                                        onchange: |_evt| {},
-                                        option {
-                                            value: "",
-                                            selected: group_name.clone() == "".to_string(),
-                                            {i18n.no_group.clone()}
-                                        }
-                                        for group in total_groups.clone() {
-                                            option {
-                                                value: group.clone(),
-                                                selected: group_name.clone() == group,
-                                                "{group}"
-                                            }
-                                        }
+                                    div { class: "text-[14px] font-normal text-[#7c8292]",
+                                        {member.group_name.clone()}
                                     }
                                 }
                                 div { class: "flex flex-row w-[310px] min-w-[310px] h-full justify-center items-center gap-[10px]",
@@ -532,17 +529,21 @@ pub fn GroupParticipant(
                                         class: "bg-transparent focus:outline-none",
                                         value: member.role_name.clone(),
                                         //TODO: update member role
-                                        onchange: |_evt| {},
+                                        onchange: move |e: Event<FormData>| {
+                                            onupdate.call((index, e.value()));
+                                        },
                                         option {
                                             value: "",
+                                            disabled: true,
                                             selected: member.role_name.is_none(),
                                             {i18n.no_role.clone()}
                                         }
                                         for role in total_roles.clone() {
                                             option {
-                                                value: role.clone(),
-                                                selected: !member.role_name.is_none() && member.role_name.clone().unwrap_or_default() == role,
-                                                "{role}"
+                                                value: role.db_name.clone(),
+                                                selected: !member.role_name.is_none()
+                                                    && member.role_name.clone().unwrap_or_default() == role.db_name,
+                                                "{role.field}"
                                             }
                                         }
                                     }
@@ -574,7 +575,7 @@ pub fn GroupParticipant(
                                             li {
                                                 class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
                                                 onclick: {
-                                                    let member_id = member.org_member_id.clone();
+                                                    let member_id = member.id.clone();
                                                     move |_| {
                                                         onremove.call(member_id.clone());
                                                     }
@@ -643,7 +644,9 @@ pub fn RemoveMemberModal(
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
                 div {
                     class: "flex flex-row w-[85px] h-[40px] justify-center items-center bg-[#2a60d3] rounded-md cursor-pointer",
-                    onclick: move |_| {},
+                    onclick: move |e: MouseEvent| {
+                        onremove.call(e);
+                    },
                     div { class: "text-white font-bold text-[16px]", "{i18n.remove}" }
                 }
                 div {
@@ -743,7 +746,9 @@ pub fn RemoveGroupModal(
 #[component]
 pub fn AddMemberModal(
     lang: Language,
-    roles: Vec<String>,
+    group_id: String,
+    group_name: String,
+    roles: Vec<RoleField>,
     onclose: EventHandler<MouseEvent>,
     onadd: EventHandler<TeamMemberRequest>,
 ) -> Element {
@@ -809,14 +814,13 @@ pub fn AddMemberModal(
                                 value: "",
                                 disabled: true,
                                 selected: select_role() == "",
-                                hidden: select_role() != "",
                                 {i18n.select_role}
                             }
                             for role in roles.clone() {
                                 option {
-                                    value: role.clone(),
-                                    selected: role == select_role(),
-                                    "{role}"
+                                    value: role.db_name.clone(),
+                                    selected: role.db_name == select_role(),
+                                    "{role.field}"
                                 }
                             }
                         }
@@ -849,15 +853,21 @@ pub fn AddMemberModal(
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
                 div {
                     class: "flex flex-row w-[120px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px] cursor-pointer",
-                    //FIXME: fix to member id, group field hardcoding
-                    onclick: move |_| {
-                        onadd
-                            .call(TeamMemberRequest {
-                                email: email(),
-                                name: if name() != "" { Some(name()) } else { None },
-                                role: if select_role() != "" { Some(select_role()) } else { None },
-                                group: None,
-                            });
+                    onclick: {
+                        let group_id = group_id.clone();
+                        let group_name = group_name.clone();
+                        move |_| {
+                            onadd
+                                .call(TeamMemberRequest {
+                                    email: email(),
+                                    name: if name() != "" { Some(name()) } else { None },
+                                    role: if select_role() != "" { Some(select_role()) } else { None },
+                                    group: Some(GroupInfo {
+                                        id: group_id.clone(),
+                                        name: group_name.clone(),
+                                    }),
+                                });
+                        }
                     },
                     AddUser { width: "24", height: "24" }
                     div { class: "text-white font-bold text-[16px]", {i18n.invite} }

@@ -40,8 +40,8 @@ jobs:
       
       - name: Install dependencies
         run: |
-          cargo binstall dioxus-cli --version 0.6.1
-          cargo binstall toml-cli 
+          cargo install dioxus-cli --version 0.6.1
+          cargo install toml-cli 
           npm install -g aws-cdk tailwindcss@3
 
       - name: Deploy APIs

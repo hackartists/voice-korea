@@ -6,6 +6,7 @@ use dioxus_logger::tracing;
 use dioxus_translate::translate;
 use dioxus_translate::Language;
 use models::prelude::GroupInfo;
+use models::prelude::GroupResponse;
 use models::prelude::InviteMemberRequest;
 use models::prelude::Role;
 
@@ -182,8 +183,7 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                             //TODO: update member group
                                             onchange: move |e: Event<FormData>| {
                                                 spawn(async move {
-                                                    tracing::debug!("select_group: {}", e.value());
-                                                    ctrl.update_group(index, e.value()).await;
+                                                    ctrl.update_group(index, e.value().parse::<usize>().unwrap()).await;
                                                 });
                                             },
                                             option {
@@ -192,11 +192,11 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                                 selected: members[index].clone().group == "",
                                                 {translates.no_group}
                                             }
-                                            for group in groups.clone() {
+                                            for (i , group) in groups.clone().iter().enumerate() {
                                                 option {
-                                                    value: group.clone(),
-                                                    selected: group == members[index].group,
-                                                    "{group}"
+                                                    value: i.to_string(),
+                                                    selected: group.name == members[index].group,
+                                                    "{group.name}"
                                                 }
                                             }
                                         }
@@ -243,6 +243,8 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                                 label_name: members[index].projects[0].clone(),
                                                 label_color: "bg-[#35343f]",
                                                 is_delete: false,
+                                                //FIXME: implement onremove logic
+                                                onremove: move |_| {},
                                             }
                                         } else {
                                             if members.len() != 0 {
@@ -253,6 +255,8 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                                                 Label {
                                                                     label_name: project,
                                                                     label_color: "bg-[#35343f]",
+                                                                    //FIXME: implement onremove logic
+                                                                    onremove: move |_| {},
                                                                 }
                                                             }
                                                         }
@@ -282,6 +286,8 @@ pub fn MemberPage(props: MemberPageProps) -> Element {
                                                                     Label {
                                                                         label_name: project,
                                                                         label_color: "bg-[#35343f]",
+                                                                        //FIXME: implement onremove logic
+                                                                        onremove: move |_| {},
                                                                     }
                                                                 }
                                                             }
@@ -384,7 +390,7 @@ pub fn RemoveMemberModal(
 #[component]
 pub fn AddMemberModal(
     lang: Language,
-    groups: Vec<String>,
+    groups: Vec<GroupResponse>,
     roles: Vec<RoleField>,
     onclose: EventHandler<MouseEvent>,
     invite_member: EventHandler<InviteMemberRequest>,
@@ -395,7 +401,7 @@ pub fn AddMemberModal(
     let mut name = use_signal(|| "".to_string());
 
     let mut select_role = use_signal(|| "".to_string());
-    let mut select_group = use_signal(|| "".to_string());
+    let mut select_group: Signal<GroupInfo> = use_signal(|| GroupInfo::default());
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -463,17 +469,27 @@ pub fn AddMemberModal(
                         }
                         select {
                             class: "flex flex-row w-full h-[45px] bg-[#f7f7f7] rounded-sm focus:outline-none focus:border focus:border-[#2a60d3] focus:bg-white px-[15px] items-center mb-[5px] text-[#222222]",
-                            value: select_group(),
+                            value: select_group().id,
                             //TODO: update member group
                             onchange: move |evt| {
-                                select_group.set(evt.value());
+                                let value = evt.value();
+                                let parts: Vec<&str> = value.split('|').collect();
+                                if parts.len() == 2 {
+                                    let id = parts[0].to_string();
+                                    let name = parts[1].to_string();
+                                    select_group.set(GroupInfo { id, name });
+                                }
                             },
-                            option { value: "", selected: select_group() == "", {i18n.select_group} }
+                            option {
+                                value: "|",
+                                selected: select_group().name == "",
+                                {i18n.select_group}
+                            }
                             for group in groups.clone() {
                                 option {
-                                    value: group.clone(),
-                                    selected: group == select_group(),
-                                    "{group}"
+                                    value: format!("{}|{}", group.id, group.name),
+                                    selected: group.id == select_group().id,
+                                    "{group.name}"
                                 }
                             }
                         }
@@ -504,30 +520,29 @@ pub fn AddMemberModal(
             div { class: "flex flex-row w-full justify-start items-start mt-[40px] gap-[20px]",
                 div {
                     class: "flex flex-row w-[120px] h-[40px] bg-[#2a60d3] rounded-md px-[14px] py-[8px] gap-[5px] cursor-pointer",
-                    //FIXME: fix to real group id
                     onclick: move |_| async move {
                         invite_member
                             .call(InviteMemberRequest {
                                 email: email(),
                                 name: name(),
-                                group: if select_group().is_empty() {
+                                group: if select_group().name == "" {
                                     None
                                 } else {
                                     Some(GroupInfo {
-                                        id: "group_id".to_string(),
-                                        name: select_group(),
+                                        id: select_group().id,
+                                        name: select_group().name,
                                     })
                                 },
                                 role: if select_role().is_empty() {
                                     None
                                 } else {
-                                    if select_role() == "관리자" {
+                                    if select_role() == i18n.manager {
                                         Some(Role::Admin)
-                                    } else if select_role() == "공론 관리자" {
+                                    } else if select_role() == i18n.public_opinion_manager {
                                         Some(Role::PublicAdmin)
-                                    } else if select_role() == "분석가" {
+                                    } else if select_role() == i18n.analyst {
                                         Some(Role::Analyst)
-                                    } else if select_role() == "중계자" {
+                                    } else if select_role() == i18n.repeater {
                                         Some(Role::Mediator)
                                     } else {
                                         Some(Role::Speaker)

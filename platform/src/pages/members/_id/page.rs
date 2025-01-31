@@ -2,9 +2,10 @@
 use super::controller::{Controller, ProjectHistory, ProjectStatus, ProjectType};
 use super::i18n::MemberDetailTranslate;
 use dioxus::prelude::*;
+use dioxus_logger::tracing;
 use dioxus_translate::translate;
 use dioxus_translate::Language;
-use models::prelude::UpdateMemberRequest;
+use models::prelude::{Group, GroupInfo, GroupResponse, UpdateMemberRequest};
 
 use crate::models::role_field::RoleField;
 use crate::pages::members::_id::i18n::{
@@ -303,6 +304,8 @@ pub fn ProfileHistory(
                                             label_name: history.panel[0].clone(),
                                             label_color: "bg-[#35343f]",
                                             is_delete: false,
+                                            //FIXME: implement onremove logic
+                                            onremove: move |_| {},
                                         }
                                     }
                                     Expand { width: "18", height: "18" }
@@ -370,11 +373,11 @@ pub fn ProfileHistory(
 pub fn ProfileInfo(
     profile_image: Option<String>,
     profile_name: Option<String>,
-    group: String,
+    group: Group,
     role: String,
     email_address: String,
 
-    total_groups: Vec<String>,
+    total_groups: Vec<GroupResponse>,
     total_roles: Vec<RoleField>,
 
     update_member: EventHandler<UpdateMemberRequest>,
@@ -382,14 +385,17 @@ pub fn ProfileInfo(
     i18n: ProfileInfoTranslate,
 ) -> Element {
     let mut name = use_signal(|| "".to_string());
-    let mut select_group = use_signal(|| "".to_string());
+    let mut select_group: Signal<GroupInfo> = use_signal(|| GroupInfo::default());
     let mut select_role = use_signal(|| "".to_string());
 
     use_effect(use_reactive(
         (&profile_name, &group, &role),
         move |(profile_name, group, role)| {
             name.set(profile_name.unwrap_or_default());
-            select_group.set(group);
+            select_group.set(GroupInfo {
+                id: group.id.clone(),
+                name: group.name.clone(),
+            });
             select_role.set(role);
         },
     ));
@@ -420,16 +426,30 @@ pub fn ProfileInfo(
                         div { class: "mb-[8px]", "{i18n.group}" }
                         select {
                             class: "flex flex-row w-[214px] h-[40px] bg-[#f7f7f7] rounded-lg focus:outline-none px-[16px] py-[8px] text-[#3a3a3a]",
-                            value: select_group,
+                            value: format!("{}|{}", select_group().id, select_group().name),
                             onchange: move |evt| {
-                                select_group.set(evt.value());
+                                let value = evt.value();
+                                let parts: Vec<&str> = value.split('|').collect();
+                                if parts.len() == 2 {
+                                    let id = parts[0].to_string();
+                                    let name = parts[1].to_string();
+                                    select_group.set(GroupInfo { id, name });
+                                    tracing::debug!(
+                                        "selected group: {:?} {:?}", select_group().id, select_group().name
+                                    );
+                                }
                             },
-                            option { value: "", selected: select_group() == "", {i18n.no_group} }
-                            for group in total_groups {
+                            option {
+                                value: "|",
+                                disabled: true,
+                                selected: select_group().id == "",
+                                {i18n.no_group}
+                            }
+                            for group in total_groups.clone() {
                                 option {
-                                    value: group.clone(),
-                                    selected: group == select_group(),
-                                    "{group}"
+                                    value: format!("{}|{}", group.id, group.name),
+                                    selected: group.id == select_group().id,
+                                    "{group.name}"
                                 }
                             }
                         }
@@ -442,7 +462,12 @@ pub fn ProfileInfo(
                             onchange: move |evt| {
                                 select_role.set(evt.value());
                             },
-                            option { value: "", selected: select_role() == "", {i18n.no_role} }
+                            option {
+                                value: "",
+                                disabled: true,
+                                selected: select_role() == "",
+                                {i18n.no_role}
+                            }
                             for role in total_roles {
                                 option {
                                     value: role.db_name.clone(),
@@ -465,7 +490,7 @@ pub fn ProfileInfo(
                                 update_member
                                     .call(UpdateMemberRequest {
                                         name: Some(name()),
-                                        group: None,
+                                        group: if select_group().id == "" { None } else { Some(select_group()) },
                                         role: if select_role() == "" { None } else { Some(select_role()) },
                                     });
                             },
