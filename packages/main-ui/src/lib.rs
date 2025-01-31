@@ -7,6 +7,7 @@ pub mod prelude {
     pub use dioxus::document::eval;
 }
 
+pub mod config;
 pub mod pages;
 
 pub mod service {

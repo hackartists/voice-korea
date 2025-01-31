@@ -35,12 +35,7 @@ pub struct ResetRequest {
 impl UserApi {
     pub fn init() {
         let srv = Self {
-            endpoint: use_signal(|| {
-                format!(
-                    "{}",
-                    option_env!("API_URL").unwrap_or("https://voice-korea-api.dev.biyard.co")
-                )
-            }),
+            endpoint: use_signal(|| crate::config::get().api_url.to_string()),
         };
         use_context_provider(|| srv);
     }

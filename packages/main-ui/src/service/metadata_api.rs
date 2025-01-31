@@ -24,12 +24,7 @@ impl ResourceApi {
         let login_service: LoginService = use_context();
         let organization_service: OrganizationApi = use_context();
         let srv = Self {
-            endpoint: use_signal(|| {
-                format!(
-                    "{}",
-                    option_env!("API_URL").unwrap_or("https://voice-korea-api.dev.biyard.co")
-                )
-            }),
+            endpoint: use_signal(|| crate::config::get().api_url.to_string()),
             login_service,
             organization_service,
         };

@@ -3062,6 +3062,7 @@ dependencies = [
  "aws-sdk-sesv2",
  "axum 0.7.9",
  "by-components",
+ "by-types",
  "chrono",
  "dioxus",
  "dioxus-aws",
