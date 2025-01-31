@@ -9,10 +9,7 @@ use by_axum::{
 };
 use slog::o;
 
-use crate::{
-    common::CommonQueryResponse, 
-    middleware::auth::authorization_middleware,
-};
+use crate::{common::CommonQueryResponse, middleware::auth::authorization_middleware};
 
 use models::prelude::*;
 
@@ -101,22 +98,20 @@ impl AttributeControllerV1 {
             attribute_id
         );
 
-        Ok(Json(
-            AttributeResponse {
-                id: "1".to_string(),
-                name: "name".to_string(),
-                attribute: vec![
-                    AttributeItemResponse {
-                        id: "1".to_string(),
-                        name: "속성1".to_string(),
-                    },
-                    AttributeItemResponse {
-                        id: "2".to_string(),
-                        name: "속성2".to_string(),
-                    },
-                ],
-            }
-        ))
+        Ok(Json(AttributeResponse {
+            id: "1".to_string(),
+            name: "name".to_string(),
+            attribute: vec![
+                AttributeItemResponse {
+                    id: "1".to_string(),
+                    name: "속성1".to_string(),
+                },
+                AttributeItemResponse {
+                    id: "2".to_string(),
+                    name: "속성2".to_string(),
+                },
+            ],
+        }))
     }
 
     pub async fn list_attributes(
@@ -179,21 +174,15 @@ impl AttributeControllerV1 {
         slog::debug!(log, "create_attribute {:?} {:?}", organization_id, body);
         let cli = easy_dynamodb::get_client(&log);
 
-        let attribute = Attribute::new(
-            organization_id.to_string(),
-            body.name,
-        );
+        let attribute = Attribute::new(organization_id.to_string(), body.name);
 
         let _ = cli
             .upsert(&attribute)
             .await
             .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
 
-        for item in body.attribute_item {
-            let attribute_item = AttributeItem::new(
-                attribute.id.clone(),
-                item.name,
-            );
+        for item in body.attribute_items {
+            let attribute_item = AttributeItem::new(attribute.id.clone(), item.name);
 
             let _ = cli
                 .upsert(&attribute_item)
