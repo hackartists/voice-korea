@@ -80,6 +80,7 @@ pub struct ResourceMetadata {
     pub created_at: i64,
     // #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
+    pub deleted_at: Option<i64>,
 }
 
 impl ResourceMetadata {
@@ -103,6 +104,7 @@ impl ResourceMetadata {
             metadata_authority,
             created_at: chrono::Utc::now().timestamp(),
             updated_at: chrono::Utc::now().timestamp(),
+            deleted_at: None,
         }
     }
 }

@@ -115,6 +115,7 @@ impl MetadataControllerV1 {
             metadata_authority: Some(MetadataAuthority::Public),
             created_at: 1759276800,
             updated_at: 1759276800,
+            deleted_at: None,
         }))
     }
 
