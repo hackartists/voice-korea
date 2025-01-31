@@ -18,6 +18,7 @@ by-macros = { path = "deps/rust-sdk/packages/by-macros" }
 by-types = { path = "deps/rust-sdk/packages/by-types" }
 dioxus-translate = { path = "deps/rust-sdk/packages/dioxus-translate", features = ["ko"] }
 dioxus-aws = { path = "deps/rust-sdk/packages/dioxus-aws" }
+rest-api = { path = "deps/rust-sdk/packages/rest-api" }
 
 models = { version = "1.0.0", path = "packages/models" }
 slog = "2.7.0"

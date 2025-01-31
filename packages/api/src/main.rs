@@ -11,15 +11,15 @@ mod controllers {
     pub mod verification {
         pub mod v1;
     }
-    pub mod members {
-        pub mod v1;
-    }
+    // pub mod members {
+    //     pub mod v1;
+    // }
     pub mod organizations {
         pub mod v1;
     }
-    pub mod groups {
-        pub mod v1;
-    }
+    // pub mod groups {
+    //     pub mod v1;
+    // }
     pub mod attributes {
         pub mod v1;
     }
@@ -92,18 +92,18 @@ async fn main() {
             "/verification/v1",
             controllers::verification::v1::VerificationControllerV1::router(),
         )
-        .nest(
-            "/members/v1",
-            controllers::members::v1::MemberControllerV1::router(),
-        )
+        // .nest(
+        //     "/members/v1",
+        //     controllers::members::v1::MemberControllerV1::router(),
+        // )
         .nest(
             "/organizations/v1",
             controllers::organizations::v1::OrganizationControllerV1::router(),
         )
-        .nest(
-            "/groups/v1",
-            controllers::groups::v1::GroupControllerV1::router(),
-        )
+        // .nest(
+        //     "/groups/v1",
+        //     controllers::groups::v1::GroupControllerV1::router(),
+        // )
         .nest(
             "/attributes/v1",
             controllers::attributes::v1::AttributeControllerV1::router(),
@@ -137,34 +137,10 @@ async fn main() {
         .nest("/survey/v1", controllers::survey::v1::AxumState::router()) // FIXME: deprecated
         .nest("/survey/m1", controllers::survey::m1::AxumState::router()); // FIXME: deprecated
 
-    #[cfg(feature = "reload")]
-    {
-        use listenfd::ListenFd;
-        let mut listenfd = ListenFd::from_env();
-        let listener = match listenfd.take_tcp_listener(0).unwrap() {
-            Some(listener) => {
-                listener.set_nonblocking(true).unwrap();
-                TcpListener::from_std(listener).unwrap()
-            }
-            None => {
-                eprintln!("LISTENFD ERROR");
-                return;
-            }
-        };
-        slog::info!(
-            log,
-            "[AUTO-RELOAD] listening on {}",
-            listener.local_addr().unwrap()
-        );
-        by_axum::serve(listener, app).await.unwrap();
-    }
-    #[cfg(not(feature = "reload"))]
-    {
-        let port = option_env!("PORT").unwrap_or("3000");
-        let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
-            .await
-            .unwrap();
-        slog::info!(log, "listening on {}", listener.local_addr().unwrap());
-        by_axum::serve(listener, app).await.unwrap();
-    }
+    let port = option_env!("PORT").unwrap_or("3000");
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
+        .await
+        .unwrap();
+    slog::info!(log, "listening on {}", listener.local_addr().unwrap());
+    by_axum::serve(listener, app).await.unwrap();
 }

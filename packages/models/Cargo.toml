@@ -6,10 +6,17 @@ description.workspace = true
 edition.workspace = true
 
 [dependencies]
-chrono.workspace = true
-serde = { workspace = true, features = ["derive"] }
 dioxus-translate.workspace = true
+by-types.workspace = true
 by-macros.workspace = true
+by-axum = { workspace = true, optional = true }
+rest-api.workspace = true
+
+chrono.workspace = true
+reqwest.workspace = true
+sqlx = { workspace = true, optional = true }
+
+serde = { workspace = true, features = ["derive"] }
 schemars = "0.8.21"
 thiserror = "2.0.11"
 serde_json.workspace = true
@@ -17,9 +24,8 @@ uuid = { version = "1.12.1", features = ["v4"] }
 serde_urlencoded = "0.7.1"
 
 # Server dependencies
-sqlx = { workspace = true, optional = true }
-by-axum = { workspace = true, optional = true }
+tracing = "0.1.41"
 
 [features]
 web = ["dioxus-translate/web"]
-server = ["by-axum", "by-macros/server"]
+server = ["by-axum", "by-macros/server", "by-types/server", "sqlx"]

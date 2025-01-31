@@ -8,14 +8,21 @@ use by_axum::{
     },
 };
 #[cfg(feature = "server")]
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
 use serde_json::json;
 use thiserror::Error;
-#[cfg(feature = "server")]
-use schemars::JsonSchema;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Serialize, PartialEq, Eq, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum ApiError {
+    #[error("Api call error: {0}")]
+    ApiCallError(String),
+
+    #[error("Database query error: {0}")]
+    DatabaseQueryError(String),
+
     #[error("Not Found")]
     NotFound,
 
@@ -81,6 +88,27 @@ pub enum ApiError {
     OrganizationNotFound,
 }
 
+impl std::str::FromStr for ApiError {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Ok(ApiError::ApiCallError(s.to_string()))
+    }
+}
+
+impl From<reqwest::Error> for ApiError {
+    fn from(e: reqwest::Error) -> Self {
+        ApiError::ApiCallError(e.to_string())
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<sqlx::Error> for ApiError {
+    fn from(e: sqlx::Error) -> Self {
+        ApiError::DatabaseQueryError(e.to_string())
+    }
+}
+
 #[cfg(feature = "server")]
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
@@ -105,6 +133,7 @@ impl IntoResponse for ApiError {
             ApiError::AlreadyExists => StatusCode::ALREADY_REPORTED,
             ApiError::InvalidPermissions => StatusCode::FORBIDDEN,
             ApiError::OrganizationNotFound => StatusCode::INTERNAL_SERVER_ERROR,
+            _ => StatusCode::BAD_REQUEST,
         };
 
         let error_id = uuid::Uuid::new_v4();

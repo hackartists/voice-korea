@@ -1,9 +1,14 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+use crate::Result;
+#[cfg(feature = "server")]
+use by_axum::aide;
+use by_macros::api_model;
+use by_types::QueryResponse;
+
+#[api_model(base = "/auth/v1", read_action = user_info, table = users, iter_type=QueryResponse)]
 pub struct User {
-    pub r#type: String,
     pub id: String,
     pub gsi1: String, // id#email
     pub email: String,
@@ -17,7 +22,6 @@ const VERIFICATION_EXIPIRED_TIME: i64 = 60 * 5;
 impl User {
     pub fn new(id: String, email: String, hashed_pw: String) -> Self {
         Self {
-            r#type: "user".to_string(),
             id,
             gsi1: User::gsi1(email.clone()),
             email,
