@@ -97,3 +97,32 @@ translate! {
         en: "Cancel",
     },
 }
+
+translate! {
+    InputIntroductionTranslate;
+
+    necessary_info: {
+        ko: "조사 필수 정보",
+        en: "Survey essential information"
+    }
+    input_introduction: {
+        ko: "소개글 입력",
+        en: "Input introduction"
+    }
+    introduction_description: {
+        ko: "질문의 주제와 목적에 대해 설명해주세요. 참여자들이 더 쉽게 이해하고 적극적으로 참여할 수 있을 것입니다.",
+        en: "Please explain the topic and purpose of your question. Participants will be able to understand more easily and participate actively."
+    }
+    select_field: {
+        ko: "분야 선택",
+        en: "Select Field"
+    }
+    input_title_hint: {
+        ko: "제목을 입력해주세요",
+        en: "Please enter a title"
+    }
+    input_description_hint: {
+        ko: "내용을 입력해주세요",
+        en: "Please enter a description"
+    }
+}
