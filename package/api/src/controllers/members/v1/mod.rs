@@ -11,7 +11,7 @@ use easy_dynamodb::error::DynamoException;
 use slog::o;
 
 use crate::{
-    common::CommonQueryResponse, controllers::groups::v1::GroupControllerV1,
+    common::CommonQueryResponse, controllers::auth::v1::find_user_id_by_email,
     middleware::auth::authorization_middleware,
 };
 

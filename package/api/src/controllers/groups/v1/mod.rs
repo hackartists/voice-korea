@@ -352,11 +352,77 @@ impl GroupControllerV1 {
 
         if res.items.len() == 0 {
             //group member not exists
-            let group_member = GroupMember::new(group_id, member.id.clone());
+            let id = uuid::Uuid::new_v4().to_string();
+            let group_member = GroupMember::new(id, group_id, member.id.clone());
 
-            cli.upsert(group_member.clone())
-                .await
-                .map_err(|e| ApiError::DynamoCreateException(e.to_string()))?;
+            match cli.upsert(group_member.clone()).await {
+                Ok(()) => {
+                    let _ = cli
+                        .update(
+                            &member.id,
+                            vec![
+                                ("group", UpdateField::String(group_name)),
+                                ("updated_at", UpdateField::I64(now)),
+                            ],
+                        )
+                        .await
+                        .map_err(|e| ApiError::DynamoUpdateException(e.to_string()));
+                    return Ok(());
+                }
+                Err(e) => {
+                    slog::error!(log, "Create Group Member Failed {e:?}");
+                    return Err(ApiError::DynamoCreateException(e.to_string()));
+                }
+            }
+        } else {
+            //group member exists
+            let item = res.items.first().unwrap();
+
+            if item.deleted_at.is_some() {
+                let group_member = GroupMember::new(item.id.clone(), group_id, member.id.clone());
+
+                match cli.upsert(group_member.clone()).await {
+                    Ok(()) => {
+                        let _ = cli
+                            .update(
+                                &member.id,
+                                vec![
+                                    ("group", UpdateField::String(group_name)),
+                                    ("updated_at", UpdateField::I64(now)),
+                                ],
+                            )
+                            .await
+                            .map_err(|e| ApiError::DynamoUpdateException(e.to_string()));
+                        return Ok(());
+                    }
+                    Err(e) => {
+                        slog::error!(log, "Create Group Member Failed {e:?}");
+                        return Err(ApiError::DynamoCreateException(e.to_string()));
+                    }
+                }
+            } else {
+                let mut update_data: Vec<(&str, UpdateField)> = vec![];
+                let now = chrono::Utc::now().timestamp_millis();
+                update_data.push((
+                    "gsi1",
+                    UpdateField::String(GroupMember::get_gsi1(&group_id)),
+                ));
+                update_data.push((
+                    "gsi2",
+                    UpdateField::String(GroupMember::get_gsi2(&member.id)),
+                ));
+                update_data.push(("group_id", UpdateField::String(group_id)));
+                update_data.push(("org_member_id", UpdateField::String(member.id.clone())));
+                update_data.push((
+                    "user_name",
+                    UpdateField::String(member.name.unwrap_or_default()),
+                ));
+                update_data.push(("user_email", UpdateField::String(user.email)));
+                update_data.push(("updated_at", UpdateField::I64(now)));
+
+                cli.update(&item.id, update_data)
+                    .await
+                    .map_err(|e| ApiError::DynamoUpdateException(e.to_string()))?;
         }
         Ok(())
     }
@@ -648,7 +714,8 @@ impl GroupControllerV1 {
                             return Err(ApiError::NotFound);
                         }
                     };
-                    Self::upsert_group_member(id.clone(), member_id).await?;
+                    self.upsert_group_member(self.clone(), id.clone(), req.name.clone(), member_id)
+                        .await?;
                 }
 
                 return Ok(());

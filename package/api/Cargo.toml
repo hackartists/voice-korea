@@ -24,10 +24,12 @@ reqwest = { workspace = true, features = ["json"] }
 
 easy-dynamodb.workspace = true
 slog.workspace = true
-models = { workspace = true, features = [ "server" ] }
+models = { workspace = true, features = ["server"] }
 by-axum.workspace = true
 futures = "0.3.31"
 schemars = "0.8.21"
+sqlx.workspace = true
+by-types.workspace = true
 
 [features]
 default = []

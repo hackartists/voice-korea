@@ -3,8 +3,8 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::Language;
 use models::prelude::{
-    CreateMetadataRequest, Field, MetadataAuthority, MetadataPurpose, MetadataSource,
-    MetadataSummary, MetadataType, UpdateMetadataRequest,
+    CreateMetadataRequest, Field, MetadataAuthority, MetadataPurpose, MetadataSource, MetadataType,
+    ResourceMetadata, UpdateMetadataRequest,
 };
 
 use crate::{
@@ -52,7 +52,7 @@ pub struct SelectMetadataAuthority {
 pub struct Controller {
     popup_service: Signal<PopupService>,
     translate: Signal<ResourceTranslate>,
-    resources: Signal<Vec<MetadataSummary>>,
+    resources: Signal<Vec<ResourceMetadata>>,
 
     total_types: Signal<Vec<String>>,
     total_fields: Signal<Vec<String>>,
@@ -61,7 +61,7 @@ pub struct Controller {
     total_authorities: Signal<Vec<String>>,
 
     resource_api: ResourceApi,
-    metadata_resource: Resource<Result<CommonQueryResponse<MetadataSummary>, ServerFnError>>,
+    metadata_resource: Resource<Result<CommonQueryResponse<ResourceMetadata>, ServerFnError>>,
 }
 
 impl Controller {
@@ -111,7 +111,7 @@ impl Controller {
         ];
 
         let metadata_resource: Resource<
-            Result<CommonQueryResponse<MetadataSummary>, ServerFnError>,
+            Result<CommonQueryResponse<ResourceMetadata>, ServerFnError>,
         > = use_resource(move || {
             let api = resource_api.clone();
             async move {
@@ -167,7 +167,7 @@ impl Controller {
         (self.total_authorities)()
     }
 
-    pub fn get_resources(&self) -> Vec<MetadataSummary> {
+    pub fn get_resources(&self) -> Vec<ResourceMetadata> {
         (self.resources)()
     }
 
