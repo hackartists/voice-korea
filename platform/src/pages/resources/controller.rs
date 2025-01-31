@@ -3,11 +3,14 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::Language;
 use models::prelude::{
-    Field, MetadataAuthority, MetadataPurpose, MetadataSource, MetadataSummary, MetadataType,
-    PublicOpinion, PublicSurvey,
+    CreateMetadataRequest, Field, MetadataAuthority, MetadataPurpose, MetadataSource,
+    MetadataSummary, MetadataType, UpdateMetadataRequest,
 };
 
-use crate::service::popup_service::PopupService;
+use crate::{
+    api::common::CommonQueryResponse,
+    service::{metadata_api::ResourceApi, popup_service::PopupService},
+};
 use dioxus_translate::translate;
 
 use super::{
@@ -45,7 +48,7 @@ pub struct SelectMetadataAuthority {
     pub name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controller {
     popup_service: Signal<PopupService>,
     translate: Signal<ResourceTranslate>,
@@ -56,10 +59,15 @@ pub struct Controller {
     total_purposes: Signal<Vec<String>>,
     total_resources: Signal<Vec<String>>,
     total_authorities: Signal<Vec<String>>,
+
+    resource_api: ResourceApi,
+    metadata_resource: Resource<Result<CommonQueryResponse<MetadataSummary>, ServerFnError>>,
 }
 
 impl Controller {
     pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
+        let resource_api: ResourceApi = use_context();
+
         let translate: ResourceTranslate = translate(&lang);
         let total_authorities = vec![
             translate.public_material.to_string(),
@@ -101,133 +109,19 @@ impl Controller {
             translate.presentations.to_string(),
             translate.media.to_string(),
         ];
-        //FIXME: fix to api
-        let resources = vec![
-            MetadataSummary {
-                id: "1".to_string(),
-                name: "공론자료제목명".to_string(),
-                urls: vec![
-                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
-                        .to_string(),
-                ],
-                metadata_type: Some(MetadataType::Report),
-                metadata_field: Some(Field::Economy),
-                metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
-                metadata_source: Some(MetadataSource::Internal),
-                metadata_authority: Some(MetadataAuthority::Public),
-                public_opinion_projects: Some(vec![
-                    PublicOpinion {
-                        id: "1".to_string(),
-                        name: "공론명".to_string(),
-                    },
-                    PublicOpinion {
-                        id: "2".to_string(),
-                        name: "공론명2".to_string(),
-                    },
-                    PublicOpinion {
-                        id: "3".to_string(),
-                        name: "공론명3".to_string(),
-                    },
-                ]),
-                public_survey_projects: None,
-                updated_at: 1759276800,
-            },
-            MetadataSummary {
-                id: "2".to_string(),
-                name: "공론자료제목명".to_string(),
-                urls: vec![
-                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
-                        .to_string(),
-                ],
-                metadata_type: Some(MetadataType::Statistics),
-                metadata_field: Some(Field::Society),
-                metadata_purpose: Some(MetadataPurpose::AcademicResearch),
-                metadata_source: Some(MetadataSource::External),
-                metadata_authority: Some(MetadataAuthority::Restricted),
-                public_opinion_projects: None,
-                public_survey_projects: Some(vec![
-                    PublicSurvey {
-                        id: "1".to_string(),
-                        name: "조사명".to_string(),
-                    },
-                    PublicSurvey {
-                        id: "2".to_string(),
-                        name: "조사명2".to_string(),
-                    },
-                    PublicSurvey {
-                        id: "3".to_string(),
-                        name: "조사명3".to_string(),
-                    },
-                ]),
-                updated_at: 1759276800,
-            },
-            MetadataSummary {
-                id: "3".to_string(),
-                name: "공론자료제목명".to_string(),
-                urls: vec![
-                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
-                        .to_string(),
-                ],
-                metadata_type: Some(MetadataType::Statistics),
-                metadata_field: Some(Field::Environment),
-                metadata_purpose: Some(MetadataPurpose::DevelopmentPolicy),
-                metadata_source: Some(MetadataSource::Government),
-                metadata_authority: Some(MetadataAuthority::Private),
-                public_opinion_projects: None,
-                public_survey_projects: None,
-                updated_at: 1759276800,
-            },
-            MetadataSummary {
-                id: "4".to_string(),
-                name: "공론자료제목명".to_string(),
-                urls: vec![
-                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
-                        .to_string(),
-                ],
-                metadata_type: Some(MetadataType::Thesis),
-                metadata_field: Some(Field::Education),
-                metadata_purpose: Some(MetadataPurpose::Education),
-                metadata_source: Some(MetadataSource::Company),
-                metadata_authority: Some(MetadataAuthority::Public),
-                public_opinion_projects: None,
-                public_survey_projects: None,
-                updated_at: 1759276800,
-            },
-            MetadataSummary {
-                id: "5".to_string(),
-                name: "공론자료제목명".to_string(),
-                urls: vec![
-                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
-                        .to_string(),
-                ],
-                metadata_type: Some(MetadataType::Presentation),
-                metadata_field: Some(Field::Technology),
-                metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
-                metadata_source: Some(MetadataSource::Internal),
-                metadata_authority: Some(MetadataAuthority::Public),
-                public_opinion_projects: None,
-                public_survey_projects: None,
-                updated_at: 1759276800,
-            },
-            MetadataSummary {
-                id: "6".to_string(),
-                name: "공론자료제목명".to_string(),
-                urls: vec![
-                    "https://ic-metadata.dev.incheon.world/images/faab803c-b0b9-4ae9-842c-39bdc1ec6fc6.png"
-                        .to_string(),
-                ],
-                metadata_type: Some(MetadataType::Media),
-                metadata_field: Some(Field::Health),
-                metadata_purpose: Some(MetadataPurpose::PublicDiscussion),
-                metadata_source: Some(MetadataSource::Internal),
-                metadata_authority: Some(MetadataAuthority::Public),
-                public_opinion_projects: None,
-                public_survey_projects: None,
-                updated_at: 1759276800,
-            },
-        ];
-        let ctrl = Self {
-            resources: use_signal(|| resources),
+
+        let metadata_resource: Resource<
+            Result<CommonQueryResponse<MetadataSummary>, ServerFnError>,
+        > = use_resource(move || {
+            let api = resource_api.clone();
+            async move {
+                let res = api.list_metadata(Some(100), None).await;
+                res
+            }
+        });
+
+        let mut ctrl = Self {
+            resources: use_signal(|| vec![]),
             popup_service: use_signal(|| popup_service),
             translate: use_signal(|| translate),
 
@@ -236,7 +130,19 @@ impl Controller {
             total_purposes: use_signal(|| total_purposes),
             total_resources: use_signal(|| total_resources),
             total_authorities: use_signal(|| total_authorities),
+
+            resource_api,
+            metadata_resource,
         };
+
+        match metadata_resource.value()() {
+            Some(resource) => {
+                if resource.is_ok() {
+                    ctrl.resources.set(resource.unwrap().items);
+                }
+            }
+            _ => {}
+        }
 
         ctrl
     }
@@ -358,17 +264,35 @@ impl Controller {
     pub fn open_create_material(&self, lang: Language) {
         let mut popup_service = (self.popup_service)().clone();
         let translate = (self.translate)().clone();
+
+        let total_types = self.get_total_types();
+        let total_fields = self.get_total_fields();
+        let total_purposes = self.get_total_purposes();
+        let total_resources = self.get_total_resources();
+        let total_authorities = self.get_total_authorities();
+
+        let api: ResourceApi = self.resource_api;
+        let mut metadata_resource = self.metadata_resource;
+
         popup_service
             .open(rsx! {
                 CreateMaterialModal {
-                    ctrl: *self,
                     lang,
-                    onupload: move |_| {
+                    onupload: move |req: CreateMetadataRequest| async move {
                         tracing::debug!("upload material clicked");
+                        let _ = api.create_metadata(req).await;
+                        metadata_resource.restart();
+                        popup_service.close();
                     },
                     onclose: move |_| {
                         popup_service.close();
                     },
+
+                    total_types,
+                    total_fields,
+                    total_purposes,
+                    total_resources,
+                    total_authorities,
                 }
             })
             .with_id("create material")
@@ -378,13 +302,37 @@ impl Controller {
     pub fn open_update_material(&self, lang: Language, index: usize) {
         let mut popup_service = (self.popup_service)().clone();
         let translate = (self.translate)().clone();
+        let api: ResourceApi = self.resource_api;
+
+        let materials = self.get_resources();
+        let material = materials[index].clone();
+
+        let mut metadata_resource = self.metadata_resource;
         popup_service
             .open(rsx! {
                 UpdateMaterialModal {
                     lang,
-                    onupload: move |_| {
-                        tracing::debug!("update material clicked: {index}");
+                    onupload: move |(name, urls): (String, Vec<String>)| {
+                        let id = material.id.clone();
+                        let req = UpdateMetadataRequest {
+                            name,
+                            urls,
+                            metadata_type: material.metadata_type.clone(),
+                            metadata_field: material.metadata_field.clone(),
+                            metadata_purpose: material.metadata_purpose.clone(),
+                            metadata_source: material.metadata_source.clone(),
+                            metadata_authority: material.metadata_authority.clone(),
+                            public_opinion_projects: material.public_opinion_projects.clone(),
+                            public_survey_projects: material.public_survey_projects.clone(),
+                        };
+                        async move {
+                            tracing::debug!("update material clicked: {index}");
+                            let _ = api.update_metadata(id, req).await;
+                            metadata_resource.restart();
+                            popup_service.close();
+                        }
                     },
+                    initial_title: material.name.clone(),
                     onclose: move |_| {
                         popup_service.close();
                     },
@@ -394,15 +342,39 @@ impl Controller {
             .with_title(translate.update_material_li);
     }
 
+    pub async fn update_metadata(&self, index: usize, req: UpdateMetadataRequest) {
+        tracing::debug!("update metadata: {index} {:?}", req);
+        let api: ResourceApi = self.resource_api;
+
+        let materials = self.get_resources();
+        let material = materials[index].clone();
+        let mut metadata_resource = self.metadata_resource;
+
+        let _ = api.update_metadata(material.id.clone(), req).await;
+        metadata_resource.restart();
+    }
+
     pub fn open_remove_material(&self, lang: Language, index: usize) {
         let mut popup_service = (self.popup_service)().clone();
         let translate = (self.translate)().clone();
+        let api: ResourceApi = self.resource_api;
+        let resources = self.get_resources();
+        let resource_id = resources[index].id.clone();
+
+        let mut metadata_resource = self.metadata_resource;
+
         popup_service
             .open(rsx! {
                 RemoveMaterialModal {
                     lang,
-                    onremove: move |_| {
-                        tracing::debug!("remove material clicked: {index}");
+                    onremove: move |_e: MouseEvent| {
+                        let resource_id = resource_id.clone();
+                        async move {
+                            tracing::debug!("remove resource clicked: {index}");
+                            let _ = api.remove_metadata(resource_id).await;
+                            metadata_resource.restart();
+                            popup_service.close();
+                        }
                     },
                     onclose: move |_| {
                         popup_service.close();

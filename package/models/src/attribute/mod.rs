@@ -1,15 +1,15 @@
-use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 
 pub struct CreateAttributeRequest {
     pub name: String,
-    pub attribute_items: Vec<AttributeItem>,
+    pub attribute_items: Vec<AttributeItemResponse>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
@@ -17,13 +17,14 @@ pub struct CreateAttributeRequest {
 
 pub struct UpdateAttributeRequest {
     pub name: String,
-    pub attribute_items: Vec<AttributeItem>,
+    pub attribute_items: Vec<AttributeItemResponse>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 
-pub struct Attribute { // attributes
+pub struct Attribute {
+    // attributes
     pub id: String,
     pub r#type: String,
     pub gsi1: String, // attribute#organization_id
@@ -37,10 +38,7 @@ pub struct Attribute { // attributes
 }
 
 impl Attribute {
-    pub fn new(
-        organization_id: String,
-        name: String,
-    ) -> Self {
+    pub fn new(organization_id: String, name: String) -> Self {
         let now = chrono::Utc::now().timestamp_millis();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
@@ -84,10 +82,7 @@ pub struct AttributeItem {
 }
 
 impl AttributeItem {
-    pub fn new(
-        attribute_id: String,
-        name: String,
-    ) -> Self {
+    pub fn new(attribute_id: String, name: String) -> Self {
         let now = chrono::Utc::now().timestamp_millis();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
@@ -120,14 +115,14 @@ impl AttributeItem {
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AttributeResponse {
     pub id: String,
-    pub name: String,
+    pub name: Option<String>,
     pub attribute: Vec<AttributeItemResponse>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct AttributeItemResponse {
-    pub id: String,
+    pub id: String, //id가 ""일 경우 내부에서 즉각적인 id 추가
     pub name: String,
 }
 

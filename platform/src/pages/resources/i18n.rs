@@ -3,6 +3,26 @@ use dioxus_translate::translate;
 translate! {
     ResourceTranslate;
 
+    select_type: {
+        ko: "유형 선택",
+        en: "Select Hint"
+    }
+    select_field: {
+        ko: "분야 선택",
+        en: "Select Field"
+    }
+    select_purpose: {
+        ko: "목적 선택",
+        en: "Select Purpose"
+    }
+    select_source: {
+        ko: "출처 선택",
+        en: "Select Source"
+    }
+    select_authority: {
+        ko: "권한 선택",
+        en: "Select Authority"
+    }
     resource_title: {
         ko: "자료 관리",
         en: "Resource Management"

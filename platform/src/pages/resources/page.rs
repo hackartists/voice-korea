@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
+use models::prelude::{CreateMetadataRequest, UpdateMetadataRequest};
 
 use crate::{
     components::{
@@ -36,6 +37,18 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
     let mut is_focused = use_signal(|| false);
     let mut resource_name = use_signal(|| "".to_string());
     let resources = ctrl.get_resources();
+
+    let total_types = ctrl.get_total_types();
+    let total_fields = ctrl.get_total_fields();
+    let total_resources = ctrl.get_total_resources();
+    let total_authorities = ctrl.get_total_authorities();
+    let total_purposes = ctrl.get_total_purposes();
+
+    let mut clicked_resources = use_signal(|| resources.len());
+
+    use_effect(use_reactive(&resources.len(), move |len| {
+        clicked_resources.set(len);
+    }));
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -155,42 +168,154 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                         for (index , resource) in resources.clone().iter().enumerate() {
                             div { class: "flex flex-col w-full justify-start items-start",
                                 div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
-                                div { class: "flex flex-row w-full h-[55px]",
+                                div {
+                                    class: "flex flex-row w-full h-[55px]",
+                                    onclick: move |_| {
+                                        clicked_resources.set(index);
+                                    },
                                     div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_type.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_type(props.lang, resource.metadata_type.clone().unwrap())
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_type = ctrl.metadata_type_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_type.is_none(),
+                                                    "{translate.select_type}"
+                                                }
+                                                for res in total_types.clone() {
+                                                    option {
+                                                        value: res.clone(),
+                                                        selected: res.clone()
+                                                            == ctrl
+                                                                .translate_metadata_type(
+                                                                    props.lang,
+                                                                    resource.metadata_type.clone().unwrap(),
+                                                                ),
+                                                        "{res}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_type.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_type(props.lang, resource.metadata_type.clone().unwrap())
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                     div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_field.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_field(
-                                                        props.lang,
-                                                        resource.metadata_field.clone().unwrap(),
-                                                    )
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_field = ctrl.metadata_field_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_field.is_none(),
+                                                    "{translate.select_field}"
+                                                }
+                                                for field in total_fields.clone() {
+                                                    option {
+                                                        value: field.clone(),
+                                                        selected: field.clone()
+                                                            == ctrl
+                                                                .translate_metadata_field(
+                                                                    props.lang,
+                                                                    resource.metadata_field.clone().unwrap(),
+                                                                ),
+                                                        "{field}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_field.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_field(
+                                                            props.lang,
+                                                            resource.metadata_field.clone().unwrap(),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                     div { class: "flex flex-row w-[180px] min-w-[180px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_purpose.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_purpose(
-                                                        props.lang,
-                                                        resource.metadata_purpose.clone().unwrap(),
-                                                    )
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_purpose = ctrl.metadata_purpose_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_purpose.is_none(),
+                                                    "{translate.select_purpose}"
+                                                }
+                                                for purpose in total_purposes.clone() {
+                                                    option {
+                                                        value: purpose.clone(),
+                                                        selected: purpose.clone()
+                                                            == ctrl
+                                                                .translate_metadata_purpose(
+                                                                    props.lang,
+                                                                    resource.metadata_purpose.clone().unwrap(),
+                                                                ),
+                                                        "{purpose}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_purpose.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_purpose(
+                                                            props.lang,
+                                                            resource.metadata_purpose.clone().unwrap(),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -209,29 +334,101 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         }
                                     }
                                     div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_source.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_source(
-                                                        props.lang,
-                                                        resource.metadata_source.clone().unwrap(),
-                                                    )
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_source = ctrl.metadata_source_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_source.is_none(),
+                                                    "{translate.select_source}"
+                                                }
+                                                for source in total_resources.clone() {
+                                                    option {
+                                                        value: source.clone(),
+                                                        selected: source.clone()
+                                                            == ctrl
+                                                                .translate_metadata_source(
+                                                                    props.lang,
+                                                                    resource.metadata_source.clone().unwrap(),
+                                                                ),
+                                                        "{source}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_source.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_source(
+                                                            props.lang,
+                                                            resource.metadata_source.clone().unwrap(),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                     div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
-                                        div { class: "text-[#555462] font-semibold text-[14px]",
-                                            if resource.metadata_authority.is_none() {
-                                                "{translate.not_exists}"
-                                            } else {
-                                                {
-                                                    ctrl.translate_metadata_authority(
-                                                        props.lang,
-                                                        resource.metadata_authority.clone().unwrap(),
-                                                    )
+                                        if clicked_resources() == index {
+                                            select {
+                                                class: "bg-transparent focus:outline-none",
+                                                onchange: {
+                                                    let resource = resource.clone();
+                                                    let ctrl = ctrl.clone();
+                                                    let mut req: UpdateMetadataRequest = resource.into();
+                                                    move |evt: FormEvent| {
+                                                        req.metadata_authority = ctrl.metadata_authority_from_str(evt.value());
+                                                        let req = req.clone();
+                                                        async move {
+                                                            let _ = ctrl.update_metadata(index, req.clone()).await;
+                                                        }
+                                                    }
+                                                },
+                                                option {
+                                                    value: "",
+                                                    disabled: true,
+                                                    selected: resource.metadata_authority.is_none(),
+                                                    "{translate.select_authority}"
+                                                }
+                                                for authority in total_authorities.clone() {
+                                                    option {
+                                                        value: authority.clone(),
+                                                        selected: authority.clone()
+                                                            == ctrl
+                                                                .translate_metadata_authority(
+                                                                    props.lang,
+                                                                    resource.metadata_authority.clone().unwrap(),
+                                                                ),
+                                                        "{authority}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            div { class: "text-[#555462] font-semibold text-[14px]",
+                                                if resource.metadata_authority.is_none() {
+                                                    "{translate.not_exists}"
+                                                } else {
+                                                    {
+                                                        ctrl.translate_metadata_authority(
+                                                            props.lang,
+                                                            resource.metadata_authority.clone().unwrap(),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -241,7 +438,12 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                             {ctrl.convert_timestamp_to_date(resource.updated_at)}
                                         }
                                     }
-                                    div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
+                                    div {
+                                        class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
+                                        onclick: move |event: Event<MouseData>| {
+                                            event.stop_propagation();
+                                            event.prevent_default();
+                                        },
                                         button {
                                             class: "text-[#2a60d3] font-semibold text-[14px]",
                                             onclick: {
@@ -265,7 +467,12 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                         }
                                     }
                                     div { class: "group relative",
-                                        div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
+                                        div {
+                                            class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
+                                            onclick: move |event: Event<MouseData>| {
+                                                event.stop_propagation();
+                                                event.prevent_default();
+                                            },
                                             button {
                                                 RowOption { width: "24", height: "24" }
                                             }
@@ -273,14 +480,14 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                                 ul { class: "py-1",
                                                     li {
                                                         class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                        onclick: move |_| {
+                                                        onclick: move |_event| {
                                                             ctrl.open_update_material(props.lang, index);
                                                         },
                                                         "{translate.update_material_li}"
                                                     }
                                                     li {
                                                         class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                        onclick: move |_| {
+                                                        onclick: move |_event| {
                                                             ctrl.open_remove_material(props.lang, index);
                                                         },
                                                         "{translate.remove_material_li}"
@@ -324,10 +531,13 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
 #[component]
 pub fn UpdateMaterialModal(
     lang: Language,
-    onupload: EventHandler<MouseEvent>,
+    initial_title: String,
+    onupload: EventHandler<(String, Vec<String>)>,
     onclose: EventHandler<MouseEvent>,
 ) -> Element {
     let translate: UploadMaterialModalTranslate = translate(&lang);
+    let mut title: Signal<String> = use_signal(|| initial_title);
+    let metadata_urls: Signal<Vec<String>> = use_signal(|| vec![]);
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "text-[#6d6d6d] font-normal text-[14px] mb-[40px]",
@@ -345,8 +555,11 @@ pub fn UpdateMaterialModal(
                     input {
                         class: "flex flex-row w-full h-full bg-transparent focus:outline-none placeholder:text-[#b4b4b4] placeholder:font-medium placeholder:text-[15px] font-medium text-[15px] text-[#222222]",
                         r#type: "text",
+                        value: title(),
                         placeholder: translate.input_hint,
-                        oninput: move |_e| {},
+                        oninput: move |e| {
+                            title.set(e.value());
+                        },
                     }
                 }
                 div { class: "font-normal text-[#222222] text-[13px]", "{translate.input_info}" }
@@ -356,18 +569,26 @@ pub fn UpdateMaterialModal(
                 div { class: "font-semibold text-[#222222] text-[14px] mb-[10px]",
                     "{translate.classification}"
                 }
-                DirectUpload { lang }
+                DirectUpload { lang, metadata_urls }
             }
 
             div { class: "flex flex-row w-full justify-start items-start font-normal text-[#6d6d6d] text-[14px] mt-[40px] mb-[20px]",
                 "총 5개 자료 업로드"
             }
             div { class: "flex flex-row w-full justify-start items-center gap-[20px]",
-                div { class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
+                button {
+                    class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
+                    onclick: move |_| async move {
+                        onupload.call((title(), metadata_urls()));
+                    },
                     Edit { width: "24", height: "24" }
                     div { class: "text-white font-semibold text-[#16px]", "{translate.update}" }
                 }
-                div { class: "flex flex-row w-[60px] h-[40px] justify-center items-center bg-white font-semibold text-[#222222] text-[16px]",
+                button {
+                    class: "flex flex-row w-[60px] h-[40px] justify-center items-center bg-white font-semibold text-[#222222] text-[16px]",
+                    onclick: move |e: Event<MouseData>| {
+                        onclose.call(e);
+                    },
                     "{translate.cancel}"
                 }
             }
@@ -377,10 +598,15 @@ pub fn UpdateMaterialModal(
 
 #[component]
 pub fn CreateMaterialModal(
-    ctrl: Controller,
     lang: Language,
-    onupload: EventHandler<MouseEvent>,
+    onupload: EventHandler<CreateMetadataRequest>,
     onclose: EventHandler<MouseEvent>,
+
+    total_types: Vec<String>,
+    total_fields: Vec<String>,
+    total_purposes: Vec<String>,
+    total_resources: Vec<String>,
+    total_authorities: Vec<String>,
 ) -> Element {
     let translate: CreateMaterialModalTranslate = translate(&lang);
 
@@ -390,11 +616,8 @@ pub fn CreateMaterialModal(
     let mut selected_source = use_signal(|| translate.no_selection.to_string());
     let mut selected_authority = use_signal(|| translate.no_selection.to_string());
 
-    let total_types: Vec<String> = ctrl.get_total_types();
-    let total_fields: Vec<String> = ctrl.get_total_fields();
-    let total_purposes: Vec<String> = ctrl.get_total_purposes();
-    let total_resources: Vec<String> = ctrl.get_total_resources();
-    let total_authorities: Vec<String> = ctrl.get_total_authorities();
+    let metadata_urls: Signal<Vec<String>> = use_signal(|| vec![]);
+    let mut name: Signal<String> = use_signal(|| "".to_string());
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -414,8 +637,11 @@ pub fn CreateMaterialModal(
                             input {
                                 class: "flex flex-row w-full h-full bg-transparent focus:outline-none placeholder:text-[#b4b4b4] placeholder:font-medium placeholder:text-[15px] font-medium text-[15px] text-[#222222]",
                                 r#type: "text",
+                                value: name(),
                                 placeholder: translate.input_hint,
-                                oninput: move |_e| {},
+                                oninput: move |e| {
+                                    name.set(e.value());
+                                },
                             }
                         }
                         div { class: "font-normal text-[#222222] text-[13px]", "{translate.input_info}" }
@@ -425,7 +651,7 @@ pub fn CreateMaterialModal(
                         div { class: "font-semibold text-[#222222] text-[14px] mb-[10px]",
                             "{translate.classification}"
                         }
-                        DirectUpload { lang }
+                        DirectUpload { lang, metadata_urls }
                     }
                 }
 
@@ -609,12 +835,52 @@ pub fn CreateMaterialModal(
             div { class: "flex flex-row w-full justify-start items-start font-normal text-[#6d6d6d] text-[14px] mt-[40px] mb-[20px]",
                 "총 5개 자료 업로드"
             }
+            //FIXME: fix to connect project
             div { class: "flex flex-row w-full justify-start items-center gap-[20px]",
-                div { class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
+                button {
+                    class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
+                    onclick: move |_| {
+                        onupload
+                            .call(CreateMetadataRequest {
+                                name: name(),
+                                urls: metadata_urls(),
+                                metadata_type: if selected_type() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_type().parse().unwrap())
+                                },
+                                metadata_field: if selected_field() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_field().parse().unwrap())
+                                },
+                                metadata_purpose: if selected_purpose() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_purpose().parse().unwrap())
+                                },
+                                metadata_source: if selected_source() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_source().parse().unwrap())
+                                },
+                                metadata_authority: if selected_authority() == translate.no_selection {
+                                    None
+                                } else {
+                                    Some(selected_authority().parse().unwrap())
+                                },
+                                public_opinion_projects: None,
+                                public_survey_projects: None,
+                            });
+                    },
                     Upload { width: "24", height: "24" }
                     div { class: "text-white font-semibold text-[#16px]", "{translate.upload}" }
                 }
-                div { class: "flex flex-row w-[60px] h-[40px] justify-center items-center bg-white font-semibold text-[#222222] text-[16px]",
+                button {
+                    class: "flex flex-row w-[60px] h-[40px] justify-center items-center bg-white font-semibold text-[#222222] text-[16px]",
+                    onclick: move |e: Event<MouseData>| {
+                        onclose.call(e);
+                    },
                     "{translate.cancel}"
                 }
             }
@@ -623,7 +889,7 @@ pub fn CreateMaterialModal(
 }
 
 #[component]
-pub fn DirectUpload(lang: Language) -> Element {
+pub fn DirectUpload(lang: Language, metadata_urls: Signal<Vec<String>>) -> Element {
     let mut indragzone = use_signal(|| false);
     let translate: DirectUploadedTranslate = translate(&lang);
 
@@ -652,6 +918,7 @@ pub fn DirectUpload(lang: Language) -> Element {
                     tracing::debug!("leave drop zone");
                     indragzone.set(false);
                 },
+                //TODO: add file upload code
                 ondrop: move |ev: Event<DragData>| async move {
                     tracing::debug!("drop files");
                     ev.prevent_default();
@@ -673,6 +940,7 @@ pub fn DirectUpload(lang: Language) -> Element {
                     div { class: "font-normal text-[#6d6d6d] text-sm mr-[12px]", "OR" }
                     div { class: "w-[80px] h-[1px] bg-[#e7e7e7] mr-[12px]" }
                 }
+                //TODO: add file upload code
                 UploadButton {
                     class: "flex flex-row w-[100px] h-[30px] justify-center items-center bg-white border border-[#1849d6] rounded-[4px] font-semibold text-[#1849d6] text-sm",
                     text: "{translate.load_file}",
