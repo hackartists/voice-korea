@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -23,7 +23,8 @@ pub struct UpdateAttributeRequest {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 
-pub struct Attribute { // attributes
+pub struct Attribute {
+    // attributes
     pub id: String,
     pub r#type: String,
     pub gsi1: String, // attribute#organization_id
@@ -37,10 +38,7 @@ pub struct Attribute { // attributes
 }
 
 impl Attribute {
-    pub fn new(
-        organization_id: String,
-        name: String,
-    ) -> Self {
+    pub fn new(organization_id: String, name: String) -> Self {
         let now = chrono::Utc::now().timestamp_millis();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
@@ -84,10 +82,7 @@ pub struct AttributeItem {
 }
 
 impl AttributeItem {
-    pub fn new(
-        attribute_id: String,
-        name: String,
-    ) -> Self {
+    pub fn new(attribute_id: String, name: String) -> Self {
         let now = chrono::Utc::now().timestamp_millis();
         Self {
             id: uuid::Uuid::new_v4().to_string(),

@@ -1,3 +1,4 @@
+use crate::{common::CommonQueryResponse, middleware::auth::authorization_middleware};
 use by_axum::{
     axum::{
         extract::{Path, Query, State},
@@ -7,11 +8,8 @@ use by_axum::{
     },
     log::root,
 };
-use slog::o;
-use crate::{
-    common::CommonQueryResponse, middleware::auth::authorization_middleware,
-};
 use models::prelude::*;
+use slog::o;
 
 #[derive(Clone, Debug)]
 pub struct PublicSurveyControllerV1 {
@@ -352,10 +350,19 @@ impl PublicSurveyControllerV1 {
                     title: "조사주제".to_string(),
                     total_response: 60,
                     survey_response: 40,
-                    panels: vec![],
+                    panels: vec![
+                        PanelInfo {
+                            id: "1".to_string(),
+                            name: "패널1".to_string(),
+                        },
+                        PanelInfo {
+                            id: "2".to_string(),
+                            name: "패널2".to_string(),
+                        },
+                    ],
                     start_date: 1759244400,
                     end_date: 1764601200,
-                    status: PublicSurveyStatus::Finish,
+                    status: PublicSurveyStatus::Ready,
                 },
                 PublicSurveySummary {
                     id: "2".to_string(),
@@ -364,10 +371,20 @@ impl PublicSurveyControllerV1 {
                     title: "조사주제".to_string(),
                     total_response: 60,
                     survey_response: 40,
-                    panels: vec![],
+                    panels: vec![
+                        PanelInfo {
+                            id: "1".to_string(),
+                            name: "패널1".to_string(),
+                        },
+                        PanelInfo {
+                            id: "2".to_string(),
+                            name: "패널2".to_string(),
+                        },
+                    ],
+
                     start_date: 1759244400,
                     end_date: 1764601200,
-                    status: PublicSurveyStatus::Finish,
+                    status: PublicSurveyStatus::Ready,
                 },
                 PublicSurveySummary {
                     id: "3".to_string(),
@@ -376,7 +393,16 @@ impl PublicSurveyControllerV1 {
                     title: "조사주제".to_string(),
                     total_response: 60,
                     survey_response: 40,
-                    panels: vec![],
+                    panels: vec![
+                        PanelInfo {
+                            id: "1".to_string(),
+                            name: "패널1".to_string(),
+                        },
+                        PanelInfo {
+                            id: "2".to_string(),
+                            name: "패널2".to_string(),
+                        },
+                    ],
                     start_date: 1759244400,
                     end_date: 1764601200,
                     status: PublicSurveyStatus::Finish,
@@ -388,7 +414,16 @@ impl PublicSurveyControllerV1 {
                     title: "조사주제".to_string(),
                     total_response: 60,
                     survey_response: 40,
-                    panels: vec![],
+                    panels: vec![
+                        PanelInfo {
+                            id: "1".to_string(),
+                            name: "패널1".to_string(),
+                        },
+                        PanelInfo {
+                            id: "2".to_string(),
+                            name: "패널2".to_string(),
+                        },
+                    ],
                     start_date: 1759244400,
                     end_date: 1764601200,
                     status: PublicSurveyStatus::Finish,
@@ -400,7 +435,16 @@ impl PublicSurveyControllerV1 {
                     title: "조사주제".to_string(),
                     total_response: 60,
                     survey_response: 40,
-                    panels: vec![],
+                    panels: vec![
+                        PanelInfo {
+                            id: "1".to_string(),
+                            name: "패널1".to_string(),
+                        },
+                        PanelInfo {
+                            id: "2".to_string(),
+                            name: "패널2".to_string(),
+                        },
+                    ],
                     start_date: 1759244400,
                     end_date: 1764601200,
                     status: PublicSurveyStatus::Finish,

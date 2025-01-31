@@ -1,9 +1,10 @@
-use serde::{Deserialize, Serialize};
-use crate::{field::Field, prelude::Panel};
+use crate::{field::Field, prelude::PanelInfo};
 #[cfg(feature = "server")]
 use by_axum::aide;
+use dioxus_translate::Language;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -45,7 +46,7 @@ pub struct PublicSurveySummary {
     pub title: String,
     pub total_response: u64,
     pub survey_response: u64,
-    pub panels: Vec<Panel>,
+    pub panels: Vec<PanelInfo>,
     pub start_date: i64,
     pub end_date: i64,
     pub status: PublicSurveyStatus,
@@ -252,6 +253,23 @@ pub enum PublicSurveyStatus {
     Finish,
 }
 
+impl PublicSurveyStatus {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                PublicSurveyStatus::Ready => "Ready",
+                PublicSurveyStatus::InProgress => "InProgress",
+                PublicSurveyStatus::Finish => "Finish",
+            },
+            Language::Ko => match self {
+                PublicSurveyStatus::Ready => "준비",
+                PublicSurveyStatus::InProgress => "진행",
+                PublicSurveyStatus::Finish => "마감",
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "snake_case")]
@@ -260,4 +278,21 @@ pub enum SurveyType {
     Survey,
     PublicPoll,
     Satisfaction,
+}
+
+impl SurveyType {
+    pub fn translate(&self, lang: &Language) -> &'static str {
+        match lang {
+            Language::En => match self {
+                SurveyType::Survey => "Survey",
+                SurveyType::PublicPoll => "Opinion Poll",
+                SurveyType::Satisfaction => "Satisfaction Survey",
+            },
+            Language::Ko => match self {
+                SurveyType::Survey => "설문 조사",
+                SurveyType::PublicPoll => "여론 조사",
+                SurveyType::Satisfaction => "만족도 조사",
+            },
+        }
+    }
 }
