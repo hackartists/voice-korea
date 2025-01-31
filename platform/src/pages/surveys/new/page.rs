@@ -78,6 +78,9 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                     change_survey: move |(index, survey): (usize, PublicSurveyQuestion)| {
                         ctrl.change_survey(index, survey);
                     },
+                    onremove: move |index: usize| {
+                        ctrl.remove_survey(index);
+                    },
                 }
 
                 button {

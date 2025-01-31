@@ -3,7 +3,7 @@ use dioxus_translate::{translate, Language};
 use models::prelude::{PublicSurveyQuestion, PublicSurveyQuestionType};
 
 use crate::{
-    components::icons::RowMenuDial,
+    components::icons::{RowMenuDial, Trash},
     pages::surveys::{
         components::type_selection::SurveyTypeSelectionBox, i18n::SubjectiveTranslate,
     },
@@ -15,6 +15,7 @@ pub fn ListSurvey(
     surveys: Vec<PublicSurveyQuestion>,
     types: Vec<String>,
     change_survey: EventHandler<(usize, PublicSurveyQuestion)>,
+    onremove: EventHandler<usize>,
 ) -> Element {
     rsx! {
         for (index , survey) in surveys.clone().iter().enumerate() {
@@ -59,6 +60,12 @@ pub fn ListSurvey(
                             change_survey.call((index, survey));
                         }
                     },
+
+                    onremove: {
+                        move |_| {
+                            onremove.call(index);
+                        }
+                    },
                 }
             }
         }
@@ -77,6 +84,8 @@ pub fn Subjective(
 
     description: String,
     change_description: EventHandler<String>,
+
+    onremove: EventHandler<MouseEvent>,
 ) -> Element {
     let translate: SubjectiveTranslate = translate(&lang);
     let mut is_focused = use_signal(|| false);
@@ -113,13 +122,24 @@ pub fn Subjective(
             div { class: "flex flex-row w-full h-[1px] bg-[#ebeff5] my-[10px]" }
 
             input {
-                class: "flex flex-row w-full h-[55px] justify-start items-center bg-white focus:outline-none border-b-[1px] border-[#bfc8d9] px-[15px] py-[15px] font-medium text-[#b4b4b4] text-[15px] leading-[22px]",
+                class: "flex flex-row w-full h-[55px] justify-start items-center bg-white focus:outline-none border-b-[1px] border-[#bfc8d9] px-[15px] py-[15px] font-medium text-[#b4b4b4] text-[15px] leading-[22px] mb-[20px]",
                 r#type: "text",
                 placeholder: translate.input_description_hint,
                 value: description,
                 oninput: move |e: Event<FormData>| {
                     change_description.call(e.value());
                 },
+            }
+
+            div { class: "flex flex-row w-full justify-end items-center gap-[5px]",
+                button {
+                    class: "flex flex-row w-[80px] items-center justify-end",
+                    onclick: move |e: Event<MouseData>| {
+                        onremove.call(e);
+                    },
+                    div { class: "font-medium text-[#222222] text-[15px]", "{translate.remove}" }
+                    Trash { width: "18", height: "18" }
+                }
             }
         }
     }

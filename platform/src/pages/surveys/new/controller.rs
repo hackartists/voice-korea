@@ -118,6 +118,12 @@ impl Controller {
         self.surveys.set(surveys);
     }
 
+    pub fn remove_survey(&mut self, index: usize) {
+        let mut surveys = (self.surveys)();
+        surveys.remove(index);
+        self.surveys.set(surveys);
+    }
+
     pub fn add_survey(&mut self) {
         let mut surveys = (self.surveys)();
         surveys.push(PublicSurveyQuestion {

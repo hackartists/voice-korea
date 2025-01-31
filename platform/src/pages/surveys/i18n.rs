@@ -11,6 +11,10 @@ translate! {
         ko: "내용을 입력해주세요",
         en: "Please enter a description"
     }
+    remove: {
+        ko: "삭제",
+        en: "Remove"
+    }
 }
 
 translate! {
