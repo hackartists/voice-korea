@@ -1,5 +1,5 @@
 [package]
-name = "platform"
+name = "main-ui"
 version = "0.2.4"
 authors = ["victor138128 <yepp0517@naver.com>"]
 edition = "2021"

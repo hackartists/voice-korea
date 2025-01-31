@@ -1,6 +1,7 @@
 [workspace]
-members = ["package/models", "package/api", "platform", "package/watcher"]
+members = ["packages/models", "packages/api", "packages/main-ui", "packages/watcher"]
 resolver = "2"
+exclude = ["deps"]
 
 [workspace.package]
 version = "1.0.0"
@@ -18,7 +19,7 @@ by-types = { path = "deps/rust-sdk/packages/by-types" }
 dioxus-translate = { path = "deps/rust-sdk/packages/dioxus-translate", features = ["ko"] }
 dioxus-aws = { path = "deps/rust-sdk/packages/dioxus-aws" }
 
-models = { version = "1.0.0", path = "package/models" }
+models = { version = "1.0.0", path = "packages/models" }
 slog = "2.7.0"
 chrono = "0.4.38"
 serde = { version="1.0.215", features = ["derive"] }

@@ -99,7 +99,6 @@ dependencies = [
  "futures",
  "jsonwebtoken",
  "lazy_static",
- "listenfd",
  "models",
  "rand",
  "reqwest",
@@ -821,8 +820,6 @@ checksum = "1628fb46dfa0b37568d12e5edd512553eccf6a22a78e8bde00bb4aed84d5bdbf"
 [[package]]
 name = "by-axum"
 version = "0.2.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94546ec5418f8d745a29518af24c4656e7d4da32da8eec8fdff6e5d5eb6a751a"
 dependencies = [
  "aide",
  "axum 0.8.1",
@@ -854,16 +851,11 @@ version = "0.1.1"
 dependencies = [
  "dioxus",
  "tracing",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
 name = "by-macros"
 version = "0.6.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90c33e8fdb8cefaf7103fe3a3d286c7bcd40d3c00e00913b34019377cf7c64e7"
 dependencies = [
  "bigdecimal",
  "convert_case 0.7.1",
@@ -881,8 +873,6 @@ dependencies = [
 [[package]]
 name = "by-types"
 version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2b6d20b3f2d28afcbff4a4daa8d0d812ebb58f4c4cc10eededa55b9d0a2d51f"
 dependencies = [
  "aide",
  "axum 0.8.1",
@@ -1329,8 +1319,6 @@ dependencies = [
 [[package]]
 name = "dioxus-aws"
 version = "0.6.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed6b512cc57aa9d235fe49442dcba4e2693ee730438f8be00600368dea35e0f7"
 dependencies = [
  "axum 0.7.9",
  "axum-core 0.4.5",
@@ -1702,11 +1690,22 @@ dependencies = [
 [[package]]
 name = "dioxus-translate"
 version = "0.1.2"
+dependencies = [
+ "dioxus-translate-macro 0.1.0",
+ "dioxus-translate-types 0.1.1",
+ "schemars",
+ "serde",
+ "web-sys",
+]
+
+[[package]]
+name = "dioxus-translate"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8ca1aba9b70282030d9c3e343933ab95f0673e93789faf42ff044970a81a581"
 dependencies = [
- "dioxus-translate-macro",
- "dioxus-translate-types",
+ "dioxus-translate-macro 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dioxus-translate-types 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde",
  "web-sys",
@@ -1715,14 +1714,28 @@ dependencies = [
 [[package]]
 name = "dioxus-translate-macro"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aebf71c2957c420b7a403f3db1df5d00358b8ca9edfc541bf9ee0cfcc16527f8"
 dependencies = [
- "dioxus-translate-types",
+ "dioxus-translate-types 0.1.1",
  "proc-macro2",
  "quote",
  "syn 2.0.96",
 ]
+
+[[package]]
+name = "dioxus-translate-macro"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aebf71c2957c420b7a403f3db1df5d00358b8ca9edfc541bf9ee0cfcc16527f8"
+dependencies = [
+ "dioxus-translate-types 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.96",
+]
+
+[[package]]
+name = "dioxus-translate-types"
+version = "0.1.1"
 
 [[package]]
 name = "dioxus-translate-types"
@@ -1826,9 +1839,7 @@ checksum = "0d6ef0072f8a535281e4876be788938b528e9a1d43900b82c2569af7da799125"
 
 [[package]]
 name = "easy-dynamodb"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e60c5672adbb230d4fc6399e245788a7ae85a80084856e3efcbf81a4e6541df0"
+version = "0.1.8"
 dependencies = [
  "aws-config",
  "aws-credential-types",
@@ -3037,17 +3048,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d26c52dbd32dccf2d10cac7725f8eae5296885fb5703b261f7d0a0739ec807ab"
 
 [[package]]
-name = "listenfd"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b87bc54a4629b4294d0b3ef041b64c40c611097a677d9dc07b2c67739fe39dba"
-dependencies = [
- "libc",
- "uuid",
- "winapi",
-]
-
-[[package]]
 name = "litemap"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3082,6 +3082,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "234cf4f4a04dc1f57e24b96cc0cd600cf2af460d4161ac5ecdd0af8e1f3b2a38"
 dependencies = [
  "hashbrown 0.15.2",
+]
+
+[[package]]
+name = "main-ui"
+version = "0.2.4"
+dependencies = [
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-sesv2",
+ "axum 0.7.9",
+ "by-components",
+ "chrono",
+ "dioxus",
+ "dioxus-aws",
+ "dioxus-logger 0.5.1",
+ "dioxus-translate 0.1.2",
+ "easy-dynamodb",
+ "getrandom 0.2.15",
+ "models",
+ "rand",
+ "regex",
+ "reqwest",
+ "serde",
+ "sha3",
+ "slog",
+ "slog-term",
+ "static_str_ops",
+ "urlencoding",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -3200,7 +3231,7 @@ dependencies = [
  "by-axum",
  "by-macros",
  "chrono",
- "dioxus-translate",
+ "dioxus-translate 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "schemars",
  "serde",
  "serde_json",
@@ -3530,37 +3561,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
 
 [[package]]
-name = "platform"
-version = "0.2.4"
-dependencies = [
- "aws-config",
- "aws-sdk-dynamodb",
- "aws-sdk-sesv2",
- "axum 0.7.9",
- "by-components",
- "chrono",
- "dioxus",
- "dioxus-aws",
- "dioxus-logger 0.5.1",
- "dioxus-translate",
- "easy-dynamodb",
- "getrandom 0.2.15",
- "models",
- "rand",
- "regex",
- "reqwest",
- "serde",
- "sha3",
- "slog",
- "slog-term",
- "static_str_ops",
- "urlencoding",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "powerfmt"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3809,8 +3809,6 @@ dependencies = [
 [[package]]
 name = "rest-api"
 version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c5dd6e32d7d0c59ac2ffc553b192297c49ffd49e441c6629db910b5e554a831"
 dependencies = [
  "base64 0.22.1",
  "candid",
