@@ -17,23 +17,28 @@ pub fn RootLayout(lang: Language) -> Element {
     let route: Route = use_route();
     let current_path = format!("{route}");
 
-    let current_selected = selected_menu();
+    use_effect({
+        let current_selected = selected_menu();
+        let current_path = current_path.clone();
+        move || {
+            if current_selected == "" {
+                let new_menu = match current_path.as_str() {
+                    path if path.contains("/group") => "그룹 관리".to_string(),
+                    path if path.contains("/member") => "팀원 관리".to_string(),
+                    path if path.contains("/opinions") => "공론 관리".to_string(),
+                    path if path.contains("/panels") => "속성 & 패널 관리".to_string(),
+                    path if path.contains("/resources") => "자료 관리".to_string(),
+                    path if path.contains("/surveys") => "조사 관리".to_string(),
+                    _ => "프로젝트 검색".to_string(),
+                };
 
-    if current_selected == "" {
-        let new_menu = match current_path.as_str() {
-            path if path.contains("/group") => "그룹 관리".to_string(),
-            path if path.contains("/member") => "팀원 관리".to_string(),
-            path if path.contains("/opinions") => "공론 관리".to_string(),
-            path if path.contains("/panels") => "속성 & 패널 관리".to_string(),
-            path if path.contains("/resources") => "자료 관리".to_string(),
-            path if path.contains("/surveys") => "조사 관리".to_string(),
-            _ => "프로젝트 검색".to_string(),
-        };
-
-        if current_selected != new_menu {
-            selected_menu.set(new_menu);
+                if current_selected != new_menu {
+                    selected_menu.set(new_menu);
+                }
+            }
         }
-    }
+    });
+
     rsx! {
         div { class: "flex flex-col w-screen min-h-screen bg-white text-black",
             // Header {
