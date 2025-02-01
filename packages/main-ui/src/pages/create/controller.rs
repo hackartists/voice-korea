@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
+use models::*;
 use regex::Regex;
-
-use crate::service::auth_api::{AuthApi, SendNotificationParams};
 
 use crate::service::user_api::{SignupRequest, UserApi};
 use crate::utils::hash::get_hash_string;
@@ -42,13 +41,15 @@ pub struct Controller {
     // click_send_authentication: Signal<bool>,
     // click_search_address: Signal<bool>,
     // click_complete_join_membership: Signal<bool>,
-    auth_api: AuthApi,
+    auth_api: Signal<VerificationClient>,
     user_api: UserApi,
 }
 
 impl Controller {
     pub fn init() -> Self {
-        let auth_api: AuthApi = use_context();
+        let api_url = crate::config::get().api_url;
+        let auth_api = use_signal(|| Verification::get_client(api_url));
+
         let user_api: UserApi = use_context();
         let ctrl = Self {
             authorize_type: use_signal(|| 0),
@@ -285,16 +286,15 @@ impl Controller {
         }
 
         self.email_address_error.set(false);
-        let res = self
-            .auth_api
-            .send_notification(SendNotificationParams {
-                email: self.get_email_address(),
-            })
-            .await;
 
-        match res {
-            Ok(s) => {
-                self.auth_key.set(s);
+        match self
+            .auth_api
+            .read()
+            .send_verification_code(self.get_email_address())
+            .await
+        {
+            Ok(Verification { id, .. }) => {
+                self.auth_key.set(id);
             }
             Err(e) => {
                 tracing::error!("send email failed: {}", e);
