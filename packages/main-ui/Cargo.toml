@@ -12,6 +12,7 @@ by-components.workspace = true
 dioxus-translate.workspace = true
 dioxus-aws.workspace = true
 easy-dynamodb = { workspace = true, optional = true }
+by-types.workspace = true
 
 # This Repo Dependencies
 models.workspace = true

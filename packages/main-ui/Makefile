@@ -4,14 +4,13 @@ COMMIT ?= $(shell git rev-parse --short HEAD)
 ENV ?= local
 HOST ?= 0.0.0.0:8080
 PROFILE ?= default
-RUST_LOG ?= info
 
 ifneq ("$(PROFILE)","default")
 	AWS_FLAG += --profile $(PROFILE)
 endif
 
 ifeq ("$(ENV)","prod")
-	LOG_LEVEL ?= info
+	RUST_LOG ?= info
 	VOICE_KOREA_TABLE_NAME = voice-korea-prod
 	BASE_URL = https://voice-korea.biyard.co
 	API_URL ?= https://voice-korea-api.dev.biyard.co
@@ -35,9 +34,9 @@ SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG)
 REGION ?= $(shell aws configure get region)
 AWS_DYNAMODB_KEY ?= "id"
 RUSTFLAGS ?= -D warnings
-LOG_LEVEL ?= debug
+RUST_LOG ?= debug
 
-BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) LOG_LEVEL=$(LOG_LEVEL) AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_DYNAMODB_KEY=${AWS_DYNAMODB_KEY} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} TABLE_NAME=$(VOICE_KOREA_TABLE_NAME) BASE_URL=$(BASE_URL) API_URL=${API_URL} RUSTFLAGS="${RUSTFLAGS}"
+BUILD_ENV ?= ENV=$(ENV) VERSION=$(VERSION) COMMIT=$(COMMIT) RUST_LOG=$(LOG_LEVEL) AWS_REGION=${REGION} AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_DYNAMODB_KEY=${AWS_DYNAMODB_KEY} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} TABLE_NAME=$(VOICE_KOREA_TABLE_NAME) BASE_URL=$(BASE_URL) API_URL=${API_URL} RUSTFLAGS="${RUSTFLAGS}"
 
 setup.tool:
 	cargo install cargo-binstall

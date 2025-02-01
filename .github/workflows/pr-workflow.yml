@@ -3,8 +3,6 @@ name: PR Testing
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-  pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
 
 env:
   CARGO_TERM_COLOR: always
@@ -26,7 +24,7 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dioxus-cli
         run: |
-          cargo binstall dioxus-cli
+          cargo binstall dioxus-cli --force
 
       - name: Dioxus Lint
         env:
@@ -35,6 +33,7 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           dx check -p main-ui
+
       - name: Dioxus Lint
         env:
           REGION: ap-northeast-2
@@ -60,7 +59,7 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - name: Install dioxus-cli
         run: |
-          cargo binstall dioxus-cli
+          cargo binstall dioxus-cli --force
 
       - name: Cache builder
         id: api-build-cache-builder

@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use dioxus_logger::tracing::{self, Level};
+use dioxus_logger::tracing;
 
 use dioxus::prelude::*;
 use main_ui::service::attribute_api::AttributeApi;
@@ -12,25 +12,19 @@ use main_ui::service::organization_api::OrganizationApi;
 use main_ui::service::panel_api::PanelApi;
 use main_ui::service::popup_service::PopupService;
 
+use main_ui::config;
 use main_ui::service::metadata_api::ResourceApi;
 use main_ui::service::prev_survey_api::PrevSurveyApi;
 use main_ui::service::survey_api::SurveyApi;
 use main_ui::service::theme::Theme;
 use main_ui::service::user_api::UserApi;
+
 use main_ui::{
     routes::Route, service::login_service::LoginService, utils::context::use_iitp_context_provider,
 };
 
 fn main() {
-    dioxus_logger::init(match option_env!("LOG_LEVEL") {
-        Some("trace") => Level::TRACE,
-        Some("debug") => Level::DEBUG,
-        Some("info") => Level::INFO,
-        Some("warn") => Level::WARN,
-        Some("error") => Level::ERROR,
-        _ => Level::INFO,
-    })
-    .expect("failed to init logger");
+    dioxus_logger::init(config::get().log_level).expect("failed to init logger");
 
     #[cfg(feature = "server")]
     {

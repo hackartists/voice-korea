@@ -872,7 +872,7 @@ dependencies = [
 
 [[package]]
 name = "by-types"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "aide",
  "axum 0.8.1",
@@ -3062,6 +3062,7 @@ dependencies = [
  "aws-sdk-sesv2",
  "axum 0.7.9",
  "by-components",
+ "by-types",
  "chrono",
  "dioxus",
  "dioxus-aws",
@@ -3199,14 +3200,18 @@ version = "1.0.0"
 dependencies = [
  "by-axum",
  "by-macros",
+ "by-types",
  "chrono",
  "dioxus-translate",
+ "reqwest",
+ "rest-api",
  "schemars",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "sqlx",
  "thiserror 2.0.11",
+ "tracing",
  "uuid",
 ]
 
