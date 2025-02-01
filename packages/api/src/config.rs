@@ -14,7 +14,7 @@ impl Default for Config {
             env: option_env!("ENV").expect("You must set ENV"),
             database: DatabaseConfig::default(),
             auth: AuthConfig::default(),
-            verification_expiration: option_env!("VERIFYCATION_EXPIRATION")
+            verification_expiration: option_env!("VERIFICATION_EXPIRATION")
                 .unwrap_or((60 * 5).to_string().as_str())
                 .parse()
                 .expect("VERIFYCATION_EXPIRATION must be a number"),
