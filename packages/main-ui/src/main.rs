@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use by_components::effects::HoverEffects;
 use dioxus_logger::tracing;
 
 use dioxus::prelude::*;
@@ -81,6 +82,7 @@ fn App() -> Element {
             link { rel: "stylesheet", href: asset!("/public/tailwind.css") }
             load_tailwindcss {}
         }
+        HoverEffects {}
         Router::<Route> {}
     }
 }

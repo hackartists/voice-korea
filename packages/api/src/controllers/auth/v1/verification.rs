@@ -41,12 +41,7 @@ impl VerificationControllerV1 {
 
         match body {
             VerificationAction::SendVerificationCode(params) => {
-                let s = ctrl.send_verification_email(params).await?;
-
-                Ok(Json(Verification {
-                    id: s.id,
-                    ..Verification::default()
-                }))
+                ctrl.send_verification_email(params).await
             }
         }
     }
@@ -57,7 +52,7 @@ impl VerificationControllerV1 {
     pub async fn send_verification_email(
         &self,
         body: VerificationSendVerificationCodeRequest,
-    ) -> Result<Verification> {
+    ) -> Result<Json<Verification>> {
         use rand::distributions::Alphanumeric;
         use rand::{thread_rng, Rng};
 
@@ -96,6 +91,10 @@ impl VerificationControllerV1 {
             .insert(body.email, code, now + self.verification_expiration, 0)
             .await?;
 
-        Ok(result)
+        Ok(Json(Verification {
+            id: result.id,
+            expired_at: result.expired_at,
+            ..Verification::default()
+        }))
     }
 }

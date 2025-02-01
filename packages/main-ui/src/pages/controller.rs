@@ -1,15 +1,10 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use dioxus_translate::Language;
+use models::*;
 
 use crate::{
-    routes::Route,
-    service::{
-        login_service::use_login_service,
-        organization_api::OrganizationApi,
-        user_api::{LoginRequest, UserApi},
-    },
-    utils::hash::get_hash_string,
+    routes::Route, service::login_service::use_login_service, utils::hash::get_hash_string,
 };
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -65,34 +60,34 @@ impl Controller {
     }
 
     pub async fn login_clicked(&mut self, lang: Language) {
-        let user_api: UserApi = use_context();
+        let user_api = User::get_client(&crate::config::get().api_url);
         let mut login_service = use_login_service();
-        let mut api: OrganizationApi = use_context();
+        // let mut api: OrganizationApi = use_context();
         let navigator = use_navigator();
         let res = user_api
-            .login_user(LoginRequest {
-                email: self.get_email(),
-                password: get_hash_string(self.get_password().as_bytes()),
-            })
+            .login(
+                self.get_email(),
+                get_hash_string(self.get_password().as_bytes()),
+            )
             .await;
 
         match res {
-            Ok(token) => {
+            Ok(_user) => {
+                let token = rest_api::get_authz_token().unwrap_or_default();
                 login_service.setup(self.get_email(), token).await;
-                let organizations = api.list_organizations(Some(100), None).await;
-                let items = organizations.unwrap_or_default().items;
-                api.set_organization(items);
+                // TODO: load organizations
+                // let organizations = api.list_organizations(Some(100), None).await;
+                // let items = organizations.unwrap_or_default().items;
+                // api.set_organization(items);
                 navigator.push(Route::DashboardPage { lang });
             }
             Err(e) => match e {
-                ServerFnError::ServerError(v) => {
-                    if v.contains("Wrong User") {
-                        self.not_matched_error.set(true);
-                    } else {
-                        self.login_failed_error.set(true);
-                    }
+                ApiError::AuthKeyNotMatch(_) => {
+                    self.not_matched_error.set(true);
                 }
-                _ => {}
+                _ => {
+                    self.login_failed_error.set(true);
+                }
             },
         }
     }

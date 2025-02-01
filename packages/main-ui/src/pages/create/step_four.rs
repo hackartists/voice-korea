@@ -76,7 +76,7 @@ pub fn StepFourPage(props: StepFourProps) -> Element {
             // }
             }
             div { class: "flex flex-row w-full justify-end min-w-[710px] items-end pt-[30px]",
-                div { class: "flex flex-row w-[300px] h-[60px] justify-end items-end bg-[#f5f5f5] border-solid border border-[#e0e0e0]",
+                button { class: "flex flex-row w-[300px] h-[60px] justify-end items-end bg-[#f5f5f5] border-solid border border-[#e0e0e0]",
                     div {
                         class: "flex flex-row w-full h-full justify-center items-center text-[24px] font-bold text-black",
                         onclick: move |_| {

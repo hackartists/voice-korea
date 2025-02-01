@@ -13,6 +13,7 @@ dioxus-translate.workspace = true
 dioxus-aws.workspace = true
 easy-dynamodb = { workspace = true, optional = true }
 by-types.workspace = true
+rest-api.workspace = true
 
 # This Repo Dependencies
 models.workspace = true
@@ -63,6 +64,7 @@ lambda = ["dioxus-aws/lambda", "server"]
 web = [
   "dioxus-aws/web",
   "dioxus-translate/web",
+  "by-components/web",
   "web-sys",
   "wasm-bindgen",
   "wasm-bindgen-futures",

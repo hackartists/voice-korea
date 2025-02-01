@@ -32,6 +32,7 @@ lazy_static = "1.5.0"
 futures = "0.3.31"
 schemars = "0.8.21"
 tracing = "0.1.41"
+validator = "0.20.0"
 
 [features]
 default = []

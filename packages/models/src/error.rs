@@ -10,82 +10,61 @@ use by_axum::{
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "server")]
-use serde_json::json;
-use thiserror::Error;
 
-#[derive(Error, Debug, Serialize, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Serialize, PartialEq, Eq, Deserialize)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum ApiError {
-    #[error("Api call error: {0}")]
     ApiCallError(String),
 
-    #[error("Database query error: {0}")]
     DatabaseQueryError(String),
 
-    #[error("Not Found")]
+    InvalidVerificationCode,
+
     NotFound,
 
-    #[error("input error: {0}")]
     ValidationError(String),
 
-    #[allow(dead_code)]
-    #[error("DynamoDB Create Failed. Reason({0})")]
     DynamoCreateException(String),
 
-    #[allow(dead_code)]
-    #[error("DynamoDB Query Failed. Reason({0})")]
     DynamoQueryException(String),
 
-    #[error("DynamoDB Update Failed. Reason({0})")]
     DynamoUpdateException(String),
 
-    #[error("DynamoDB Delete Failed. Reason({0})")]
     DynamoDeleteException(String),
 
-    #[error("Wrong User Login info ({0})")]
     InvalidCredentials(String),
 
-    #[error("JWT Generation Failed. Reason({0})")]
     JWTGenerationFail(String),
 
-    #[error("AWS SES Service is Failed. Reason({0})")]
     SESServiceError(String),
 
-    #[error("Email verification code {0} does not match")]
     AuthKeyNotMatch(String),
 
-    #[error("Email already used")]
     DuplicateUser,
 
-    // #[error("Request Client Create Failed")]
-    // ReqwestClientFailed(String),
-    #[error("Request Failed")]
     ReqwestFailed(String),
 
-    #[error("JSON serialize Failed")]
     JSONSerdeError(String),
 
-    #[error("Survey Draft ({0}) Not Found")]
     SurveyNotFound(String),
 
-    #[error("Only draft survey can modified")]
     NotDraftSurvey,
 
-    #[error("survey draft is not completed")]
     InCompleteDraft,
 
-    #[error("Permission denied")]
     ForbiddenAccessError,
 
-    #[error("Already Exists")]
     AlreadyExists,
 
-    #[error("Invalid permission to access")]
     InvalidPermissions, // if organization is not matched with organization_member or group_member
 
-    #[error("Organization Id Not Found")]
     OrganizationNotFound,
+}
+
+impl std::fmt::Display for ApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 impl std::str::FromStr for ApiError {
@@ -99,6 +78,12 @@ impl std::str::FromStr for ApiError {
 impl From<reqwest::Error> for ApiError {
     fn from(e: reqwest::Error) -> Self {
         ApiError::ApiCallError(e.to_string())
+    }
+}
+
+impl From<validator::ValidationErrors> for ApiError {
+    fn from(e: validator::ValidationErrors) -> Self {
+        ApiError::ValidationError(e.to_string())
     }
 }
 
@@ -136,13 +121,7 @@ impl IntoResponse for ApiError {
             _ => StatusCode::BAD_REQUEST,
         };
 
-        let error_id = uuid::Uuid::new_v4();
-        let body = Json(json!({
-                    "error": {
-                        "id": error_id.to_string(),
-                        "message": self.to_string(),
-                    }
-        }));
+        let body = Json(self);
 
         (status_code, body).into_response()
     }
