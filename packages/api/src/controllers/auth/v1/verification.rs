@@ -17,10 +17,8 @@ pub struct VerificationControllerV1 {
 }
 
 impl VerificationControllerV1 {
-    pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = Verification::get_repository(pool);
-
-        repo.create_table().await?;
 
         let ctrl = VerificationControllerV1 {
             repo,

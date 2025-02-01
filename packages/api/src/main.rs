@@ -3,7 +3,7 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
-use models::ApiError;
+use models::*;
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
 // use sqlx::postgres::PgPoolOptions;
@@ -52,8 +52,21 @@ pub mod config;
 // mod middleware;
 mod utils;
 
+async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
+    tracing::info!("Running migration");
+    Organization::get_repository(pool.clone())
+        .create_table()
+        .await?;
+    Verification::get_repository(pool.clone())
+        .create_table()
+        .await?;
+    User::get_repository(pool.clone()).create_table().await?;
+    tracing::info!("Migration done");
+    Ok(())
+}
+
 #[tokio::main]
-async fn main() -> Result<(), ApiError> {
+async fn main() -> Result<()> {
     let conf = config::get();
     set_auth_config(conf.auth.clone());
 
@@ -67,10 +80,12 @@ async fn main() -> Result<(), ApiError> {
         panic!("Database is not initialized. Call init() first.");
     };
 
+    migration(&pool).await?;
+
     let app = by_axum::new()
         .nest(
             "/auth/v1",
-            controllers::auth::v1::UserControllerV1::route(pool.clone()).await?,
+            controllers::auth::v1::UserControllerV1::route(pool.clone())?,
         )
         .layer(middleware::from_fn(authorization_middleware));
     // .nest(

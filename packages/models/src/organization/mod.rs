@@ -1,9 +1,9 @@
-use serde::{Deserialize, Serialize};
 use crate::member::CreateMemberRequest;
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -30,8 +30,8 @@ pub struct OrganizationMemberResponse {
 pub struct OrganizationMember {
     pub id: String,
     pub r#type: String,
-    pub gsi1: String, //user_id
-    pub gsi2: String, //user_id#organization_id
+    pub gsi1: String,  //user_id
+    pub gsi2: String,  //user_id#organization_id
     pub email: String, // FIXME: remove this field if postgre is implemented
     pub created_at: i64,
     pub updated_at: i64,
@@ -41,18 +41,18 @@ pub struct OrganizationMember {
     pub organization_id: String,
     pub name: Option<String>,
     pub role: Option<Role>,
-    pub contact : Option<String>,
+    pub contact: Option<String>,
 }
 
 impl OrganizationMember {
     pub fn new(
-        user_id: String, 
+        user_id: String,
         organization_id: String,
         email: String,
         name: Option<String>,
-        role: Option<Role>
+        role: Option<Role>,
     ) -> Self {
-        let now = chrono::Utc::now().timestamp_millis();    
+        let now = chrono::Utc::now().timestamp_millis();
 
         OrganizationMember {
             id: uuid::Uuid::new_v4().to_string(),
@@ -84,12 +84,7 @@ impl OrganizationMember {
     }
 
     pub fn get_gsi2_deleted(email: &str, organization_id: &str) -> String {
-        format!(
-            "{}#{}#{}",
-            Self::get_deleted_type(),
-            email,
-            organization_id
-        )
+        format!("{}#{}#{}", Self::get_deleted_type(), email, organization_id)
     }
 
     pub fn get_deleted_type() -> String {
@@ -124,52 +119,52 @@ impl Into<OrganizationMember> for (CreateMemberRequest, String, String, String) 
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct Organization {
-    pub id: String,
-    pub r#type: String,
-    pub gsi1: String,
-    pub created_at: i64,
-    pub updated_at: i64,
-    pub deleted_at: Option<i64>,
+// #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+// #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+// pub struct Organization {
+//     pub id: String,
+//     pub r#type: String,
+//     pub gsi1: String,
+//     pub created_at: i64,
+//     pub updated_at: i64,
+//     pub deleted_at: Option<i64>,
 
-    pub name: String,
-    pub user_id: String,
-}
+//     pub name: String,
+//     pub user_id: String,
+// }
 
-impl Organization {
-    pub fn new(user_id: String, email_address: String) -> Self {
-        let now = chrono::Utc::now().timestamp_millis();
-        let id = uuid::Uuid::new_v4().to_string();
-        Self {
-            id: id.clone(),
-            r#type: Self::get_type(),
-            gsi1: Self::get_gsi1(&id),
-            created_at: now,
-            updated_at: now,
-            deleted_at: None,
-            name: email_address,
-            user_id,
-        }
-    }
+// impl Organization {
+//     pub fn new(user_id: String, email_address: String) -> Self {
+//         let now = chrono::Utc::now().timestamp_millis();
+//         let id = uuid::Uuid::new_v4().to_string();
+//         Self {
+//             id: id.clone(),
+//             r#type: Self::get_type(),
+//             gsi1: Self::get_gsi1(&id),
+//             created_at: now,
+//             updated_at: now,
+//             deleted_at: None,
+//             name: email_address,
+//             user_id,
+//         }
+//     }
 
-    pub fn get_gsi1(id: &str) -> String {
-        format!("{}#{}", Self::get_type(), id)
-    }
+//     pub fn get_gsi1(id: &str) -> String {
+//         format!("{}#{}", Self::get_type(), id)
+//     }
 
-    pub fn get_gsi1_deleted(id: &str) -> String {
-        format!("{}#{}", Self::get_deleted_type(), id)
-    }
+//     pub fn get_gsi1_deleted(id: &str) -> String {
+//         format!("{}#{}", Self::get_deleted_type(), id)
+//     }
 
-    pub fn get_deleted_type() -> String {
-        "deleted#organization".to_string()
-    }
+//     pub fn get_deleted_type() -> String {
+//         "deleted#organization".to_string()
+//     }
 
-    pub fn get_type() -> String {
-        "organization".to_string()
-    }
-}
+//     pub fn get_type() -> String {
+//         "organization".to_string()
+//     }
+// }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

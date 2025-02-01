@@ -24,11 +24,9 @@ pub struct UserControllerV1 {
 }
 
 impl UserControllerV1 {
-    pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = User::get_repository(pool.clone());
         let verification = Verification::get_repository(pool.clone());
-
-        repo.create_table().await?;
 
         let ctrl = UserControllerV1 { repo, verification };
 
@@ -39,7 +37,7 @@ impl UserControllerV1 {
             .with_state(ctrl.clone())
             .nest(
                 "/verification",
-                VerificationControllerV1::route(pool.clone()).await?,
+                VerificationControllerV1::route(pool.clone())?,
             ))
     }
 

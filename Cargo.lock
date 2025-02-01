@@ -868,6 +868,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
+ "serde_json",
  "serde_urlencoded",
  "syn 2.0.96",
  "tracing",
