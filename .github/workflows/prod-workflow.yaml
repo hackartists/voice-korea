@@ -37,11 +37,11 @@ jobs:
           key: web-cache-builder
           path: |
             target
-      
+
       - name: Install dependencies
         run: |
           cargo install dioxus-cli --version 0.6.1
-          cargo install toml-cli 
+          cargo install toml-cli
           npm install -g aws-cdk tailwindcss@3
 
       - name: Deploy APIs
@@ -99,9 +99,8 @@ jobs:
           SERVICE: api
           BASE_DOMAIN: biyard.co
           DOMAIN: voice-korea-api.dev.biyard.co
-          RDS_ADMIN_PASSWORD: ${{ secrets.DEV_RDS_ADMIN_PASSWORD }}
           DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_BASE_URL }}/voicekorea
           AUTH_TYPE: jwt
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
           ENABLE_S3: false
