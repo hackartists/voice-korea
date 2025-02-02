@@ -51,7 +51,7 @@ clean:
 	rm -rf dist public/tailwind.css .aws-sam
 
 public/tailwind.css:
-	npx tailwindcss -i ./input.css -o ./public/tailwind.css
+	tailwindcss -i ./input.css -o ./public/tailwind.css
 
 build: public/tailwind.css
 	$(BUILD_ENV) dx build --release
