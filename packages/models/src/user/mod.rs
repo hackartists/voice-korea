@@ -8,9 +8,9 @@ use by_types::QueryResponse;
 use validator::ValidationError;
 
 #[derive(validator::Validate)]
-#[api_model(base = "/auth/v1", action = [signup(code = String), reset(code = String)], table = users, iter_type=QueryResponse)]
+#[api_model(base = "/auth/v1", action = [signup(code = String), reset(code = String)], read_action = refresh, table = users, iter_type=QueryResponse)]
 pub struct User {
-    #[api_model(primary_key)]
+    #[api_model(primary_key, find_by_id)]
     pub id: String,
     #[api_model(auto = insert)]
     pub created_at: i64,
@@ -19,7 +19,7 @@ pub struct User {
     #[api_model(action = [signup, login, reset], unique, read_action = get_user)]
     #[validate(email)]
     pub email: String,
-    #[api_model(action = [signup, login, reset], read_action = get_user)]
+    #[api_model(action = [signup, login, reset], read_action = [get_user, find_by_email])]
     #[validate(custom(function = "validate_hex"))]
     pub password: String,
 
@@ -67,4 +67,9 @@ pub struct Organization {
     #[api_model(many_to_many = user_orgs, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = org_id)]
     #[serde(default)]
     pub users: Vec<User>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct VoiceKoreaClaim {
+    pub email: String,
 }

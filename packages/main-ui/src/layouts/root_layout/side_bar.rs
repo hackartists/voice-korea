@@ -5,7 +5,7 @@ use dioxus_logger::tracing;
 use crate::{
     components::icons::{BottomArrow, Logo},
     routes::Route,
-    service::organization_api::OrganizationApi,
+    service::login_service::LoginService,
 };
 
 use super::Language;
@@ -19,27 +19,18 @@ pub struct SidebarProps {
 
 #[component]
 pub fn SideBar(props: SidebarProps) -> Element {
-    let mut api: OrganizationApi = use_context();
+    let mut srv: LoginService = use_context();
 
-    let _ = use_resource(move || {
-        let mut api = api.clone();
-        async move {
-            let organizations = api.list_organizations(Some(100), None).await;
-            let items = organizations.unwrap_or_default().items;
-            api.set_organization(items);
-        }
-    });
+    let organizations = srv.get_orgs();
+    let selected_organization = srv.get_selected_org().unwrap_or_default();
 
-    let organizations = api.get_organizations();
-    let selected_organization = api.get_selected_organization_id();
-
-    tracing::debug!("selected organization: {selected_organization}");
+    tracing::debug!("selected organization: {}", selected_organization.name);
 
     let organization_menus: Vec<MenuItem> = organizations
         .iter()
         .map(|v| MenuItem {
-            id: v.organization_id.clone(),
-            title: v.organization_name.clone(),
+            id: v.id.clone(),
+            title: v.name.clone(),
             is_selected: false,
             link: None,
         })
@@ -57,9 +48,9 @@ pub fn SideBar(props: SidebarProps) -> Element {
                     div { class: "flex flex-col grow items-center w-full",
                         SectionMenus {
                             onselected: move |menu: SelectedMenu| {
-                                api.set_selected_organization_id(menu.id.clone());
+                                srv.select_org(menu.id);
                             },
-                            title: "{Organization}".to_string(),
+                            title: selected_organization.name.clone(),
                             menus: organization_menus,
                         }
                         SectionMenus {
