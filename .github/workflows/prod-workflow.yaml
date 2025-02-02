@@ -59,7 +59,7 @@ jobs:
           ENABLE_LAMBDA: true
           ENABLE_FARGATE: false
           ENABLE_DYNAMO: false
-          ENABLECRON: false
+          ENABLE_CRON: false
 
         run: |
           make deploy-web-if-needed

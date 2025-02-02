@@ -54,19 +54,25 @@ mod utils;
 
 async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     tracing::info!("Running migration");
-    Organization::get_repository(pool.clone())
-        .create_table()
-        .await?;
-    Verification::get_repository(pool.clone())
-        .create_table()
-        .await?;
-    User::get_repository(pool.clone()).create_table().await?;
+    let v = Verification::get_repository(pool.clone());
+    let o = Organization::get_repository(pool.clone());
+    let u = User::get_repository(pool.clone());
+
+    v.create_this_table().await?;
+    o.create_this_table().await?;
+    u.create_this_table().await?;
+
+    v.create_related_tables().await?;
+    o.create_related_tables().await?;
+    u.create_related_tables().await?;
+
     tracing::info!("Migration done");
     Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let app = by_axum::new();
     let conf = config::get();
     set_auth_config(conf.auth.clone());
 
@@ -82,7 +88,7 @@ async fn main() -> Result<()> {
 
     migration(&pool).await?;
 
-    let app = by_axum::new()
+    let app = app
         .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
