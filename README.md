@@ -33,18 +33,63 @@ make run
 
 
 ## Deployment
+### Main UI
+
+``` bash
+export STACK=voice-korea-dev-stack
+export SERVICE=main-ui
+export ENV=dev
+export BASE_DOMAIN=biyard.co
+export DOMAIN=voice-korea.dev.biyard.co
+
+export ENABLE_S3=true
+export ENABLE_LAMBDA=true
+export ENABLE_FARGATE=false
+export ENABLE_DYNAMO=false
+export ENABLECRON=false
+
+
+```
+
 ### Main API
 
 ``` bash
-export SERVICE=main-api
+export ENV=dev
+export STACK=voice-korea-api-dev-stack
+export SERVICE=api
 export ENABLE_S3=false
 export ENABLE_FARGATE=false
 export ENABLE_DYNAMO=false
-export ENABLE_RDS=true
+export ENABLE_RDS=false
 export ENABLE_LAMBDA=true
-export DOMAIN=
-export DATABASE_TYPE=""
+export BASE_DOMAIN=biyard.co
+export DOMAIN=voice-korea-api.dev.biyard.co
+
+export RDS_ADMIN_PASSWORD=""
+export DATABASE_TYPE=postgres
 export DATABASE_URL=""
+export NONCE_LAB_API_TOKEN=
+export INTERNAL_SERVER_KEY=
+
 
 ENV=dev make deploy
+```
+
+### Watcher API
+
+``` bash
+export STACK=voice-korea-watcher-api-dev-stack
+export ENV=dev
+export SERVICE=watcher
+export ENABLE_S3=false
+export ENABLE_FARGATE=false
+export ENABLE_DYNAMO=false
+export ENABLE_RDS=false
+export ENABLE_LAMBDA=true
+export BASE_DOMAIN=biyard.co
+export ENABLE_CRON=true
+export SCHEDULE='cron(0 15 * * ? *)'
+export DOMAIN=voice-korea-watcher-api.dev.biyard.co
+
+
 ```

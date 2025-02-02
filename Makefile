@@ -13,14 +13,7 @@ VPC_ID ?= $(shell aws ec2 describe-vpcs --query "Vpcs[0].VpcId" --output json | 
 BASE_DOMAIN ?= biyard.co
 
 DOMAIN ?= voice-korea.$(ENV).$(BASE_DOMAIN)
-SUBDOMAIN ?= $(ENV).$(BASE_DOMAIN)
-API_DOMAIN ?= voice-korea-api.$(ENV).$(BASE_DOMAIN)
-WATCHER_DOMAIN ?= voice-korea-watcher-api.$(ENV).$(BASE_DOMAIN)
 CDN_ID ?= $(shell aws cloudfront list-distributions --query "DistributionList.Items[*].{id:Id,test:AliasICPRecordals[?CNAME=='$(DOMAIN)']}" --output json |jq '. | map(select(.test | length > 0))[0] | .id' | tr -d \")
-ACM_ID ?= $(shell aws acm list-certificates --query "CertificateSummaryList[*].{id:CertificateArn,domains:SubjectAlternativeNameSummaries}[?contains(domains,'$(DOMAIN)')].id" --output text --region us-east-1)
-API_ACM_ID ?= $(shell aws acm list-certificates --query "CertificateSummaryList[*].{id:CertificateArn,domains:SubjectAlternativeNameSummaries}[?contains(domains,'$(API_DOMAIN)')].id" --output text --region us-east-1)
-WATCHER_ACM_ID ?= $(shell aws acm list-certificates --query "CertificateSummaryList[*].{id:CertificateArn,domains:SubjectAlternativeNameSummaries}[?contains(domains,'$(WATCHER_DOMAIN)')].id" --output text --region us-east-1)
-HOSTED_ZONE_ID ?= $(shell basename `aws route53 list-hosted-zones-by-name --dns-name $(BASE_DOMAIN) --query "HostedZones[0].Id" --output text`)
 WORKSPACE_ROOT ?= $(PWD)
 
 TABLE_NAME ?= $(PROJECT)-$(ENV)
@@ -28,10 +21,8 @@ TABLE_NAME ?= $(PROJECT)-$(ENV)
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) CDN_ID=$(CDN_ID) ACM_ID=$(ACM_ID) HOSTED_ZONE_ID=$(HOSTED_ZONE_ID) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE)
 
 BUILD_WEB_CDK_ENV ?= SERVICE=$(SERVICE) ENV=$(ENV) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) ACM_ID=$(ACM_ID) HOSTED_ZONE_ID=$(HOSTED_ZONE_ID) WORKSPACE_ROOT=$(WORKSPACE_ROOT) CODE_PATH=$(PWD)/.build/platform ENABLE_S3=true ENABLE_DYNAMO=false
-BUILD_API_CDK_ENV ?= SERVICE=$(SERVICE)-api ENV=$(ENV) DOMAIN=$(API_DOMAIN) TABLE_NAME=$(TABLE_NAME) ACM_ID=$(API_ACM_ID) HOSTED_ZONE_ID=$(HOSTED_ZONE_ID) WORKSPACE_ROOT=$(WORKSPACE_ROOT) CODE_PATH=$(PWD)/.build/api ENABLE_DYNAMO=true
-BUILD_WATCHER_CDK_ENV ?= SERVICE=$(SERVICE)-watcher-api ENV=$(ENV) DOMAIN=$(WATCHER_DOMAIN) ACM_ID=$(WATCHER_ACM_ID) HOSTED_ZONE_ID=$(HOSTED_ZONE_ID) WORKSPACE_ROOT=$(WORKSPACE_ROOT) CODE_PATH=$(PWD)/.build/watcher ENABLE_DYNAMO=false ENABLE_CRON=true
 
-BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE) VPC_ID=$(VPC_ID) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) COMMIT=$(COMMIT) ENV=$(ENV) ENABLE_S3=$(ENABLE_S3) ENABLE_DYNAMO=$(ENABLE_DYNAMO) ENABLE_FARGATE=$(ENABLE_FARGATE) ENABLE_LAMBDA=$(ENABLE_LAMBDA) ENABLE_OPENSEARCH=$(ENABLE_OPENSEARCH) BASE_DOMAIN=$(BASE_DOMAIN) PROJECT=$(PROJECT) STACK=$(STACK)
+BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE) VPC_ID=$(VPC_ID) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) COMMIT=$(COMMIT) ENV=$(ENV) ENABLE_S3=$(ENABLE_S3) ENABLE_DYNAMO=$(ENABLE_DYNAMO) ENABLE_FARGATE=$(ENABLE_FARGATE) ENABLE_LAMBDA=$(ENABLE_LAMBDA) ENABLE_OPENSEARCH=$(ENABLE_OPENSEARCH) BASE_DOMAIN=$(BASE_DOMAIN) PROJECT=$(PROJECT)
 
 run:
 	cd packages/$(SERVICE) && make run
@@ -65,13 +56,13 @@ build: clean
 	mkdir -p .build
 	cd packages/$(SERVICE) && ENV=$(ENV) ARTIFACT_DIR=$(PWD)/.build/$(SERVICE) make build
 
-fixtures/cdk/node_modules:
-	cd fixtures/cdk && npm install
+deps/rust-sdk/cdk/node_modules:
+	cd deps/rust-sdk/cdk && npm install
 
-cdk-deploy: fixtures/cdk/node_modules
-	cd fixtures/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) npm run build
-	cd fixtures/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk synth
-	cd fixtures/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk deploy --require-approval never $(AWS_FLAG) --all
+cdk-deploy: deps/rust-sdk/cdk/node_modules
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) npm run build
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk synth
+	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk deploy --require-approval never $(AWS_FLAG) --all
 
 s3-deploy:
 	cp -r packages/$(SERVICE)/public/* .build/$(SERVICE)/public

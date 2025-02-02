@@ -181,7 +181,7 @@ pub fn LoginComponent(props: LoginProps) -> Element {
                             password_message: props.password_message,
                         }
                     }
-                    div {
+                    button {
                         onclick: move |_| async move {
                             let _ = ctrl.login_clicked(props.lang).await;
                         },

@@ -1,11 +1,9 @@
-#![allow(non_snake_case)]
+#![allow(non_snake_case, dead_code)]
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
+use models::*;
 use regex::Regex;
 
-use crate::service::auth_api::{AuthApi, SendNotificationParams};
-
-use crate::service::user_api::{SignupRequest, UserApi};
 use crate::utils::hash::get_hash_string;
 
 #[derive(Debug, Clone, Copy)]
@@ -42,14 +40,16 @@ pub struct Controller {
     // click_send_authentication: Signal<bool>,
     // click_search_address: Signal<bool>,
     // click_complete_join_membership: Signal<bool>,
-    auth_api: AuthApi,
-    user_api: UserApi,
+    auth_api: Signal<VerificationClient>,
+    user_api: Signal<UserClient>,
 }
 
 impl Controller {
     pub fn init() -> Self {
-        let auth_api: AuthApi = use_context();
-        let user_api: UserApi = use_context();
+        let api_url = crate::config::get().api_url;
+        let auth_api = use_signal(|| Verification::get_client(api_url));
+        let user_api = use_signal(|| User::get_client(api_url));
+
         let ctrl = Self {
             authorize_type: use_signal(|| 0),
             step: use_signal(|| 0),
@@ -285,16 +285,15 @@ impl Controller {
         }
 
         self.email_address_error.set(false);
-        let res = self
-            .auth_api
-            .send_notification(SendNotificationParams {
-                email: self.get_email_address(),
-            })
-            .await;
 
-        match res {
-            Ok(s) => {
-                self.auth_key.set(s);
+        match self
+            .auth_api
+            .read()
+            .send_verification_code(self.get_email_address())
+            .await
+        {
+            Ok(Verification { id, .. }) => {
+                self.auth_key.set(id);
             }
             Err(e) => {
                 tracing::error!("send email failed: {}", e);
@@ -340,12 +339,12 @@ impl Controller {
         self.password_pattern_error.set(false);
         let res = self
             .user_api
-            .signup_user(SignupRequest {
-                auth_id: self.get_auth_key(),
-                auth_value: self.get_authentication_number(),
-                email: self.get_email_address(),
-                password: get_hash_string(self.get_password().as_bytes()),
-            })
+            .read()
+            .signup(
+                self.get_email_address(),
+                get_hash_string(self.get_password().as_bytes()),
+                self.get_authentication_number(),
+            )
             .await;
 
         match res {
@@ -357,18 +356,18 @@ impl Controller {
                 self.set_step(1);
             }
             Err(e) => match e {
-                ServerFnError::ServerError(v) => {
-                    if v.contains("does not match") {
-                        self.invalid_authkey_error.set(true);
-                    } else if v.contains("Email already used") {
-                        self.already_exists_user_error.set(true);
-                    } else {
-                        self.unknown_error.set(true);
-                    }
+                ApiError::InvalidVerificationCode => {
+                    self.invalid_authkey_error.set(true);
                 }
-                _ => {}
+                ApiError::DuplicateUser => {
+                    self.already_exists_user_error.set(true);
+                }
+                e => {
+                    tracing::error!("signup failed: {}", e);
+                    self.unknown_error.set(true);
+                }
             },
-        }
+        };
     }
 
     fn check_and_update_terms_agreement(&mut self) {

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use chrono::{DateTime, FixedOffset, MappedLocalTime, TimeZone, Utc};
 
 pub fn convert_rfc3339_to_timestamp_millis(iso_str: &str) -> Option<i64> {

@@ -16,7 +16,9 @@ mod survey;
 mod update_field;
 mod user;
 
-pub use crate::user::{AuthDocument, User};
+pub use crate::prelude::*;
+pub use by_types::QueryResponse;
+
 pub mod prelude {
     pub use crate::attribute::*;
     pub use crate::auth::*;

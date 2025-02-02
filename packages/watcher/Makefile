@@ -1,4 +1,6 @@
 ENV ?= local
+SERVICE ?= watcher
+WORKSPACE_ROOT ?= ../..
 VERSION ?= $(shell toml get Cargo.toml package.version | tr -d \")
 COMMIT ?= $(shell git rev-parse --short HEAD)
 
@@ -20,7 +22,10 @@ run:
 	$(BUILD_ENV) cargo lambda watch
 
 build:
-	$(BUILD_ENV) cargo build --release -p watcher
+	$(BUILD_ENV) cargo build --release -p $(SERVICE)
+	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
+	cp $(WORKSPACE_ROOT)/target/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
+
 get-version:
 	curl -X GET "http://localhost:9000/lambda-url/watcher/version"
 

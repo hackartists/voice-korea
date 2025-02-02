@@ -1,7 +1,8 @@
+#![allow(dead_code, unused)]
 use std::collections::HashMap;
 
 use models::prelude::{
-    Age, SurveyAttribute, Gender, SurveyPanel, Quota, RegionCode, SalaryTier, SurveyQuestion,
+    Age, Gender, Quota, RegionCode, SalaryTier, SurveyAttribute, SurveyPanel, SurveyQuestion,
     SurveyQuestionType, SurveyStatus,
 };
 use serde::{Deserialize, Serialize};

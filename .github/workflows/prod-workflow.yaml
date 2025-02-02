@@ -37,11 +37,11 @@ jobs:
           key: web-cache-builder
           path: |
             target
-      
+
       - name: Install dependencies
         run: |
           cargo install dioxus-cli --version 0.6.1
-          cargo install toml-cli 
+          cargo install toml-cli
           npm install -g aws-cdk tailwindcss@3
 
       - name: Deploy APIs
@@ -74,9 +74,10 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
+      - uses: cargo-bins/cargo-binstall@main
       - name: Install dependencies
         run: |
-          cargo install toml-cli
+          cargo binstall toml-cli
 
       - name: API Cache builder
         id: api-cache-builder
@@ -93,10 +94,24 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           NONCE_LAB_API_TOKEN: ${{ secrets.NONCE_LAB_API_TOKEN }}
           INTERNAL_SERVER_KEY: ${{ secrets.VOICE_KOREA_INTERNAL_SERVER_KEY }}
+          ENV: dev
+          STACK: voice-korea-api-dev-stack
+          SERVICE: api
+          BASE_DOMAIN: biyard.co
+          DOMAIN: voice-korea-api.dev.biyard.co
+          DATABASE_TYPE: postgres
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_BASE_URL }}/voicekorea
+          AUTH_TYPE: jwt
+          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
+          ENABLE_S3: false
+          ENABLE_FARGATE: false
+          ENABLE_DYNAMO: false
+          ENABLE_LAMBDA: true
+          ENABLE_RDS: false
         run: |
           npm i -g aws-cdk
-          ENV=dev make deploy-api-if-needed
-        
+          make deploy-if-needed
+
   watcher-deployment:
     runs-on: ubuntu-22.04
 
@@ -136,7 +151,19 @@ jobs:
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           INTERNAL_SERVER_KEY: ${{ secrets.VOICE_KOREA_INTERNAL_SERVER_KEY }}
+          STACK: voice-korea-watcher-api-dev-stack
+          ENV: dev
+          SERVICE: watcher
+          ENABLE_S3: false
+          ENABLE_FARGATE: false
+          ENABLE_DYNAMO: false
+          ENABLE_RDS: false
+          ENABLE_LAMBDA: true
+          BASE_DOMAIN: biyard.co
+          ENABLE_CRON: true
+          SCHEDULE: 'cron(0 15 * * ? *)'
+          DOMAIN: voice-korea-watcher-api.dev.biyard.co
 
         run: |
           npm i -g aws-cdk
-          ENV=dev make deploy-watcher-if-needed
+          make deploy-if-needed

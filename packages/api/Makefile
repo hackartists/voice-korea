@@ -6,6 +6,7 @@ JWT_SECRET ?= "JWT_SECRET"
 AWS_ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
 AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
 AWS_REGION ?= $(shell aws configure get region)
+WORKSPACE_ROOT ?= $(PWD)/../..
 
 ifeq ("$(ENV)","prod")
 	LOG_LEVEL ?= error
@@ -28,4 +29,6 @@ run:
 	$(BUILD_ENV) cargo watch -x run -w src
 
 build:
-	$(BUILD_ENV) cargo build -p api --release --features lambda
+	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
+	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
+	cp $(WORKSPACE_ROOT)/target/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
