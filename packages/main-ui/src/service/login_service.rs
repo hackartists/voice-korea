@@ -1,19 +1,64 @@
 use dioxus::prelude::*;
+use dioxus_logger::tracing;
+use models::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct LoginService {
     pub email: Signal<Option<String>>,
+    pub orgs: Signal<Vec<Organization>>,
+    pub selected_org: Signal<Option<Organization>>,
     // pub token: Signal<String>,
 }
 
 impl LoginService {
     pub fn init() {
-        let srv = LoginService {
+        let mut srv = LoginService {
             email: use_signal(|| None),
+            orgs: use_signal(|| vec![]),
+            selected_org: use_signal(|| None),
             // token: use_signal(|| "".to_string()),
         };
 
+        use_effect(move || {
+            tracing::debug!("LoginService::init for web");
+            spawn(async move {
+                match User::get_client(&crate::config::get().api_url)
+                    .refresh()
+                    .await
+                {
+                    Ok(user) => {
+                        tracing::debug!("User(refreshed): {:?}", user);
+                        srv.set_orgs(user.orgs);
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to refresh user: {:?}", e);
+                    }
+                };
+            });
+        });
+
         use_context_provider(|| srv);
+    }
+
+    pub fn set_orgs(&mut self, orgs: Vec<Organization>) {
+        if orgs.len() > 0 {
+            self.selected_org.set(Some(orgs[0].clone()));
+        }
+        self.orgs.set(orgs);
+    }
+
+    pub fn get_orgs(&self) -> Vec<Organization> {
+        (self.orgs)()
+    }
+
+    pub fn select_org(&mut self, id: String) {
+        let org = self.get_orgs();
+        let org = org.iter().find(|org| org.id == id);
+        self.selected_org.set(org.cloned());
+    }
+
+    pub fn get_selected_org(&self) -> Option<Organization> {
+        (self.selected_org)()
     }
 
     #[cfg(feature = "web")]

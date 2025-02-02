@@ -19,6 +19,8 @@ pub enum ApiError {
     DatabaseQueryError(String),
 
     InvalidVerificationCode,
+    InvalidAction,
+    Unauthorized,
 
     NotFound,
 

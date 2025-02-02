@@ -21,14 +21,20 @@ use crate::utils::hash::get_hash_string;
 pub struct UserControllerV1 {
     repo: UserRepository,
     verification: VerificationRepository,
+    org: OrganizationRepository,
 }
 
 impl UserControllerV1 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = User::get_repository(pool.clone());
         let verification = Verification::get_repository(pool.clone());
+        let org = Organization::get_repository(pool.clone());
 
-        let ctrl = UserControllerV1 { repo, verification };
+        let ctrl = UserControllerV1 {
+            repo,
+            verification,
+            org,
+        };
 
         Ok(by_axum::axum::Router::new()
             .route("/:id", get(Self::get_user))
@@ -67,13 +73,24 @@ impl UserControllerV1 {
     }
 
     pub async fn list_user(
-        State(_ctrl): State<UserControllerV1>,
-        Extension(_auth): Extension<Option<Authorization>>,
-        Query(q): Query<UserQuery>,
+        State(ctrl): State<UserControllerV1>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Query(q): Query<UserParam>,
     ) -> Result<Json<UserGetResponse>> {
         tracing::debug!("list_user {:?}", q);
 
-        Ok(Json(UserGetResponse::Query(QueryResponse::default())))
+        match q {
+            UserParam::Query(_params) => Ok(Json(UserGetResponse::Query(QueryResponse::default()))),
+            UserParam::Read(action) => match action.action.unwrap() {
+                UserReadActionType::Refresh => {
+                    if auth.is_none() {
+                        return Err(ApiError::Unauthorized);
+                    }
+                    ctrl.refresh_user(auth.unwrap()).await
+                }
+                _ => Err(ApiError::InvalidAction),
+            },
+        }
     }
 }
 
@@ -90,6 +107,20 @@ impl UserControllerV1 {
             tracing::error!("Failed to generate JWT: {}", e);
             ApiError::JWTGenerationFail(e.to_string())
         })
+    }
+
+    pub async fn refresh_user(&self, auth: Authorization) -> Result<Json<UserGetResponse>> {
+        match auth {
+            Authorization::Bearer { claims } => {
+                let user = self
+                    .repo
+                    .find_one(&UserReadAction::new().find_by_email(claims.custom["email"].clone()))
+                    .await?;
+
+                Ok(Json(UserGetResponse::Read(user)))
+            }
+            _ => Err(ApiError::Unauthorized),
+        }
     }
 
     pub async fn verify_code(&self, email: String, code: String) -> Result<()> {
@@ -115,15 +146,24 @@ impl UserControllerV1 {
         self.verify_code(body.email.clone(), body.code.clone())
             .await?;
 
-        let mut user = self
+        let pw = get_hash_string(body.password.as_bytes());
+
+        let user = self
             .repo
-            .insert(body.email, get_hash_string(body.password.as_bytes()))
+            .insert(body.email.clone(), pw.clone())
             .await
             .map_err(|e| {
                 tracing::error!("Failed to insert user: {}", e);
                 ApiError::DuplicateUser
             })?;
-        user.password = "".to_string();
+        self.org
+            .insert_with_dependency(user.id.parse().unwrap(), user.clone().email)
+            .await?;
+
+        let user = self
+            .repo
+            .find_one(&UserReadAction::new().get_user(body.email, pw))
+            .await?;
 
         let jwt = self.generate_token(&user)?;
 

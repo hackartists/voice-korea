@@ -62,7 +62,6 @@ impl Controller {
     pub async fn login_clicked(&mut self, lang: Language) {
         let user_api = User::get_client(&crate::config::get().api_url);
         let mut login_service = use_login_service();
-        // let mut api: OrganizationApi = use_context();
         let navigator = use_navigator();
         let res = user_api
             .login(
@@ -72,13 +71,10 @@ impl Controller {
             .await;
 
         match res {
-            Ok(_user) => {
+            Ok(user) => {
                 let token = rest_api::get_authz_token().unwrap_or_default();
                 login_service.setup(self.get_email(), token).await;
-                // TODO: load organizations
-                // let organizations = api.list_organizations(Some(100), None).await;
-                // let items = organizations.unwrap_or_default().items;
-                // api.set_organization(items);
+                login_service.set_orgs(user.orgs);
                 navigator.push(Route::DashboardPage { lang });
             }
             Err(e) => match e {
