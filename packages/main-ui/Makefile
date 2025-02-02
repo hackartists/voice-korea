@@ -1,9 +1,12 @@
-SERVICE ?= $(shell basename `git rev-parse --show-toplevel`)
+SERVICE ?= main-ui
 VERSION ?= $(shell toml get Cargo.toml package.version | tr -d \")
 COMMIT ?= $(shell git rev-parse --short HEAD)
 ENV ?= local
 HOST ?= 0.0.0.0:8080
 PROFILE ?= default
+WORKSPACE_ROOT ?= ../..
+ARTIFACT_DIR ?= $(WORKSPACE_ROOT)/.build/$(SERVICE)
+
 
 ifneq ("$(PROFILE)","default")
 	AWS_FLAG += --profile $(PROFILE)

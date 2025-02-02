@@ -46,8 +46,7 @@ export ENABLE_S3=true
 export ENABLE_LAMBDA=true
 export ENABLE_FARGATE=false
 export ENABLE_DYNAMO=false
-export ENABLE_RDS=false
-export ENABLE_CRON=false
+export ENABLECRON=false
 
 
 ```
@@ -61,7 +60,7 @@ export SERVICE=api
 export ENABLE_S3=false
 export ENABLE_FARGATE=false
 export ENABLE_DYNAMO=false
-export ENABLE_RDS=true
+export ENABLE_RDS=false
 export ENABLE_LAMBDA=true
 export BASE_DOMAIN=biyard.co
 export DOMAIN=voice-korea-api.dev.biyard.co
@@ -85,7 +84,7 @@ export SERVICE=watcher
 export ENABLE_S3=false
 export ENABLE_FARGATE=false
 export ENABLE_DYNAMO=false
-export ENABLE_RDS=true
+export ENABLE_RDS=false
 export ENABLE_LAMBDA=true
 export BASE_DOMAIN=biyard.co
 export ENABLE_CRON=true
