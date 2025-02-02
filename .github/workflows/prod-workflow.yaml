@@ -50,8 +50,19 @@ jobs:
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           API_URL: https://voice-korea-api.dev.biyard.co
+          ENV: dev
+          STACK: voice-korea-dev-stack
+          SERVICE: main-ui
+          BASE_DOMAIN: biyard.co
+          DOMAIN: voice-korea.dev.biyard.co
+          ENABLE_S3: true
+          ENABLE_LAMBDA: true
+          ENABLE_FARGATE: false
+          ENABLE_DYNAMO: false
+          ENABLECRON: false
+
         run: |
-          ENV=dev make deploy-web-if-needed
+          make deploy-web-if-needed
 
   api-deployment:
     runs-on: ubuntu-22.04
