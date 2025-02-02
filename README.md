@@ -38,6 +38,17 @@ make run
 ``` bash
 export STACK=voice-korea-dev-stack
 export SERVICE=main-ui
+export ENV=dev
+export BASE_DOMAIN=biyard.co
+export DOMAIN=voice-korea.dev.biyard.co
+
+export ENABLE_S3=true
+export ENABLE_LAMBDA=true
+export ENABLE_FARGATE=false
+export ENABLE_DYNAMO=false
+export ENABLE_RDS=false
+export ENABLE_CRON=false
+
 
 ```
 

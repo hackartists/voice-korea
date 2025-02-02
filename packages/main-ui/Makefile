@@ -48,17 +48,18 @@ run: public/tailwind.css
 	$(BUILD_ENV) dx serve
 
 clean:
-	rm -rf dist public/tailwind.css .aws-sam
+	rm -rf public/tailwind.css
 
 public/tailwind.css:
 	tailwindcss -i ./input.css -o ./public/tailwind.css
 
-build: public/tailwind.css
-	$(BUILD_ENV) dx build --release
-
-.ONESHELL:
-build-lambda: clean public/tailwind.css
-	$(BUILD_ENV) dx build --release --server-features lambda -p platform
+build: clean public/tailwind.css
+	$(BUILD_ENV) dx build --release --fullstack --server-features lambda
+	cp -r $(WORKSPACE_ROOT)/target/dx/$(SERVICE)/release/web $(ARTIFACT_DIR)
+	mv $(ARTIFACT_DIR)/server $(ARTIFACT_DIR)/bootstrap
 
 version:
 	@echo $(VERSION)
+
+build-docker: clean public/tailwind.css
+	docker run -it --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) biyard/dioxus-docker bash -c 'source ~/.cargo/env && $(BUILD_ENV) dx build --release --fullstack --server-features lambda && cp -r /app/target/dx/$(SERVICE)/release/web /app/.build/$(SERVICE) && mv /app/.build/$(SERVICE)/server /app/.build/$(SERVICE)/bootstrap'
