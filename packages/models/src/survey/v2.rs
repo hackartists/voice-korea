@@ -42,14 +42,38 @@ pub struct SurveyV2 {
 
     #[api_model(summary, action = create, many_to_one = organizations)]
     pub org_id: String,
-    // #[api_model(action = create)]
-    // pub questions: Vec<Question>,
-
+    #[api_model(action = create, type = JSONB, version = v0.1)]
+    pub questions: Vec<Question>,
     // #[api_model(summary, one_to_many= responses, aggregator = count)]
     // pub response_count: i64,
 
     // #[api_model(summary, many_to_many = attrs, foreign_table_name = attributes, foreign_primary_key = attr_id, foreign_reference_key = survey_id)]
     // pub attributes: Vec<Attribute>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[serde(rename_all = "snake_case", tag = "answerType")]
+pub enum Question {
+    SingleChoice(ChoiceQuestion),
+    MultipleChoice(ChoiceQuestion),
+    ShortAnswer(SubjectiveQuestion),
+    Essay(SubjectiveQuestion),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubjectiveQuestion {
+    pub title: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ChoiceQuestion {
+    pub title: String,
+    pub description: Option<String>,
+    pub options: Vec<String>,
 }
 
 #[derive(
@@ -94,12 +118,18 @@ pub enum ProjectType {
     Deliberation = 2,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel)]
+// FIXME: rename to ProjectStatus after finishing migration from public_opinion.
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
+)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 #[serde(rename_all = "snake_case")]
 pub enum ProjectStatus {
     #[default]
+    #[translate(ko = "준비중")]
     Ready = 1,
+    #[translate(ko = "진행중")]
     InProgress = 2,
+    #[translate(ko = "마감")]
     Finish = 3,
 }

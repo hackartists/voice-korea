@@ -120,6 +120,7 @@ impl SurveyControllerV2 {
                 body.ended_at,
                 body.description,
                 body.quotes,
+                body.questions,
             )
             .await?;
 
