@@ -8,29 +8,57 @@ use by_types::QueryResponse;
 
 #[derive(validator::Validate)]
 #[api_model(base = "/panels/v2", table = panels, iter_type=QueryResponse)]
-pub struct PanelV2 {
-    #[api_model(primary_key, find_by_id, action = delete)]
+pub struct Test {
+    #[api_model(summary, primary_key, find_by_id, action = delete, read_action = get_panel)]
     pub id: String,
-    #[api_model(auto = insert)]
+    #[api_model(summary, auto = insert)]
     pub created_at: i64,
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(action = [create], action_by_id = update)]
+    #[api_model(summary, action = [create], action_by_id = update)]
     pub name: String,
-    #[api_model(action = [create], action_by_id = update)]
+    #[api_model(summary, action = [create], action_by_id = update)]
     pub user_count: u64,
 
-    #[api_model(action = [create], action_by_id = update, type = INTEGER, nullable)]
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
+    pub age: Option<Age>,
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
+    pub gender: Option<Gender>,
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
+    pub region: Option<Region>,
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
+    pub payload: Option<Payload>,
+
+    #[api_model(summary, action = [create], query_action = list_panels)]
+    pub org_id: String,
+}
+
+#[derive(validator::Validate)]
+#[api_model(base = "/panels/v2", table = panels, iter_type=QueryResponse)]
+pub struct PanelV2 {
+    #[api_model(summary, primary_key, find_by_id, action = delete, read_action = get_panel)]
+    pub id: String,
+    #[api_model(summary, auto = insert)]
+    pub created_at: i64,
+    #[api_model(auto = [insert, update])]
+    pub updated_at: i64,
+
+    #[api_model(summary, action = [create], action_by_id = update)]
+    pub name: String,
+    #[api_model(summary, action = [create], action_by_id = update)]
+    pub user_count: u64,
+
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
     pub age: Age,
-    #[api_model(action = [create], action_by_id = update, type = INTEGER, nullable)]
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
     pub gender: Gender,
-    #[api_model(action = [create], action_by_id = update, type = INTEGER, nullable)]
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
     pub region: Region,
-    #[api_model(action = [create], action_by_id = update, type = INTEGER, nullable)]
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
     pub payload: Payload,
 
-    #[api_model(action = [create], query_action = list_panels)]
+    #[api_model(summary, action = [create], query_action = list_panels)]
     pub org_id: String,
 }
 
