@@ -14,21 +14,7 @@ endif
 
 ifeq ("$(ENV)","prod")
 	RUST_LOG ?= info
-	VOICE_KOREA_TABLE_NAME = voice-korea-prod
-	BASE_URL = https://voice-korea.biyard.co
 	API_URL ?= https://voice-korea-api.dev.biyard.co
-endif
-
-ifeq ("$(ENV)","dev")
-	VOICE_KOREA_TABLE_NAME = voice-korea-dev
-	BASE_URL = https://voice-korea.dev.biyard.co
-	API_URL ?= https://voice-korea-api.dev.biyard.co
-endif
-
-ifeq ("$(ENV)","local")
-	VOICE_KOREA_TABLE_NAME = voice-korea-dev
-	BASE_URL = http://localhost:8080
-	API_URL ?= http://localhost:3000
 endif
 
 API_URL ?= https://voice-korea-api.dev.biyard.co

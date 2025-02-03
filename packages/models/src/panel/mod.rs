@@ -61,6 +61,19 @@ impl PanelAttributeItem {
     }
 }
 
+#[derive(validator::Validate)]
+pub struct PanelV2 {
+    pub id: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+
+    pub name: String,
+    pub quotes: i64,
+
+    pub age: String,
+    pub salary: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct Panel {
