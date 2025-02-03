@@ -109,21 +109,21 @@ impl Controller {
                     (
                         d.members
                             .iter()
-                            .map(|member| Member {
-                                member_id: member.member.id.clone(),
+                            .map(|mem| Member {
+                                member_id: mem.member.id.clone(),
                                 profile: None,
-                                profile_name: member.member.name.clone(),
-                                email: member.member.email.clone(),
+                                profile_name: Some(mem.member.name.clone()),
+                                email: mem.email.clone(),
                                 //FIXME: fix to group
-                                group: if member.groups.len() == 0 {
+                                group: if mem.groups.len() == 0 {
                                     "".to_string()
                                 } else {
-                                    member.groups[0].name.clone()
+                                    mem.groups[0].name.clone()
                                 },
-                                role: if member.member.role.is_none() {
+                                role: if mem.member.role.is_none() {
                                     "".to_string()
                                 } else {
-                                    member.member.role.clone().unwrap().to_string()
+                                    mem.member.role.clone().unwrap().to_string()
                                 },
                                 projects: vec![],
                             })

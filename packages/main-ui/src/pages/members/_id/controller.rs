@@ -2,7 +2,7 @@ use chrono::{Local, TimeZone};
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{Group, GroupMemberRelationship, GroupResponse, UpdateMemberRequest};
+use models::prelude::{Group, GroupResponse, MemberSummary, UpdateMemberRequest};
 
 use crate::{
     api::common::CommonQueryResponse,
@@ -57,7 +57,7 @@ pub struct Controller {
     pub member: Signal<MemberDetail>,
     pub groups: Signal<Vec<GroupResponse>>,
     pub roles: Signal<Vec<RoleField>>,
-    pub member_resource: Resource<Result<GroupMemberRelationship, ServerFnError>>,
+    pub member_resource: Resource<Result<MemberSummary, ServerFnError>>,
 
     pub member_api: MemberApi,
     pub popup_service: Signal<PopupService>,
@@ -72,7 +72,7 @@ impl Controller {
     ) -> Self {
         let translates: MemberDetailTranslate = translate(&lang);
         let api: MemberApi = use_context();
-        let member_resource: Resource<Result<GroupMemberRelationship, ServerFnError>> =
+        let member_resource: Resource<Result<MemberSummary, ServerFnError>> =
             use_resource(move || {
                 let api = api.clone();
                 let member_id = member_id.clone();
@@ -129,9 +129,9 @@ impl Controller {
                     let formatted_date = datetime.format("%Y년 %m월 %d일").to_string();
 
                     let data = MemberDetail {
-                        email: d.member.email.clone(),
+                        email: d.email.clone(),
                         profile_image: None,
-                        profile_name: d.member.name,
+                        profile_name: Some(d.member.name),
                         //FIXME: fix to group
                         group: if d.groups.len() == 0 {
                             Group::default()

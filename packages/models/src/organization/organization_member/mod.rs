@@ -20,7 +20,7 @@ pub struct MemberProject {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct ListMemberResponse {
-    pub members: Vec<GroupMemberRelationship>,
+    pub members: Vec<MemberSummary>,
     pub role_count: Vec<u64>,
     pub bookmark: Option<String>,
 }
@@ -75,14 +75,14 @@ impl Into<OrganizationMember> for (CreateMemberRequest, String, String, String) 
             name: req.name.unwrap_or_else(|| "".to_string()),
             role: req.role,
             contact: None,
-            test: "test".to_string(),
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct GroupMemberRelationship {
+pub struct MemberSummary {
+    pub email: String,
     pub member: OrganizationMember,
     pub groups: Vec<Group>,
     pub project: Vec<MemberProject>,

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 use dioxus::prelude::*;
 use models::prelude::{
-    CreateMemberRequest, GroupMemberRelationship, InviteMemberRequest, ListMemberResponse,
-    MemberActionRequest, MemberByIdActionRequest, UpdateMemberRequest,
+    CreateMemberRequest, InviteMemberRequest, ListMemberResponse, MemberActionRequest,
+    MemberByIdActionRequest, MemberSummary, UpdateMemberRequest,
 };
 
 use super::{login_service::LoginService, organization_api::OrganizationApi};
@@ -113,7 +113,7 @@ impl MemberApi {
         Ok(members)
     }
 
-    pub async fn get_member(&self, user_id: String) -> Result<GroupMemberRelationship> {
+    pub async fn get_member(&self, user_id: String) -> Result<MemberSummary> {
         let token = self.get_token();
         let id = self.get_organization_id();
 
