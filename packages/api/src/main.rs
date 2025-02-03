@@ -14,10 +14,10 @@ mod controllers {
     pub mod auth {
         pub mod v1;
     }
+    pub mod organizations {
+        pub mod v2;
+    }
     // pub mod members {
-    //     pub mod v1;
-    // }
-    // pub mod organizations {
     //     pub mod v1;
     // }
     // pub mod groups {
@@ -95,14 +95,14 @@ async fn main() -> Result<()> {
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
         )
+        .nest(
+            "/organizations/v2",
+            controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
+        )
         .layer(middleware::from_fn(authorization_middleware));
     // .nest(
     //     "/members/v1",
     //     controllers::members::v1::MemberControllerV1::router(),
-    // )
-    // .nest(
-    //     "/organizations/v1",
-    //     controllers::organizations::v1::OrganizationControllerV1::router(),
     // )
     // .nest(
     //     "/groups/v1",

@@ -1,12 +1,12 @@
 use by_axum::{
     auth::Authorization,
     axum::{
-        extract::{Path, Query, State},
-        routing::{get, post},
+        extract::{Query, State},
+        routing::get,
         Extension, Json,
     },
 };
-use dto::*;
+use models::*;
 
 #[derive(Clone, Debug)]
 pub struct OrganizationControllerV2 {
@@ -14,62 +14,32 @@ pub struct OrganizationControllerV2 {
 }
 
 impl OrganizationControllerV2 {
-    pub async fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
-        let repo = Organization::get_repository(pool);
-
-        repo.create_table().await?;
+    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+        let repo = Organization::get_repository(pool.clone());
 
         let ctrl = OrganizationControllerV2 { repo };
 
         Ok(by_axum::axum::Router::new()
-            .route(
-                "/:id",
-                get(Self::get_Organization).post(Self::act_Organization_by_id),
-            )
-            .with_state(ctrl.clone())
-            .route(
-                "/",
-                post(Self::act_Organization).get(Self::list_Organization),
-            )
+            .route("/", get(Self::list_organization))
             .with_state(ctrl.clone()))
     }
 
-    pub async fn act_Organization(
-        State(_ctrl): State<OrganizationControllerV2>,
+    pub async fn list_organization(
+        State(ctrl): State<OrganizationControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Json(body): Json<OrganizationAction>,
-    ) -> Result<Json<Organization>> {
-        tracing::debug!("act_Organization {:?}", body);
-        Ok(Json(Organization::default()))
-    }
-
-    pub async fn act_Organization_by_id(
-        State(_ctrl): State<OrganizationControllerV2>,
-        Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<String>,
-        Json(body): Json<OrganizationByIdAction>,
-    ) -> Result<Json<Organization>> {
-        tracing::debug!("act_Organization_by_id {:?} {:?}", id, body);
-        Ok(Json(Organization::default()))
-    }
-
-    pub async fn get_Organization(
-        State(_ctrl): State<OrganizationControllerV2>,
-        Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<String>,
-    ) -> Result<Json<Organization>> {
-        tracing::debug!("get_Organization {:?}", id);
-        Ok(Json(Organization::default()))
-    }
-
-    pub async fn list_Organization(
-        State(_ctrl): State<OrganizationControllerV2>,
-        Extension(_auth): Extension<Option<Authorization>>,
-        Query(q): Query<OrganizationParam>,
+        Query(param): Query<OrganizationParam>,
     ) -> Result<Json<OrganizationGetResponse>> {
-        tracing::debug!("list_Organization {:?}", q);
-        Ok(Json(OrganizationGetResponse::Query(
-            QueryResponse::default(),
-        )))
+        tracing::debug!("list_organization {:?}", param);
+
+        match param {
+            OrganizationParam::Query(q) => {
+                let organizations: QueryResponse<OrganizationSummary> = ctrl.repo.find(&q).await?;
+                Ok(Json(OrganizationGetResponse::Query(organizations)))
+            }
+            OrganizationParam::Read(_action) => {
+                // FIXME: return filtered organization
+                Ok(Json(OrganizationGetResponse::Read(Organization::default())))
+            }
+        }
     }
 }

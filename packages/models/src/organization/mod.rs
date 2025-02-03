@@ -17,11 +17,11 @@ pub struct OrganizationMiddlewareParams {
     pub id: String,
 }
 
-#[api_model(base = "/organizations/v2", table = organizations, iter_type=QueryResponse)]
+#[api_model(base = "/organizations/v2", read_action=[list_organization], table = organizations, iter_type=QueryResponse)]
 pub struct Organization {
     #[api_model(summary, primary_key)]
     pub id: String,
-    #[api_model(summary, auto = insert)]
+    #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,

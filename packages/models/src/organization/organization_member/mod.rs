@@ -25,11 +25,11 @@ pub struct ListMemberResponse {
     pub bookmark: Option<String>,
 }
 
-#[api_model(base = "/members/v2", table = organizations_members, iter_type=QueryResponse)]
+#[api_model(base = "/members/v2", table = organization_members, iter_type=QueryResponse)]
 pub struct OrganizationMember {
     #[api_model(summary, primary_key)]
     pub id: String,
-    #[api_model(summary, auto = insert)]
+    #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
@@ -37,7 +37,7 @@ pub struct OrganizationMember {
     #[api_model(many_to_one = users, unique, read_action = get_member_by_email)]
     pub user_id: String,
     #[api_model(many_to_one = organizations, read_action = list_member_by_organization)]
-    pub organization_id: String,
+    pub org_id: String,
 
     #[api_model(summary)]
     pub name: String,
@@ -63,13 +63,13 @@ pub struct OrganizationMemberResponse {
 
 impl Into<OrganizationMember> for (CreateMemberRequest, String, String, String) {
     fn into(self) -> OrganizationMember {
-        let (req, id, user_id, organization_id) = self;
+        let (req, id, user_id, org_id) = self;
         let now = chrono::Utc::now().timestamp_millis();
 
         OrganizationMember {
             id,
             user_id,
-            organization_id,
+            org_id,
             created_at: now,
             updated_at: now,
             name: req.name.unwrap_or_else(|| "".to_string()),
