@@ -3,7 +3,7 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
-use models::*;
+use models::{v2::PanelV2, *};
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
 // use sqlx::postgres::PgPoolOptions;
@@ -58,14 +58,17 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let v = Verification::get_repository(pool.clone());
     let o = Organization::get_repository(pool.clone());
     let u = User::get_repository(pool.clone());
+    let p = PanelV2::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
     u.create_this_table().await?;
+    p.create_this_table().await?;
 
     v.create_related_tables().await?;
     o.create_related_tables().await?;
     u.create_related_tables().await?;
+    p.create_related_tables().await?;
 
     tracing::info!("Migration done");
     Ok(())
