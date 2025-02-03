@@ -1,13 +1,14 @@
-use serde::{Deserialize, Serialize};
-use crate::{
-    organization::OrganizationMember,
-    group::Group,
-};
-use crate::prelude::Role;
+#![allow(unused_variables)]
+pub use crate::group::{Group, GroupInfo};
+#[allow(unused)]
+use crate::Result;
 #[cfg(feature = "server")]
 use by_axum::aide;
+use by_macros::{api_model, ApiModel};
+use by_types::QueryResponse;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Eq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -24,6 +25,61 @@ pub struct ListMemberResponse {
     pub bookmark: Option<String>,
 }
 
+#[api_model(base = "/members/v2", table = organizations_members, iter_type=QueryResponse)]
+pub struct OrganizationMember {
+    #[api_model(summary, primary_key)]
+    pub id: String,
+    #[api_model(summary, auto = insert)]
+    pub created_at: i64,
+    #[api_model(summary, auto = [insert, update])]
+    pub updated_at: i64,
+
+    #[api_model(many_to_one = users, unique, read_action = get_member_by_email)]
+    pub user_id: String,
+    #[api_model(many_to_one = organizations, read_action = list_member_by_organization)]
+    pub organization_id: String,
+
+    #[api_model(summary)]
+    pub name: String,
+    #[api_model(summary)]
+    pub role: Option<Role>,
+    #[api_model(summary)]
+    pub contact: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub struct OrganizationMemberResponse {
+    pub id: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub deleted_at: Option<i64>,
+
+    pub user_id: String,
+    pub organization_id: String,
+    pub organization_name: String,
+    pub creator: String,
+}
+
+impl Into<OrganizationMember> for (CreateMemberRequest, String, String, String) {
+    fn into(self) -> OrganizationMember {
+        let (req, id, user_id, organization_id) = self;
+        let now = chrono::Utc::now().timestamp_millis();
+
+        OrganizationMember {
+            id,
+            user_id,
+            organization_id,
+            created_at: now,
+            updated_at: now,
+            name: req.name.unwrap_or_else(|| "".to_string()),
+            role: req.role,
+            contact: None,
+            test: "test".to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct GroupMemberRelationship {
@@ -31,6 +87,47 @@ pub struct GroupMemberRelationship {
     pub groups: Vec<Group>,
     pub project: Vec<MemberProject>,
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq, ApiModel)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+#[serde(rename_all = "snake_case")]
+// #[derive(sqlx::Type)]
+// #[sqlx(type_name = "TEXT", rename_all = "snake_case")]
+// TODO: change to text type after sdk supports it
+pub enum Role {
+    Admin = 1,
+    PublicAdmin = 2,
+    Analyst = 3,
+    Mediator = 4,
+    Speaker = 5,
+}
+
+impl std::fmt::Display for Role {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Role::Admin => write!(f, "admin"),
+            Role::PublicAdmin => write!(f, "public_admin"),
+            Role::Analyst => write!(f, "analyst"),
+            Role::Mediator => write!(f, "mediator"),
+            Role::Speaker => write!(f, "speaker"),
+        }
+    }
+}
+
+// impl std::str::FromStr for Role {
+//     type Err = String;
+
+//     fn from_str(r: &str) -> Result<Self, Self::Err> {
+//         match r {
+//             "admin" => Ok(Role::Admin),
+//             "public_admin" => Ok(Role::PublicAdmin),
+//             "analyst" => Ok(Role::Analyst),
+//             "mediator" => Ok(Role::Mediator),
+//             "speaker" => Ok(Role::Speaker),
+//             _ => Err("Invalid role".to_string()),
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -132,24 +229,6 @@ pub struct CreateMemberRequest {
     pub role: Option<Role>,
     pub email: String,
     pub projects: Option<Vec<MemberProject>>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Eq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct GroupInfo {
-    pub id: String,
-    pub name: String,
-}
-
-impl TryFrom<Group> for GroupInfo {
-    type Error = std::fmt::Error;
-
-    fn try_from(group: Group) -> Result<Self, Self::Error> {
-        Ok(Self {
-            id: group.id,
-            name: group.name,
-        })
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Eq)]
