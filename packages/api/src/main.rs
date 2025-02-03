@@ -11,6 +11,9 @@ use tokio::net::TcpListener;
 
 mod common;
 mod controllers {
+    pub mod panels {
+        pub mod v2;
+    }
     pub mod auth {
         pub mod v1;
     }
@@ -33,9 +36,7 @@ mod controllers {
     // pub mod search {
     //     pub mod v1;
     // }
-    // pub mod panels {
-    //     pub mod v1;
-    // }
+
     // pub mod public_opinions {
     //     pub mod v1;
     // }
@@ -90,6 +91,10 @@ async fn main() -> Result<()> {
 
     let app = app
         .nest(
+            "/panels/v2",
+            controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
+        )
+        .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
         )
@@ -124,10 +129,7 @@ async fn main() -> Result<()> {
     //     "/search/v1",
     //     controllers::search::v1::SearchControllerV1::router(),
     // )
-    // .nest(
-    //     "/panels/v1",
-    //     controllers::panels::v1::PanelControllerV1::router(),
-    // )
+
     // .nest(
     //     "/public-opinions/v1",
     //     controllers::public_opinions::v1::PublicOpinionControllerV1::router(),
