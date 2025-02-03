@@ -4,6 +4,7 @@ use crate::Result;
 use by_axum::aide;
 use by_macros::{api_model, ApiModel};
 use by_types::QueryResponse;
+use chrono::{TimeZone, Utc};
 use dioxus_translate::Translate;
 use validator::ValidationError;
 
@@ -58,7 +59,7 @@ pub enum Question {
     SingleChoice(ChoiceQuestion),
     MultipleChoice(ChoiceQuestion),
     ShortAnswer(SubjectiveQuestion),
-    Essay(SubjectiveQuestion),
+    Subjective(SubjectiveQuestion),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -126,10 +127,40 @@ pub enum ProjectType {
 #[serde(rename_all = "snake_case")]
 pub enum ProjectStatus {
     #[default]
-    #[translate(ko = "준비중")]
+    #[translate(ko = "준비")]
     Ready = 1,
-    #[translate(ko = "진행중")]
+    #[translate(ko = "진행")]
     InProgress = 2,
     #[translate(ko = "마감")]
     Finish = 3,
+}
+
+impl SurveyV2Summary {
+    pub fn start_date(&self) -> String {
+        let datetime = Utc.timestamp_opt(self.started_at, 0).unwrap();
+        let formatted_date = datetime.format("%Y.%m.%d").to_string();
+        formatted_date
+    }
+
+    pub fn end_date(&self) -> String {
+        let datetime = Utc.timestamp_opt(self.ended_at, 0).unwrap();
+        let formatted_date = datetime.format("%Y.%m.%d").to_string();
+        formatted_date
+    }
+
+    pub fn period(&self) -> String {
+        format!("{} ~ {}", self.start_date(), self.end_date())
+    }
+
+    pub fn response_rate(&self) -> String {
+        // TODO: implement real logic for calculation of response rate.
+        let responses = 0;
+
+        format!(
+            "{}% ({}/{})",
+            responses / self.quotes * 100,
+            responses,
+            self.quotes
+        )
+    }
 }
