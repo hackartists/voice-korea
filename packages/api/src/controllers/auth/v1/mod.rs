@@ -60,6 +60,7 @@ impl UserControllerV1 {
             UserAction::Signup(params) => ctrl.signup(params).await,
             UserAction::Login(params) => ctrl.login(params).await,
             UserAction::Reset(params) => ctrl.reset(params).await,
+            _ => Err(ApiError::InvalidAction),
         }
     }
 
