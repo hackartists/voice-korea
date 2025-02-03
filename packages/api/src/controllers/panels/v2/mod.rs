@@ -79,7 +79,7 @@ impl PanelControllerV2 {
                 age: item.age,
                 gender: item.gender,
                 region: item.region,
-                payload: item.payload,
+                salary: item.salary,
                 org_id: item.org_id,
             });
         }
@@ -130,7 +130,7 @@ impl PanelControllerV2 {
                 params.age,
                 params.gender,
                 params.region,
-                params.payload,
+                params.salary,
                 params.org_id,
             )
             .await

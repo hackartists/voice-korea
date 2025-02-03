@@ -366,108 +366,26 @@ pub fn PanelList(
                                         }
                                     }
                                 }
-                                // div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                //     div { class: "font-medium text-[#222222] text-[14px]",
-                                //         {format!("{}", panel.age)}
-                                //     }
-                                // }
-                                // for (index2 , attribute) in panel.attribute.clone().iter().enumerate() {
-                                //     div { class: "relative flex flex-row flex-1 h-full justify-center items-center gap-[5px]",
-                                //         if attribute.attribute.len() == 0 {
-                                //             button {
-                                //                 class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
-                                //                 onclick: {
-                                //                     let attributes = attributes.clone();
-                                //                     move |_| {
-                                //                         if clicked_attribute_index() == index2 {
-                                //                             clicked_attribute_index.set(attributes.len());
-                                //                         } else {
-                                //                             clicked_attribute_index.set(index2);
-                                //                         }
-                                //                     }
-                                //                 },
-                                //                 "+"
-                                //             }
-                                //         } else {
-                                //             for attr in attribute.attribute.clone() {
-                                //                 div {
-                                //                     PanelLabel { label: attr.name.clone() }
-                                //                 }
-                                //             }
-                                //             button {
-                                //                 class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
-                                //                 onclick: {
-                                //                     let attributes = attributes.clone();
-                                //                     move |_| {
-                                //                         if clicked_attribute_index() == index2 {
-                                //                             clicked_attribute_index.set(attributes.len());
-                                //                         } else {
-                                //                             clicked_attribute_index.set(index2);
-                                //                         }
-                                //                     }
-                                //                 },
-                                //                 "+"
-                                //             }
-                                //         }
-
-                                //         if clicked_panel_index() != panels.len()
-                                //             && clicked_attribute_index() != attributes.len()
-                                //             && clicked_panel_index() == index && clicked_attribute_index() == index2
-                                //         {
-                                //             div {
-                                //                 class: "absolute top-full bg-white border border-[#bfc8d9] shadow-lg rounded-lg w-full z-50",
-                                //                 onclick: move |event| {
-                                //                     event.stop_propagation();
-                                //                     event.prevent_default();
-                                //                 },
-                                //                 div { class: "flex flex-col w-full justify-start items-start",
-                                //                     div { class: format!("flex flex-col w-full justify-start items-center bg-white"),
-                                //                         input {
-                                //                             class: "flex flex-row w-full h-full bg-transparent focus:outline-none px-[10px] py-[15px]",
-                                //                             r#type: "text",
-                                //                             placeholder: translate.input_name,
-                                //                         }
-                                //                     }
-
-                                //                     if attributes.len() != 0 {
-                                //                         for (_j , attr) in attributes[index2].values.clone().iter().enumerate() {
-                                //                             if !attribute.attribute.iter().any(|m| m.name == attr.clone()) {
-                                //                                 button {
-                                //                                     class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
-                                //                                     //FIXME: remove id value
-                                //                                     onclick: {
-                                //                                         let attribute_len = attributes.len();
-                                //                                         let mut attribute_vec: Vec<AttributeResponse> = panels[index]
-                                //                                             .clone()
-                                //                                             .attribute
-                                //                                             .clone();
-                                //                                         attribute_vec[index2]
-                                //                                             .attribute
-                                //                                             .push(AttributeItemInfo {
-                                //                                                 id: "id".to_string(),
-                                //                                                 name: attr.clone(),
-                                //                                             });
-                                //                                         move |_| {
-                                //                                             let attrs = attribute_vec.clone();
-                                //                                             let ctrl = ctrl.clone();
-                                //                                             async move {
-                                //                                                 let _ = ctrl.update_panel_attribute(index, attrs).await;
-                                //                                                 clicked_attribute_index.set(attribute_len);
-                                //                                             }
-                                //                                         }
-                                //                                     },
-                                //                                     div { class: "font-medium text-[#222222] text-[10px]",
-                                //                                         "{attr}"
-                                //                                     }
-                                //                                 }
-                                //                             }
-                                //                         }
-                                //                     }
-                                //                 }
-                                //             }
-                                //         }
-                                //     }
-                                // }
+                                div { class: "flex flex-row flex-1 h-full justify-center items-center",
+                                    div { class: "font-medium text-[#222222] text-[14px]",
+                                        PanelLabel { label: panel.age.translate(&lang) }
+                                    }
+                                }
+                                div { class: "flex flex-row flex-1 h-full justify-center items-center",
+                                    div { class: "font-medium text-[#222222] text-[14px]",
+                                        PanelLabel { label: panel.gender.translate(&lang) }
+                                    }
+                                }
+                                div { class: "flex flex-row flex-1 h-full justify-center items-center",
+                                    div { class: "font-medium text-[#222222] text-[14px]",
+                                        PanelLabel { label: panel.region.translate(&lang) }
+                                    }
+                                }
+                                div { class: "flex flex-row flex-1 h-full justify-center items-center",
+                                    div { class: "font-medium text-[#222222] text-[14px]",
+                                        PanelLabel { label: panel.salary.translate(&lang) }
+                                    }
+                                }
                                 div { class: "group relative",
                                     div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
                                         button {
