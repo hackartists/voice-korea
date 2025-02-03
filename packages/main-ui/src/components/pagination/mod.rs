@@ -12,6 +12,11 @@ pub fn Pagination(
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
+    if total_page == 0 {
+        return rsx! {
+            div { class: "w-full h-[40px] flex justify-center items-center", "" }
+        };
+    }
     let total_slot = use_signal(move || (total_page - 1) / size);
     let mut selected_page = use_signal(move || current_page);
     let mut current_slot = use_signal(move || (current_page - 1) / size);
