@@ -14,6 +14,9 @@ mod controllers {
     pub mod auth {
         pub mod v1;
     }
+    pub mod resources {
+        pub mod v1;
+    }
     // pub mod members {
     //     pub mod v1;
     // }
@@ -57,14 +60,22 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let v = Verification::get_repository(pool.clone());
     let o = Organization::get_repository(pool.clone());
     let u = User::get_repository(pool.clone());
+    let resource = Resource::get_repository(pool.clone());
+    // let files = Files::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
     u.create_this_table().await?;
 
+    resource.create_this_table().await?;
+    // files.create_table().await?;
+
     v.create_related_tables().await?;
     o.create_related_tables().await?;
     u.create_related_tables().await?;
+
+    resource.create_related_tables().await?;
+    // files.create_related_tables().await?;
 
     tracing::info!("Migration done");
     Ok(())
@@ -92,6 +103,10 @@ async fn main() -> Result<()> {
         .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
+        )
+        .nest(
+            "/resource/v1",
+            controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
         )
         .layer(middleware::from_fn(authorization_middleware));
     // .nest(

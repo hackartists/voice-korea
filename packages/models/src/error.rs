@@ -61,6 +61,8 @@ pub enum ApiError {
     InvalidPermissions, // if organization is not matched with organization_member or group_member
 
     OrganizationNotFound,
+
+    ResourceNotFound,
 }
 
 impl std::fmt::Display for ApiError {
