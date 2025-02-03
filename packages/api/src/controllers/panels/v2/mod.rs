@@ -41,7 +41,7 @@ impl PanelControllerV2 {
 
         let panel = ctrl
             .repo
-            .find_one(&PanelV2ReadAction::new().get_panel(panel_id))
+            .find_one(&PanelV2ReadAction::new().find_by_id(panel_id))
             .await?;
 
         Ok(Json(panel))

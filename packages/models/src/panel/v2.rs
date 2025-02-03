@@ -10,7 +10,7 @@ use dioxus_translate::Language;
 #[derive(validator::Validate)]
 #[api_model(base = "/panels/v2", table = panels, iter_type=QueryResponse)]
 pub struct PanelV2 {
-    #[api_model(summary, primary_key, find_by_id, action = delete, read_action = get_panel)]
+    #[api_model(summary, primary_key, action = delete, read_action = [get_panel, find_by_id])]
     pub id: String,
     #[api_model(summary, auto = insert)]
     pub created_at: i64,
