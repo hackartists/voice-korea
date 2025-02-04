@@ -1,9 +1,15 @@
-use crate::attribute::AttributeResponse;
+#![allow(unused_variables)]
+#[allow(unused)]
+use crate::Result;
 #[cfg(feature = "server")]
 use by_axum::aide;
+
+use crate::attribute::AttributeResponse;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+pub mod v2;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

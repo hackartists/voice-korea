@@ -1,131 +1,132 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{
-    AttributeItemInfo, AttributeResponse, CreateAttributeRequest, CreatePanelRequest,
-    PanelResponse, UpdateAttributeRequest, UpdatePanelRequest,
+use models::{
+    prelude::CreatePanelRequest,
+    v2::{PanelV2, PanelV2Summary},
+    AttributeResponse,
 };
 
-use crate::{
-    api::common::CommonQueryResponse,
-    service::{attribute_api::AttributeApi, panel_api::PanelApi, popup_service::PopupService},
-};
+use crate::service::{panel_api::PanelApi, popup_service::PopupService};
 
 use super::{
     i18n::PanelTranslate,
-    page::{
-        RemoveAttributeModal, RemovePanelModal, UpdateAttributeNameModal, UpdatePanelNameModal,
-    },
+    page::{RemovePanelModal, UpdatePanelNameModal},
 };
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeInfo {
+    pub name: String,
+    pub values: Vec<String>,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
-    panels: Signal<Vec<PanelResponse>>,
-    attributes: Signal<Vec<AttributeResponse>>,
+    panels: Signal<Vec<PanelV2Summary>>,
     popup_service: Signal<PopupService>,
     translate: Signal<PanelTranslate>,
 
-    attribute_resource:
-        Resource<Result<CommonQueryResponse<models::prelude::AttributeResponse>, ServerFnError>>,
-    panel_resource:
-        Resource<Result<CommonQueryResponse<models::prelude::PanelResponse>, ServerFnError>>,
-
-    attribute_bookmark: Signal<Option<String>>,
+    panel_resource: Resource<Vec<PanelV2Summary>>,
     panel_bookmark: Signal<Option<String>>,
-
-    attribute_api: AttributeApi,
+    attributes: Signal<Vec<AttributeInfo>>,
     panel_api: PanelApi,
 }
 
 impl Controller {
     pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
-        let attribute_api: AttributeApi = use_context();
         let panel_api: PanelApi = use_context();
         let translate: PanelTranslate = translate(&lang);
+        let panel_bookmark = Signal::new(None);
 
-        let mut attribute_bookmark = Signal::new(None);
-        let mut panel_bookmark = Signal::new(None);
-
-        let attribute_resource: Resource<
-            Result<CommonQueryResponse<models::prelude::AttributeResponse>, ServerFnError>,
-        > = use_resource(move || {
-            let api = attribute_api.clone();
-            let bookmark = attribute_bookmark();
-            //FIXME: add bookmark
+        let panel_resource = use_resource(move || {
+            //FIXME: add bookmark and fix to real organization id
             async move {
-                let res = api.list_attributes(Some(5), bookmark).await;
-
-                match res.clone() {
-                    Ok(v) => {
-                        if let Some(bookmark) = v.bookmark {
-                            if attribute_bookmark() != Some(bookmark.clone()) {
-                                attribute_bookmark.set(Some(bookmark.clone()));
-                            }
-                        }
-                    }
+                match PanelV2::get_client(&crate::config::get().api_url)
+                    .list_panels(100, None, "test".to_string())
+                    .await
+                {
+                    Ok(d) => d.items,
                     Err(e) => {
-                        tracing::error!("error: {:?}", e);
+                        tracing::error!("list panels failed: {e}");
+                        vec![]
                     }
                 }
-
-                res
             }
         });
 
-        let panel_resource: Resource<
-            Result<CommonQueryResponse<models::prelude::PanelResponse>, ServerFnError>,
-        > = use_resource(move || {
-            let api = panel_api.clone();
-            //FIXME: add bookmark
-            async move {
-                let res = api.list_panels(Some(5), None).await;
-                match res.clone() {
-                    Ok(v) => {
-                        if let Some(bookmark) = v.bookmark {
-                            if panel_bookmark() != Some(bookmark.clone()) {
-                                panel_bookmark.set(Some(bookmark.clone()));
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        tracing::error!("error: {:?}", e);
-                    }
-                }
-
-                res
-            }
-        });
+        let trans = translate.clone();
 
         let mut ctrl = Self {
             panels: use_signal(|| vec![]),
-            attributes: use_signal(|| vec![]),
             popup_service: use_signal(|| popup_service),
-            translate: use_signal(|| translate),
+            translate: use_signal(|| trans),
 
-            attribute_resource,
+            attributes: use_signal(|| vec![]),
             panel_resource,
-
-            attribute_bookmark,
             panel_bookmark,
-
-            attribute_api,
             panel_api,
         };
 
-        match panel_resource.value()() {
-            Some(panel) => {
-                if panel.is_ok() {
-                    ctrl.panels.set(panel.unwrap().items);
-                }
-            }
-            _ => {}
+        if ctrl.attributes.len() == 0 {
+            ctrl.attributes.push(AttributeInfo {
+                name: translate.clone().age.to_string(),
+                values: vec![
+                    translate.clone().teenager.to_string(),
+                    translate.clone().twenty.to_string(),
+                    translate.clone().thirty.to_string(),
+                    translate.clone().fourty.to_string(),
+                    translate.clone().fifty.to_string(),
+                    translate.clone().sixty.to_string(),
+                    translate.clone().over.to_string(),
+                ],
+            });
+
+            ctrl.attributes.push(AttributeInfo {
+                name: translate.clone().gender.to_string(),
+                values: vec![
+                    translate.clone().male.to_string(),
+                    translate.clone().female.to_string(),
+                ],
+            });
+
+            ctrl.attributes.push(AttributeInfo {
+                name: translate.clone().region.to_string(),
+                values: vec![
+                    translate.clone().seoul.to_string(),
+                    translate.clone().busan.to_string(),
+                    translate.clone().daegu.to_string(),
+                    translate.clone().incheon.to_string(),
+                    translate.clone().gwangju.to_string(),
+                    translate.clone().daejeon.to_string(),
+                    translate.clone().ulsan.to_string(),
+                    translate.clone().sejong.to_string(),
+                    translate.clone().gyeongi.to_string(),
+                    translate.clone().gangwon.to_string(),
+                    translate.clone().chungbuk.to_string(),
+                    translate.clone().chungnam.to_string(),
+                    translate.clone().jeonbuk.to_string(),
+                    translate.clone().jeonnam.to_string(),
+                    translate.clone().gyeonbuk.to_string(),
+                    translate.clone().gyeonnam.to_string(),
+                    translate.clone().jeju.to_string(),
+                ],
+            });
+
+            ctrl.attributes.push(AttributeInfo {
+                name: translate.clone().salary.to_string(),
+                values: vec![
+                    translate.clone().tier_one.to_string(),
+                    translate.clone().tier_two.to_string(),
+                    translate.clone().tier_three.to_string(),
+                    translate.clone().tier_four.to_string(),
+                    translate.clone().tier_five.to_string(),
+                ],
+            });
         }
 
-        match attribute_resource.value()() {
-            Some(attribute) => {
-                if attribute.is_ok() {
-                    ctrl.attributes.set(attribute.unwrap().items);
-                }
+        match panel_resource.value()() {
+            Some(panel) => {
+                ctrl.panels.set(panel);
             }
             _ => {}
         }
@@ -138,28 +139,16 @@ impl Controller {
         self.panel_resource.restart();
     }
 
-    pub fn get_panels(&self) -> Vec<PanelResponse> {
+    pub fn get_panels(&self) -> Vec<PanelV2Summary> {
         (self.panels)()
     }
 
-    pub fn get_attributes(&self) -> Vec<AttributeResponse> {
+    pub fn get_attributes(&self) -> Vec<AttributeInfo> {
         (self.attributes)()
-    }
-
-    pub fn get_attribute_bookmark(&self) -> Option<String> {
-        (self.attribute_bookmark)()
     }
 
     pub fn get_panel_bookmark(&self) -> Option<String> {
         (self.panel_bookmark)()
-    }
-
-    pub async fn create_attribute(&self, req: CreateAttributeRequest) {
-        let api: AttributeApi = self.attribute_api;
-        let mut attribute_resource = self.attribute_resource;
-
-        let _ = api.create_attribute(req).await;
-        attribute_resource.restart();
     }
 
     pub async fn create_panel(&self, req: CreatePanelRequest) {
@@ -168,79 +157,6 @@ impl Controller {
 
         let _ = api.create_panel(req).await;
         panel_resource.restart();
-    }
-
-    pub async fn open_remove_attribute(&self, lang: Language, index: usize) {
-        let mut popup_service = (self.popup_service)().clone();
-        let translate = (self.translate)().clone();
-        let api: AttributeApi = self.attribute_api;
-        let attributes = self.get_attributes();
-        let attribute_id = attributes[index].id.clone();
-
-        let mut attribute_resource = self.attribute_resource;
-
-        popup_service
-            .open(rsx! {
-                RemoveAttributeModal {
-                    lang,
-                    remove_click: move |_e: MouseEvent| {
-                        let attribute_id = attribute_id.clone();
-                        async move {
-                            tracing::debug!("remove attribute clicked: {index}");
-                            let _ = api.remove_attribute(attribute_id).await;
-                            attribute_resource.restart();
-                            popup_service.close();
-                        }
-                    },
-                    onclose: move |_| {
-                        popup_service.close();
-                    },
-                }
-            })
-            .with_id("remove_attribute")
-            .with_title(translate.remove_attribute);
-    }
-
-    pub async fn open_update_attribute_name(&self, lang: Language, index: usize) {
-        let mut popup_service = (self.popup_service)().clone();
-        let translate = (self.translate)().clone();
-        let api: AttributeApi = self.attribute_api;
-        let attributes = self.get_attributes();
-        let attribute = attributes[index].clone();
-
-        let mut attribute_resource = self.attribute_resource;
-
-        popup_service
-            .open(rsx! {
-                UpdateAttributeNameModal {
-                    lang,
-                    onupdate: move |name: String| {
-                        let attribute_id = attribute.id.clone();
-                        let name = name.clone();
-                        let attribute_items = attribute.attribute.clone();
-                        async move {
-                            tracing::debug!("update attribute clicked: {index} {name}");
-                            let _ = api
-                                .update_attribute(
-                                    attribute_id,
-                                    UpdateAttributeRequest {
-                                        name,
-                                        attribute_items,
-                                    },
-                                )
-                                .await;
-                            attribute_resource.restart();
-                            popup_service.close();
-                        }
-                    },
-                    initial_value: attributes[index].name.clone().unwrap_or_default(),
-                    onclose: move |_| {
-                        popup_service.close();
-                    },
-                }
-            })
-            .with_id("update_attribute_name")
-            .with_title(translate.update_attribute_name);
     }
 
     pub async fn open_remove_panel(&self, lang: Language, index: usize) {
@@ -277,38 +193,19 @@ impl Controller {
     pub async fn open_update_panel_name(&self, lang: Language, index: usize) {
         let mut popup_service = (self.popup_service)().clone();
         let translate = (self.translate)().clone();
-        let api: PanelApi = self.panel_api;
+        let _api: PanelApi = self.panel_api;
         let panels = self.get_panels();
-        let panel = panels[index].clone();
+        let _panel = panels[index].clone();
 
-        let mut panel_resource = self.panel_resource;
+        let _panel_resource = self.panel_resource;
 
         popup_service
             .open(rsx! {
                 UpdatePanelNameModal {
                     lang,
-                    onupdate: move |name: String| {
-                        let panel_id = panel.id.clone();
-                        let name = name.clone();
-                        let count = panel.count.unwrap_or(0);
-                        let attribute = panel.attribute.clone();
-                        async move {
-                            tracing::debug!("update panel clicked: {index} {name}");
-                            let _ = api
-                                .update_panel(
-                                    panel_id,
-                                    UpdatePanelRequest {
-                                        name,
-                                        count,
-                                        attribute,
-                                    },
-                                )
-                                .await;
-                            panel_resource.restart();
-                            popup_service.close();
-                        }
-                    },
-                    initial_value: panels[index].name.clone().unwrap_or_default(),
+                    // FIXME: implement panel name update logic
+                    onupdate: move |_name: String| {},
+                    initial_value: panels[index].name.clone(),
                     onclose: move |_| {
                         popup_service.close();
                     },
@@ -318,97 +215,54 @@ impl Controller {
             .with_title(translate.update_panel_name);
     }
 
-    pub async fn update_attribute(
-        &self,
-        index: usize,
-        attribute_items: Vec<AttributeItemInfo>,
-    ) {
-        tracing::debug!("update attribute: {} {:?}", index, attribute_items);
-        let api: AttributeApi = self.attribute_api;
-        let attributes = self.get_attributes();
-        let attr = attributes[index].clone();
-
-        let mut attribute_resource = self.attribute_resource;
-
-        let _ = api
-            .update_attribute(
-                attr.id.clone(),
-                UpdateAttributeRequest {
-                    name: attr.name.clone().unwrap_or_default(),
-                    attribute_items,
-                },
-            )
-            .await;
-
-        attribute_resource.restart();
-    }
-
     pub async fn update_panel_name(&self, index: usize, name: String) {
         tracing::debug!("update update_panel_name: {} {:?}", index, name);
-        let api: PanelApi = self.panel_api;
+        let _api: PanelApi = self.panel_api;
         let panels = self.get_panels();
-        let panel = panels[index].clone();
+        let _panel = panels[index].clone();
 
         let mut panel_resource = self.panel_resource;
 
-        let _ = api
-            .update_panel(
-                panel.id.clone(),
-                UpdatePanelRequest {
-                    name,
-                    count: panel.count.unwrap_or_default(),
-                    attribute: panel.attribute,
-                },
-            )
-            .await;
+        //TODO: implement update panel name logic
+
+        // let _ = api
+        //     .update_panel(
+        //         panel.id.clone(),
+        //         UpdatePanelRequest {
+        //             name,
+        //             count: panel.user_count as i64,
+        //             attribute: panel.attribute,
+        //         },
+        //     )
+        //     .await;
 
         panel_resource.restart();
     }
 
-    pub async fn update_attribute_name(&self, index: usize, name: String) {
-        tracing::debug!("update update_attribute_name: {} {:?}", index, name);
-        let api: AttributeApi = self.attribute_api;
-        let attributes = self.get_attributes();
-        let attr = attributes[index].clone();
-
-        let mut attribute_resource = self.attribute_resource;
-
-        let _ = api
-            .update_attribute(
-                attr.id.clone(),
-                UpdateAttributeRequest {
-                    name,
-                    attribute_items: attr.attribute,
-                },
-            )
-            .await;
-
-        attribute_resource.restart();
-    }
-
     pub async fn update_panel_attribute(&self, index: usize, attribute: Vec<AttributeResponse>) {
         tracing::debug!("update panel attribute: {} {:?}", index, attribute);
-        let api: PanelApi = self.panel_api;
+        let _api: PanelApi = self.panel_api;
         let panels = self.get_panels();
-        let panel = panels[index].clone();
+        let _panel = panels[index].clone();
 
         let mut panel_resource = self.panel_resource;
 
-        let panel_id = panel.id.clone();
-        let name = panel.name.clone();
-        let count = panel.count.unwrap_or(0);
-        let attribute = attribute.clone();
+        //FIXME: implement panel attribute logic
+        // let panel_id = panel.id.clone();
+        // let name = panel.name.clone();
+        // let count = panel.count.unwrap_or(0);
+        // let attribute = attribute.clone();
 
-        let _ = api
-            .update_panel(
-                panel_id,
-                UpdatePanelRequest {
-                    name: name.unwrap_or_default(),
-                    count,
-                    attribute,
-                },
-            )
-            .await;
+        // let _ = api
+        //     .update_panel(
+        //         panel_id,
+        //         UpdatePanelRequest {
+        //             name: name.unwrap_or_default(),
+        //             count,
+        //             attribute,
+        //         },
+        //     )
+        //     .await;
         panel_resource.restart();
     }
 }
