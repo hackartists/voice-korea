@@ -54,7 +54,7 @@ pub struct SurveyV2 {
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-#[serde(rename_all = "snake_case", tag = "answerType")]
+#[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum Question {
     SingleChoice(ChoiceQuestion),
     MultipleChoice(ChoiceQuestion),
