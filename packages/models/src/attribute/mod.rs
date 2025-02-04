@@ -1,8 +1,12 @@
+// FIXME: remove this model when attribute page is migrating postgre db fully
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+pub mod attribute_v2;
+pub use attribute_v2::*;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
