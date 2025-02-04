@@ -25,7 +25,25 @@ impl Controller {
         let page = use_signal(|| 1);
         let size = 10;
 
-        let surveys = use_server_future(move || {
+        // FIXME: it causes screen flickering when navigating to this page
+        // let surveys = use_server_future(move || {
+        //     let page = page();
+
+        //     async move {
+        //         match SurveyV2::get_client(config::get().api_url)
+        //             .query(SurveyV2Query::new(size).with_page(page))
+        //             .await
+        //         {
+        //             Ok(res) => res,
+        //             Err(e) => {
+        //                 tracing::error!("Failed to list surveys: {:?}", e);
+        //                 QueryResponse::default()
+        //             }
+        //         }
+        //     }
+        // })?;
+
+        let surveys = use_resource(move || {
             let page = page();
 
             async move {
@@ -40,7 +58,7 @@ impl Controller {
                     }
                 }
             }
-        })?;
+        });
 
         let ctrl = Self {
             page,

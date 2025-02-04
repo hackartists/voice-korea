@@ -24,7 +24,7 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
     let translates: SurveyNewTranslate = translate(&props.lang);
     let mut ctrl = Controller::new(props.lang);
     rsx! {
-        div { class: "relative h-full grow",
+        div { class: "flex flex-col gap-[40px] items-end justify-start mb-[40px]",
             div { class: "flex flex-col w-full h-full justify-start items-start",
                 div { class: "text-[#b4b4b4] font-medium text-[14px] mb-[10px]",
                     "{translates.survey_title}"
@@ -86,11 +86,28 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                 }
             }
 
-            div { class: "absolute right-[0px] bottom-[40px]",
-                div {
-                    class: "flex flex-row w-[70px] h-[70px] justify-center items-center bg-white border border-[#ebeff5] rounded-[100px]",
-                    style: "box-shadow: 0px 8px 15px 0px rgba(53, 70, 177, 0.45);",
-                    Plus { width: "18", height: "18", color: "#555462" }
+            div { class: "flex flex-row gap-[20px] text-white",
+                button {
+                    class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
+                    onclick: move |_| {
+                        ctrl.back();
+                    },
+                    "{translates.btn_cancel}"
+                }
+                button {
+                    class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
+                    onclick: move |_| async move {
+                        ctrl.save_survey().await;
+                    },
+                    "{translates.btn_temp_save}"
+                }
+
+                button {
+                    class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
+                    onclick: move |_| async move {
+                        ctrl.save_survey().await;
+                    },
+                    "{translates.btn_complete}"
                 }
             }
         }

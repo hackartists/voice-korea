@@ -8,7 +8,6 @@ pub struct Controller {
     pub year: Signal<i32>,
     pub month: Signal<u32>,
     pub day: Signal<u32>,
-    pub weekday: Signal<u32>,
     pub weekday_of_month: Signal<chrono::Weekday>,
     pub last_weekday_of_month: Signal<chrono::Weekday>,
     pub last_date_of_month: Signal<u32>,
@@ -32,12 +31,11 @@ impl Controller {
         let last_weekday_of_month = NaiveDate::from_ymd_opt(year, month, last_date_of_month)
             .unwrap()
             .weekday();
-        let mut ctrl = Self {
+        let ctrl = Self {
             today: use_signal(|| (year, month, day)),
             year: use_signal(|| year),
             month: use_signal(|| month),
             day: use_signal(|| day),
-            weekday: use_signal(|| 0),
             weekday_of_month: use_signal(|| weekday),
             last_weekday_of_month: use_signal(|| last_weekday_of_month),
             last_date_of_month: use_signal(|| last_date_of_month),
@@ -49,8 +47,6 @@ impl Controller {
             selected_day: use_signal(|| 0),
         };
 
-        ctrl.weekday
-            .set(ctrl.translate_num_days(weekday.num_days_from_monday()));
         Ok(ctrl)
     }
     pub fn get_days(&self) -> Vec<Vec<u32>> {

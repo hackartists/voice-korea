@@ -8,14 +8,14 @@ use models::{
 
 use super::i18n::SurveyNewTranslate;
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Clone, Copy)]
 pub struct Controller {
-    total_fields: Signal<Vec<String>>,
     selected_field: Signal<Option<ProjectArea>>,
     title: Signal<String>,
     description: Signal<String>,
     start_date: Signal<i64>,
     end_date: Signal<i64>,
+    nav: Navigator,
 
     surveys: Signal<Vec<PublicSurveyQuestion>>,
     total_survey_types: Signal<Vec<String>>,
@@ -27,20 +27,7 @@ impl Controller {
 
         let timestamp = Local::now().timestamp();
         let ctrl = Self {
-            total_fields: use_signal(|| {
-                vec![
-                    translates.economy.to_string(),
-                    translates.society.to_string(),
-                    translates.environment.to_string(),
-                    translates.education.to_string(),
-                    translates.culture.to_string(),
-                    translates.labor.to_string(),
-                    translates.city.to_string(),
-                    translates.technology.to_string(),
-                    translates.health.to_string(),
-                    translates.politic.to_string(),
-                ]
-            }),
+            nav: use_navigator(),
             selected_field: use_signal(|| None),
             title: use_signal(|| "".to_string()),
 
@@ -134,5 +121,11 @@ impl Controller {
             necessary_answer_enable: None,
         });
         self.surveys.set(surveys);
+    }
+
+    pub async fn save_survey(&self) {}
+
+    pub fn back(&self) {
+        self.nav.go_back();
     }
 }
