@@ -7,7 +7,7 @@ use by_axum::{
     },
 };
 use models::{
-    v2::{
+    panel_v2::{
         PanelV2, PanelV2Action, PanelV2ByIdAction, PanelV2CreateRequest, PanelV2Query,
         PanelV2ReadAction, PanelV2Repository, PanelV2Summary, PanelV2UpdateRequest,
     },
@@ -36,7 +36,6 @@ impl PanelControllerV2 {
         Path(panel_id): Path<String>,
         Extension(_auth): Extension<Option<Authorization>>,
     ) -> Result<Json<PanelV2>> {
-        //FIXME: fix to bigint parsing bug
         tracing::debug!("get_panel: {:?}", panel_id);
 
         let panel = ctrl
