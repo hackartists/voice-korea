@@ -2,14 +2,16 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::{
-    panel_v2::{PanelV2, PanelV2Summary},
-    prelude::CreatePanelRequest,
-    AttributeResponse,
+    attribute_v2::{AgeV2, GenderV2, RegionV2, SalaryV2},
+    panel_v2::{
+        PanelV2, PanelV2Client, PanelV2CreateRequest, PanelV2DeleteRequest, PanelV2Summary,
+        PanelV2UpdateRequest,
+    },
 };
 
 use crate::{
     pages::panels::components::setting::AttributeSetting,
-    service::{panel_api::PanelApi, popup_service::PopupService},
+    service::{login_service::LoginService, popup_service::PopupService},
 };
 
 use super::{
@@ -25,6 +27,7 @@ pub struct AttributeInfo {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
+    client: Signal<PanelV2Client>,
     panels: Signal<Vec<PanelV2Summary>>,
     popup_service: PopupService,
     translate: Signal<PanelTranslate>,
@@ -32,26 +35,32 @@ pub struct Controller {
     panel_resource: Resource<Vec<PanelV2Summary>>,
     panel_bookmark: Signal<Option<String>>,
     attributes: Signal<Vec<AttributeInfo>>,
-    panel_api: PanelApi,
 }
 
 impl Controller {
     pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
-        let panel_api: PanelApi = use_context();
+        let login_service: LoginService = use_context();
+        let org_id = match login_service.get_selected_org() {
+            Some(v) => v.id,
+            None => "".to_string(),
+        };
         let translate: PanelTranslate = translate(&lang);
         let panel_bookmark = Signal::new(None);
+        let client = PanelV2::get_client(&crate::config::get().api_url);
 
-        let panel_resource = use_resource(move || {
-            //FIXME: add bookmark and fix to real organization id
-            async move {
-                match PanelV2::get_client(&crate::config::get().api_url)
-                    .list_panels(100, None, "test".to_string())
-                    .await
-                {
-                    Ok(d) => d.items,
-                    Err(e) => {
-                        tracing::error!("list panels failed: {e}");
-                        vec![]
+        let panel_resource = use_resource({
+            let client = client.clone();
+            move || {
+                let client = client.clone();
+                let org_id = org_id.clone();
+
+                async move {
+                    match client.list_panels(100, None, org_id.clone()).await {
+                        Ok(d) => d.items,
+                        Err(e) => {
+                            tracing::error!("list panels failed: {e}");
+                            vec![]
+                        }
                     }
                 }
             }
@@ -60,6 +69,7 @@ impl Controller {
         let trans = translate.clone();
 
         let mut ctrl = Self {
+            client: use_signal(|| client),
             panels: use_signal(|| vec![]),
             popup_service,
             translate: use_signal(|| trans),
@@ -67,7 +77,6 @@ impl Controller {
             attributes: use_signal(|| vec![]),
             panel_resource,
             panel_bookmark,
-            panel_api,
         };
 
         if ctrl.attributes.len() == 0 {
@@ -154,11 +163,13 @@ impl Controller {
         (self.panel_bookmark)()
     }
 
-    pub async fn create_panel(&self, req: CreatePanelRequest) {
-        let api: PanelApi = self.panel_api;
+    pub async fn create_panel(&self, req: PanelV2CreateRequest) {
         let mut panel_resource = self.panel_resource;
+        let client = (self.client)().clone();
 
-        let _ = api.create_panel(req).await;
+        let _ = client
+            .act(models::panel_v2::PanelV2Action::Create(req))
+            .await;
         panel_resource.restart();
     }
 
@@ -166,8 +177,10 @@ impl Controller {
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let panels = self.get_panels();
-        let _panel_id = panels[index].id.clone();
+        let panel = panels[index].clone();
         let salary = panels[index].salary.translate(&lang);
+        let client = (self.client)().clone();
+        let mut panel_resource = self.panel_resource;
 
         popup_service
             .open(rsx! {
@@ -182,8 +195,27 @@ impl Controller {
                         translate.clone().tier_five.to_string(),
                     ],
                     current_option: salary,
-                    onsave: move |_option: String| {
-                        popup_service.close();
+                    onsave: {
+                        let id = panel.id.clone();
+                        let req = self.convert_update_request(panel);
+                        move |option: String| {
+                            let client = client.clone();
+                            let salary = SalaryV2::convert_str_to_salary(&option);
+                            let mut req = req.clone();
+                            let id = id.clone();
+                            async move {
+                                if salary.is_some() {
+                                    let salary = salary.unwrap();
+                                    req.salary = salary;
+                                    tracing::info!("update salary clicked: {index} {:?}", req);
+                                    let _ = client
+                                        .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
+                                        .await;
+                                    panel_resource.restart();
+                                    popup_service.close();
+                                } else {}
+                            }
+                        }
                     },
                     oncancel: move |_| {
                         popup_service.close();
@@ -198,8 +230,10 @@ impl Controller {
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let panels = self.get_panels();
-        let _panel_id = panels[index].id.clone();
+        let panel = panels[index].clone();
         let region = panels[index].region.translate(&lang);
+        let client = (self.client)().clone();
+        let mut panel_resource = self.panel_resource;
 
         popup_service
             .open(rsx! {
@@ -226,8 +260,27 @@ impl Controller {
                         translate.clone().jeju.to_string(),
                     ],
                     current_option: region,
-                    onsave: move |_option: String| {
-                        popup_service.close();
+                    onsave: {
+                        let id = panel.id.clone();
+                        let req = self.convert_update_request(panel);
+                        move |option: String| {
+                            let client = client.clone();
+                            let region = RegionV2::convert_str_to_region(&option);
+                            let mut req = req.clone();
+                            let id = id.clone();
+                            async move {
+                                if region.is_some() {
+                                    let region = region.unwrap();
+                                    req.region = region;
+                                    tracing::info!("update region clicked: {index} {:?}", req);
+                                    let _ = client
+                                        .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
+                                        .await;
+                                    panel_resource.restart();
+                                    popup_service.close();
+                                } else {}
+                            }
+                        }
                     },
                     oncancel: move |_| {
                         popup_service.close();
@@ -242,8 +295,10 @@ impl Controller {
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let panels = self.get_panels();
-        let _panel_id = panels[index].id.clone();
+        let panel = panels[index].clone();
         let gender = panels[index].gender.translate(&lang);
+        let client = (self.client)().clone();
+        let mut panel_resource = self.panel_resource;
 
         popup_service
             .open(rsx! {
@@ -252,8 +307,27 @@ impl Controller {
                     name: translate.clone().gender.to_string(),
                     total_options: vec![translate.clone().male.to_string(), translate.clone().female.to_string()],
                     current_option: gender,
-                    onsave: move |_option: String| {
-                        popup_service.close();
+                    onsave: {
+                        let id = panel.id.clone();
+                        let req = self.convert_update_request(panel);
+                        move |option: String| {
+                            let client = client.clone();
+                            let gender = GenderV2::convert_str_to_gender(&option);
+                            let mut req = req.clone();
+                            let id = id.clone();
+                            async move {
+                                if gender.is_some() {
+                                    let gender = gender.unwrap();
+                                    req.gender = gender;
+                                    tracing::info!("update gender clicked: {index} {:?}", req);
+                                    let _ = client
+                                        .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
+                                        .await;
+                                    panel_resource.restart();
+                                    popup_service.close();
+                                } else {}
+                            }
+                        }
                     },
                     oncancel: move |_| {
                         popup_service.close();
@@ -268,8 +342,10 @@ impl Controller {
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let panels = self.get_panels();
-        let _panel_id = panels[index].id.clone();
+        let panel = panels[index].clone();
         let age = panels[index].age.translate(&lang);
+        let client = (self.client)().clone();
+        let mut panel_resource = self.panel_resource;
 
         popup_service
             .open(rsx! {
@@ -286,8 +362,27 @@ impl Controller {
                         translate.clone().over.to_string(),
                     ],
                     current_option: age,
-                    onsave: move |_option: String| {
-                        popup_service.close();
+                    onsave: {
+                        let id = panel.id.clone();
+                        let req = self.convert_update_request(panel);
+                        move |option: String| {
+                            let client = client.clone();
+                            let age = AgeV2::convert_str_to_age(&option);
+                            let mut req = req.clone();
+                            let id = id.clone();
+                            async move {
+                                if age.is_some() {
+                                    let age = age.unwrap();
+                                    req.age = age;
+                                    tracing::debug!("update age clicked: {index} {:?}", req);
+                                    let _ = client
+                                        .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
+                                        .await;
+                                    panel_resource.restart();
+                                    popup_service.close();
+                                } else {}
+                            }
+                        }
                     },
                     oncancel: move |_| {
                         popup_service.close();
@@ -301,11 +396,12 @@ impl Controller {
     pub async fn open_remove_panel(&self, lang: Language, index: usize) {
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
-        let api: PanelApi = self.panel_api;
         let panels = self.get_panels();
         let panel_id = panels[index].id.clone();
 
         let mut panel_resource = self.panel_resource;
+
+        let client = (self.client)().clone();
 
         popup_service
             .open(rsx! {
@@ -313,9 +409,16 @@ impl Controller {
                     lang,
                     remove_click: move |_e: MouseEvent| {
                         let panel_id = panel_id.clone();
+                        let client = client.clone();
                         async move {
                             tracing::debug!("remove panel clicked: {index}");
-                            let _ = api.remove_panel(panel_id).await;
+                            let _ = client
+                                .act(
+                                    models::panel_v2::PanelV2Action::Delete(PanelV2DeleteRequest {
+                                        id: panel_id,
+                                    }),
+                                )
+                                .await;
                             panel_resource.restart();
                             popup_service.close();
                         }
@@ -332,18 +435,41 @@ impl Controller {
     pub async fn open_update_panel_name(&self, lang: Language, index: usize) {
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
-        let _api: PanelApi = self.panel_api;
         let panels = self.get_panels();
-        let _panel = panels[index].clone();
+        let panel = panels[index].clone();
 
-        let _panel_resource = self.panel_resource;
+        let mut panel_resource = self.panel_resource;
+        let client = (self.client)().clone();
 
         popup_service
             .open(rsx! {
                 UpdatePanelNameModal {
                     lang,
-                    // FIXME: implement panel name update logic
-                    onupdate: move |_name: String| {},
+                    onupdate: {
+                        let id = panel.id.clone();
+                        let req = PanelV2UpdateRequest {
+                            name: panel.name,
+                            user_count: panel.user_count,
+                            age: panel.age,
+                            gender: panel.gender,
+                            region: panel.region,
+                            salary: panel.salary,
+                        };
+                        move |name: String| {
+                            let client = client.clone();
+                            let id = id.clone();
+                            let mut req = req.clone();
+                            req.name = name;
+                            async move {
+                                tracing::debug!("update panel clicked: {index}");
+                                let _ = client
+                                    .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
+                                    .await;
+                                panel_resource.restart();
+                                popup_service.close();
+                            }
+                        }
+                    },
                     initial_value: panels[index].name.clone(),
                     onclose: move |_| {
                         popup_service.close();
@@ -356,52 +482,36 @@ impl Controller {
 
     pub async fn update_panel_name(&self, index: usize, name: String) {
         tracing::debug!("update update_panel_name: {} {:?}", index, name);
-        let _api: PanelApi = self.panel_api;
         let panels = self.get_panels();
-        let _panel = panels[index].clone();
+        let panel = panels[index].clone();
+        let client = (self.client)().clone();
 
         let mut panel_resource = self.panel_resource;
 
-        //TODO: implement update panel name logic
+        let req = PanelV2UpdateRequest {
+            name,
+            user_count: panel.user_count,
+            age: panel.age,
+            gender: panel.gender,
+            region: panel.region,
+            salary: panel.salary,
+        };
 
-        // let _ = api
-        //     .update_panel(
-        //         panel.id.clone(),
-        //         UpdatePanelRequest {
-        //             name,
-        //             count: panel.user_count as i64,
-        //             attribute: panel.attribute,
-        //         },
-        //     )
-        //     .await;
+        let _ = client
+            .act_by_id(&panel.id, models::panel_v2::PanelV2ByIdAction::Update(req))
+            .await;
 
         panel_resource.restart();
     }
 
-    pub async fn update_panel_attribute(&self, index: usize, attribute: Vec<AttributeResponse>) {
-        tracing::debug!("update panel attribute: {} {:?}", index, attribute);
-        let _api: PanelApi = self.panel_api;
-        let panels = self.get_panels();
-        let _panel = panels[index].clone();
-
-        let mut panel_resource = self.panel_resource;
-
-        //FIXME: implement panel attribute logic
-        // let panel_id = panel.id.clone();
-        // let name = panel.name.clone();
-        // let count = panel.count.unwrap_or(0);
-        // let attribute = attribute.clone();
-
-        // let _ = api
-        //     .update_panel(
-        //         panel_id,
-        //         UpdatePanelRequest {
-        //             name: name.unwrap_or_default(),
-        //             count,
-        //             attribute,
-        //         },
-        //     )
-        //     .await;
-        panel_resource.restart();
+    pub fn convert_update_request(&self, panel: PanelV2Summary) -> PanelV2UpdateRequest {
+        PanelV2UpdateRequest {
+            name: panel.name,
+            user_count: panel.user_count,
+            age: panel.age,
+            gender: panel.gender,
+            region: panel.region,
+            salary: panel.salary,
+        }
     }
 }

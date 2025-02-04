@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::{panel_v2::PanelV2Summary, prelude::CreatePanelRequest};
+use models::panel_v2::{PanelV2CreateRequest, PanelV2Summary};
 
 use crate::{
     components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},
@@ -13,7 +13,7 @@ use crate::{
             UpdateAttributeNameModalTranslate, UpdatePanelNameModalTranslate,
         },
     },
-    service::popup_service::PopupService,
+    service::{login_service::LoginService, popup_service::PopupService},
 };
 
 use super::controller::AttributeInfo;
@@ -52,7 +52,7 @@ pub fn PanelPage(props: PanelProps) -> Element {
                 onupdate: move |index: usize| async move {
                     ctrl.open_update_panel_name(props.lang, index).await;
                 },
-                oncreate: move |req: CreatePanelRequest| async move {
+                oncreate: move |req: PanelV2CreateRequest| async move {
                     ctrl.create_panel(req).await;
                 },
                 onremove: move |index: usize| async move {
@@ -126,15 +126,21 @@ pub fn PanelList(
     panels: Vec<PanelV2Summary>,
     attributes: Vec<AttributeInfo>,
     onupdate: EventHandler<usize>,
-    oncreate: EventHandler<CreatePanelRequest>,
+    oncreate: EventHandler<PanelV2CreateRequest>,
     onremove: EventHandler<usize>,
 
     update_panel_name: EventHandler<(usize, String)>,
 ) -> Element {
+    let login_service: LoginService = use_context();
     let mut ctrl: Controller = use_context();
     let mut is_focused = use_signal(|| false);
     let mut panel_name = use_signal(|| "".to_string());
     let translate: PanelListTranslate = translate(&lang);
+
+    let org_id = match login_service.get_selected_org() {
+        Some(v) => v.id,
+        None => "".to_string(),
+    };
 
     let mut panel_names = use_signal(|| vec![]);
     let mut panel_name_width = use_signal(|| vec![]);
@@ -244,7 +250,21 @@ pub fn PanelList(
                             button {
                                 class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
                                 //FIXME: implement add attribute logic
-                                onclick: move |_| {},
+                                onclick: {
+                                    let org_id = org_id.clone();
+                                    move |_| {
+                                        oncreate
+                                            .call(PanelV2CreateRequest {
+                                                name: "".to_string(),
+                                                user_count: 0,
+                                                age: models::attribute_v2::AgeV2::Teenager,
+                                                gender: models::attribute_v2::GenderV2::Male,
+                                                region: models::attribute_v2::RegionV2::Seoul,
+                                                salary: models::attribute_v2::SalaryV2::TierOne,
+                                                org_id: org_id.clone(),
+                                            });
+                                    }
+                                },
                                 "+"
                             }
                         }
