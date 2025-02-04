@@ -17,6 +17,9 @@ mod controllers {
     pub mod auth {
         pub mod v1;
     }
+    pub mod survey {
+        pub mod v2;
+    }
     // pub mod members {
     //     pub mod v1;
     // }
@@ -59,15 +62,18 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let o = Organization::get_repository(pool.clone());
     let u = User::get_repository(pool.clone());
     let p = PanelV2::get_repository(pool.clone());
+    let s = SurveyV2::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
     u.create_this_table().await?;
+    s.create_this_table().await?;
     p.create_this_table().await?;
 
     v.create_related_tables().await?;
     o.create_related_tables().await?;
     u.create_related_tables().await?;
+    s.create_related_tables().await?;
     p.create_related_tables().await?;
 
     tracing::info!("Migration done");
@@ -100,6 +106,10 @@ async fn main() -> Result<()> {
         .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
+        )
+        .nest(
+            "/surveys/v2",
+            controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
         )
         .layer(middleware::from_fn(authorization_middleware));
     // .nest(
