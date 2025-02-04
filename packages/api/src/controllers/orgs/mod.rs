@@ -2,7 +2,7 @@ use by_axum::{
     auth::Authorization,
     axum::{
         body::Body,
-        extract::{Path, Request, State},
+        extract::{Path, Request},
         http::Response,
         middleware::{self, Next},
     },
