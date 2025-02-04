@@ -37,7 +37,7 @@ impl OrganizationControllerV2 {
                 Ok(Json(OrganizationGetResponse::Query(organizations)))
             }
             OrganizationParam::Read(_action) => {
-                // FIXME: return filtered organization
+                // TODO: implement to return filtered organization
                 Ok(Json(OrganizationGetResponse::Read(Organization::default())))
             }
         }
