@@ -333,7 +333,7 @@ impl MemberControllerV1 {
                 groups.push(group);
             }
 
-            result.push(GroupMemberRelationship {
+            result.push(MemberSum {
                 member: item.clone(),
                 groups,
                 project: vec![], // TODO: implement projects

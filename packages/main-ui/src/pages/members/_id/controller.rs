@@ -72,7 +72,7 @@ impl Controller {
     ) -> Self {
         let translates: MemberDetailTranslate = translate(&lang);
         let api: MemberApi = use_context();
-        let member_resource: Resource<Result<QueryResponse<MemberSummary>>> =
+        let member_resource: Resource<Result<MemberSummary, ServerFnError>> =
             use_resource(move || {
                 let api = api.clone();
                 let member_id = member_id.clone();

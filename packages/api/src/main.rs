@@ -3,7 +3,7 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
-use models::{panel_v2::PanelV2, *};
+use models::*;
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
 // use sqlx::postgres::PgPoolOptions;
@@ -113,10 +113,10 @@ async fn main() -> Result<()> {
     migration(&pool).await?;
 
     let app = app
-        // .nest(
-        //     "/panels/v2",
-        //     controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
-        // )
+        .nest(
+            "/panels/v2",
+            controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
+        )
         .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
@@ -125,10 +125,10 @@ async fn main() -> Result<()> {
             "/resource/v1",
             controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
         )
-        // .nest(
-        //     "/surveys/v2",
-        //     controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
-        // )
+        .nest(
+            "/surveys/v2",
+            controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
+        )
         .nest(
             "/organizations/v2",
             controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
