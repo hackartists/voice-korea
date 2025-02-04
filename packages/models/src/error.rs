@@ -61,6 +61,8 @@ pub enum ApiError {
     InvalidPermissions, // if organization is not matched with organization_member or group_member
 
     OrganizationNotFound,
+
+    ResourceNotFound,
 }
 
 impl std::fmt::Display for ApiError {
@@ -120,6 +122,7 @@ impl IntoResponse for ApiError {
             ApiError::AlreadyExists => StatusCode::ALREADY_REPORTED,
             ApiError::InvalidPermissions => StatusCode::FORBIDDEN,
             ApiError::OrganizationNotFound => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::ResourceNotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::BAD_REQUEST,
         };
 

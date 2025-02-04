@@ -27,11 +27,170 @@ translate! {
         ko: "패널명 수정하기",
         en: "Update Panel Name"
     }
+
+    age: {
+        ko: "나이",
+        en: "Age"
+    }
+    teenager: {
+        ko: "17세 이하",
+        en: "Under 17 years old"
+    }
+    twenty: {
+        ko: "18~29세",
+        en: "18-29 years old"
+    }
+    thirty: {
+        ko: "30대",
+        en: "30-39 years old"
+    }
+    fourty: {
+        ko: "40대",
+        en: "40-49 years old"
+    }
+    fifty: {
+        ko: "50대",
+        en: "50-59 years old"
+    }
+    sixty: {
+        ko: "60대",
+        en: "60-69 years old"
+    }
+    over: {
+        ko: "70대 이상",
+        en: "Over 70s"
+    }
+
+    gender: {
+        ko: "성별",
+        en: "Gender"
+    }
+    male: {
+        ko: "남성",
+        en: "Male"
+    }
+    female: {
+        ko: "여성",
+        en: "Female"
+    }
+
+    region: {
+        ko: "지역",
+        en: "Region"
+    }
+    seoul: {
+        ko: "서울",
+        en: "Seoul"
+    }
+    busan: {
+        ko: "부산",
+        en: "Busan"
+    }
+    daegu: {
+        ko: "대구",
+        en: "Daegu"
+    }
+    incheon: {
+        ko: "인천",
+        en: "Incheon"
+    }
+    gwangju: {
+        ko: "광주",
+        en: "Gwangju"
+    }
+    daejeon: {
+        ko: "대전",
+        en: "Daejeon"
+    }
+    ulsan: {
+        ko: "울산",
+        en: "Ulsan"
+    }
+    sejong: {
+        ko: "세종",
+        en: "Sejong"
+    }
+    gyeongi: {
+        ko: "경기",
+        en: "Gyeongi"
+    }
+    gangwon: {
+        ko: "강원",
+        en: "Gangwon"
+    }
+    chungbuk: {
+        ko: "충북",
+        en: "Chungbok"
+    }
+    chungnam: {
+        ko: "충남",
+        en: "Chungnam"
+    }
+    jeonbuk: {
+        ko: "전북",
+        en: "Jeonbuk"
+    }
+    jeonnam: {
+        ko: "전남",
+        en: "Jeonnam"
+    }
+    gyeonbuk: {
+        ko: "경북",
+        en: "Gyeonbuk"
+    }
+    gyeonnam: {
+        ko: "경남",
+        en: "Gyeonnam"
+    }
+    jeju: {
+        ko: "제주",
+        en: "Jeju"
+    }
+
+    salary: {
+        ko: "연봉",
+        en: "Salary"
+    }
+    tier_one: {
+        ko: "2400만원 이하",
+        en: "Less than 24 million won"
+    }
+    tier_two: {
+        ko: "2400만원 ~ 5000만원",
+        en: "24 million won ~ 50 million won"
+    }
+    tier_three: {
+        ko: "5000만원 ~ 8000만원",
+        en: "50 million won ~ 80 million won"
+    }
+    tier_four: {
+        ko: "8000만원 ~ 10000만원",
+        en: "80 million won ~ 100 million won"
+    }
+    tier_five: {
+        ko: "10000만원 이상",
+        en: "More than 100 million won"
+    }
 }
 
 translate! {
     PanelListTranslate;
-
+    gender: {
+        ko: "성별",
+        en: "Gender"
+    }
+    age: {
+        ko: "나이",
+        en: "Age"
+    }
+    region: {
+        ko: "지역",
+        en: "Region"
+    }
+    salary: {
+        ko: "연봉",
+        en: "Salary"
+    }
     input_name: {
         ko: "이름 입력",
         en: "Input Name"
@@ -60,14 +219,7 @@ translate! {
         ko: "직업",
         en: "Job"
     }
-    gender: {
-        ko: "성별",
-        en: "Gender"
-    }
-    age: {
-        ko: "나이",
-        en: "Age"
-    }
+
     education: {
         ko: "학력",
         en: "Education"

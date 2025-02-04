@@ -9,6 +9,7 @@ mod pagination;
 mod panel;
 mod public_opinion;
 mod public_survey;
+mod resource;
 mod search;
 mod strings;
 mod survey;
@@ -32,6 +33,7 @@ pub mod prelude {
     pub use crate::panel::*;
     pub use crate::public_opinion::*;
     pub use crate::public_survey::*;
+    pub use crate::resource::*;
     pub use crate::search::*;
     pub use crate::strings::*;
     pub use crate::survey::*;

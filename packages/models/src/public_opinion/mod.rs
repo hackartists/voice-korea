@@ -226,23 +226,3 @@ pub struct PanelInfo {
     pub id: String,
     pub name: String,
 }
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum ProjectStatus {
-    #[default]
-    Ready,
-    InProgress,
-    Finish,
-}
-
-impl std::fmt::Display for ProjectStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ProjectStatus::Ready => write!(f, "Ready"),
-            ProjectStatus::InProgress => write!(f, "In Progress"),
-            ProjectStatus::Finish => write!(f, "Finish"),
-        }
-    }
-}

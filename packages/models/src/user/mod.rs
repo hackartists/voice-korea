@@ -11,7 +11,7 @@ use validator::ValidationError;
 #[derive(validator::Validate)]
 #[api_model(base = "/auth/v1", action = [signup(code = String), reset(code = String)], read_action = refresh, table = users, iter_type=QueryResponse)]
 pub struct User {
-    #[api_model(primary_key, find_by_id)]
+    #[api_model(primary_key, read_action = find_by_id)]
     pub id: String,
     #[api_model(auto = [insert])]
     pub created_at: i64,

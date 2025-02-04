@@ -82,7 +82,7 @@ pub enum Route {
         ResetPasswordPage { lang: Language },
     #[end_nest]
 
-    #[redirect("/", || Route::LoginPage { lang: Language::default() })]
+    #[redirect("/", || Route::LoginPage { lang: Language::Ko })]
     #[route("/:..route")]
     NotFoundPage { route: Vec<String> },
 }
