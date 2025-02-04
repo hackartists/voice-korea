@@ -83,7 +83,7 @@ impl ResourceConterollerV1 {
         Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<ResourceByIdAction>,
     ) -> models::Result<Json<Resource>> {
-        //TODO: Check Permission
+        // TODO:Check Permission
         match body {
             ResourceByIdAction::Update(req) => {
                 let res = ctrl.update(req).await?;
@@ -120,7 +120,6 @@ impl ResourceConterollerV1 {
     #[allow(unused)]
     async fn delete(&self, id: String) -> models::Result<Resource> {
         tracing::debug!("delete_resource: {:?}", id);
-        // TODO: Soft-delete Resource
         Ok(Resource::default())
     }
 }

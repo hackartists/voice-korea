@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::Field;
 #[allow(unused)]
 use crate::Result;
@@ -18,7 +20,6 @@ pub struct Resource {
        |         ^^ used as parameter more than once
         */
     #[api_model(summary, primary_key, read_action = find_by_id )]
-    #[allow(unused)]
     pub id: String,
     #[api_model(auto = insert)]
     pub created_at: i64,
@@ -40,7 +41,6 @@ pub struct Resource {
     pub access_level: Option<AccessLevel>,
 
     #[api_model(action = create, query_action = list_resources)]
-    #[allow(unused)]
     pub org_id: String,
     // TODO: After Implement Deliberation Table
     // #[api_model(many_to_many = resource_delierations, foreign_table_name = delierations, foreign_primary_key = delieration_id, foreign_reference_key = resource_id)]
