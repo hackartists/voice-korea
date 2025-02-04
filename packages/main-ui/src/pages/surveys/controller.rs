@@ -1,11 +1,11 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
+use models::{QueryResponse, SurveyV2, SurveyV2Query, SurveyV2Summary};
 
 use crate::config;
 use crate::pages::surveys::page::RemoveSurveyModal;
 use crate::service::popup_service::PopupService;
-use models::*;
 
 use super::i18n::SurveyTranslate;
 

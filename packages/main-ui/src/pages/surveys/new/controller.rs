@@ -1,10 +1,10 @@
 use chrono::Local;
 use dioxus::prelude::*;
+use dioxus_logger::tracing;
 use dioxus_translate::translate;
-use models::{
-    prelude::{PublicSurveyQuestionType, Question},
-    ProjectArea,
-};
+use models::{prelude::Question, ProjectArea, SurveyV2};
+
+use crate::service::login_service::LoginService;
 
 use super::i18n::SurveyNewTranslate;
 
@@ -16,8 +16,9 @@ pub struct Controller {
     start_date: Signal<i64>,
     end_date: Signal<i64>,
     nav: Navigator,
+    user: LoginService,
 
-    surveys: Signal<Vec<Question>>,
+    questions: Signal<Vec<Question>>,
     total_survey_types: Signal<Vec<String>>,
 }
 
@@ -28,6 +29,7 @@ impl Controller {
         let timestamp = Local::now().timestamp();
         let ctrl = Self {
             nav: use_navigator(),
+            user: use_context(),
             selected_field: use_signal(|| None),
             title: use_signal(|| "".to_string()),
 
@@ -35,7 +37,7 @@ impl Controller {
             end_date: use_signal(|| timestamp),
 
             description: use_signal(|| "".to_string()),
-            surveys: use_signal(|| vec![]),
+            questions: use_signal(|| vec![]),
 
             total_survey_types: use_signal(|| {
                 vec![
@@ -91,39 +93,60 @@ impl Controller {
     }
 
     pub fn get_surveys(&self) -> Vec<Question> {
-        (self.surveys)()
+        (self.questions)()
     }
 
     pub fn change_survey(&mut self, index: usize, survey: Question) {
-        let mut surveys = (self.surveys)();
+        let mut surveys = (self.questions)();
         surveys[index] = survey;
-        self.surveys.set(surveys);
+        self.questions.set(surveys);
     }
 
     pub fn remove_survey(&mut self, index: usize) {
-        let mut surveys = (self.surveys)();
+        let mut surveys = (self.questions)();
         surveys.remove(index);
-        self.surveys.set(surveys);
+        self.questions.set(surveys);
     }
 
-    pub fn add_survey(&mut self) {
-        let mut surveys = (self.surveys)();
-        surveys.push(Question {
-            id: None,
-            title: "".to_string(),
-            description: None,
-            question_type: PublicSurveyQuestionType::Subjective,
-            image_url: None,
-            answer_start_range: None,
-            answer_end_range: None,
-            options: None,
-            multiple_choice_enable: None,
-            necessary_answer_enable: None,
-        });
-        self.surveys.set(surveys);
+    pub fn add_question(&mut self) {
+        self.questions.push(Question::default());
     }
 
-    pub async fn save_survey(&self) {}
+    pub async fn save_survey(&self) {
+        let cli = SurveyV2::get_client(crate::config::get().api_url);
+        let area = (self.selected_field)();
+        if area.is_none() {
+            tracing::error!("Area is not selected");
+            return;
+        }
+        let org = self.user.get_selected_org();
+        if org.is_none() {
+            tracing::error!("Organization is not selected");
+            return;
+        }
+
+        match cli
+            .create(
+                self.get_title(),
+                area.unwrap(),
+                self.get_start_date(),
+                self.get_end_date(),
+                self.get_description(),
+                // TODO: no quetes configuration
+                0,
+                org.unwrap().id.clone(),
+                (self.questions)(),
+            )
+            .await
+        {
+            Ok(_) => {
+                self.nav.go_back();
+            }
+            Err(e) => {
+                tracing::error!("Failed to create survey: {:?}", e);
+            }
+        };
+    }
 
     pub fn back(&self) {
         self.nav.go_back();

@@ -16,7 +16,6 @@ use main_ui::service::popup_service::PopupService;
 use main_ui::config;
 use main_ui::service::metadata_api::ResourceApi;
 use main_ui::service::prev_survey_api::PrevSurveyApi;
-use main_ui::service::survey_api::SurveyApi;
 use main_ui::service::theme::Theme;
 use main_ui::service::user_api::UserApi;
 
@@ -68,7 +67,6 @@ fn App() -> Element {
     AttributeApi::init();
     PanelApi::init();
     ResourceApi::init();
-    SurveyApi::init();
     PrevSurveyApi::init();
 
     rsx! {

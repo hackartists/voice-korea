@@ -68,8 +68,7 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                 QuestionListView {
                     lang: props.lang,
                     questions: ctrl.get_surveys(),
-                    types: ctrl.get_total_survey_types(),
-                    onchange_questions: move |(index, survey): (usize, Question)| {
+                    onchange: move |(index, survey): (usize, Question)| {
                         ctrl.change_survey(index, survey);
                     },
                     onremove: move |index: usize| {
@@ -80,7 +79,7 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                 button {
                     class: "flex flex-row w-full",
                     onclick: move |_| {
-                        ctrl.add_survey();
+                        ctrl.add_question();
                     },
                     AddQuestion { lang: props.lang }
                 }
