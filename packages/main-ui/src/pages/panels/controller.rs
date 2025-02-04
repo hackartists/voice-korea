@@ -7,7 +7,10 @@ use models::{
     AttributeResponse,
 };
 
-use crate::service::{panel_api::PanelApi, popup_service::PopupService};
+use crate::{
+    pages::panels::components::setting::AttributeSetting,
+    service::{panel_api::PanelApi, popup_service::PopupService},
+};
 
 use super::{
     i18n::PanelTranslate,
@@ -159,16 +162,140 @@ impl Controller {
         panel_resource.restart();
     }
 
-    pub async fn open_setting_age_modal(&self, _lang: Language, index: usize) {
+    pub async fn open_setting_salary_modal(&self, lang: Language, index: usize) {
         let mut popup_service = self.popup_service.clone();
-        let _translate = (self.translate)().clone();
+        let translate = (self.translate)().clone();
         let panels = self.get_panels();
         let _panel_id = panels[index].id.clone();
+        let salary = panels[index].salary.translate(&lang);
 
         popup_service
-            .open(rsx! {})
+            .open(rsx! {
+                AttributeSetting {
+                    lang,
+                    name: translate.clone().salary.to_string(),
+                    total_options: vec![
+                        translate.clone().tier_one.to_string(),
+                        translate.clone().tier_two.to_string(),
+                        translate.clone().tier_three.to_string(),
+                        translate.clone().tier_four.to_string(),
+                        translate.clone().tier_five.to_string(),
+                    ],
+                    current_option: salary,
+                    onsave: move |_option: String| {
+                        popup_service.close();
+                    },
+                    oncancel: move |_| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("setting_salary")
+            .with_title(translate.set_salary_properties);
+    }
+
+    pub async fn open_setting_region_modal(&self, lang: Language, index: usize) {
+        let mut popup_service = self.popup_service.clone();
+        let translate = (self.translate)().clone();
+        let panels = self.get_panels();
+        let _panel_id = panels[index].id.clone();
+        let region = panels[index].region.translate(&lang);
+
+        popup_service
+            .open(rsx! {
+                AttributeSetting {
+                    lang,
+                    name: translate.clone().region.to_string(),
+                    total_options: vec![
+                        translate.clone().seoul.to_string(),
+                        translate.clone().busan.to_string(),
+                        translate.clone().daegu.to_string(),
+                        translate.clone().incheon.to_string(),
+                        translate.clone().gwangju.to_string(),
+                        translate.clone().daejeon.to_string(),
+                        translate.clone().ulsan.to_string(),
+                        translate.clone().sejong.to_string(),
+                        translate.clone().gyeongi.to_string(),
+                        translate.clone().gangwon.to_string(),
+                        translate.clone().chungbuk.to_string(),
+                        translate.clone().chungnam.to_string(),
+                        translate.clone().jeonbuk.to_string(),
+                        translate.clone().jeonnam.to_string(),
+                        translate.clone().gyeonbuk.to_string(),
+                        translate.clone().gyeonnam.to_string(),
+                        translate.clone().jeju.to_string(),
+                    ],
+                    current_option: region,
+                    onsave: move |_option: String| {
+                        popup_service.close();
+                    },
+                    oncancel: move |_| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("setting_region")
+            .with_title(translate.set_region_properties);
+    }
+
+    pub async fn open_setting_gender_modal(&self, lang: Language, index: usize) {
+        let mut popup_service = self.popup_service.clone();
+        let translate = (self.translate)().clone();
+        let panels = self.get_panels();
+        let _panel_id = panels[index].id.clone();
+        let gender = panels[index].gender.translate(&lang);
+
+        popup_service
+            .open(rsx! {
+                AttributeSetting {
+                    lang,
+                    name: translate.clone().gender.to_string(),
+                    total_options: vec![translate.clone().male.to_string(), translate.clone().female.to_string()],
+                    current_option: gender,
+                    onsave: move |_option: String| {
+                        popup_service.close();
+                    },
+                    oncancel: move |_| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("setting_gender")
+            .with_title(translate.set_gender_properties);
+    }
+
+    pub async fn open_setting_age_modal(&self, lang: Language, index: usize) {
+        let mut popup_service = self.popup_service.clone();
+        let translate = (self.translate)().clone();
+        let panels = self.get_panels();
+        let _panel_id = panels[index].id.clone();
+        let age = panels[index].age.translate(&lang);
+
+        popup_service
+            .open(rsx! {
+                AttributeSetting {
+                    lang,
+                    name: translate.clone().age.to_string(),
+                    total_options: vec![
+                        translate.clone().teenager.to_string(),
+                        translate.clone().twenty.to_string(),
+                        translate.clone().thirty.to_string(),
+                        translate.clone().fourty.to_string(),
+                        translate.clone().fifty.to_string(),
+                        translate.clone().sixty.to_string(),
+                        translate.clone().over.to_string(),
+                    ],
+                    current_option: age,
+                    onsave: move |_option: String| {
+                        popup_service.close();
+                    },
+                    oncancel: move |_| {
+                        popup_service.close();
+                    },
+                }
+            })
             .with_id("setting_age")
-            .with_title("연령 속성 설정");
+            .with_title(translate.set_age_properties);
     }
 
     pub async fn open_remove_panel(&self, lang: Language, index: usize) {

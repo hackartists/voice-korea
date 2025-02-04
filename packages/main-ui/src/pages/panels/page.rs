@@ -367,22 +367,38 @@ pub fn PanelList(
                                     }
                                 }
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
+                                    button {
+                                        class: "font-medium text-[#222222] text-[14px]",
+                                        onclick: move |_| async move {
+                                            ctrl.open_setting_age_modal(lang, index).await;
+                                        },
                                         PanelLabel { label: panel.age.translate(&lang) }
                                     }
                                 }
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
+                                    button {
+                                        class: "font-medium text-[#222222] text-[14px]",
+                                        onclick: move |_| async move {
+                                            ctrl.open_setting_gender_modal(lang, index).await;
+                                        },
                                         PanelLabel { label: panel.gender.translate(&lang) }
                                     }
                                 }
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
+                                    button {
+                                        class: "font-medium text-[#222222] text-[14px]",
+                                        onclick: move |_| async move {
+                                            ctrl.open_setting_region_modal(lang, index).await;
+                                        },
                                         PanelLabel { label: panel.region.translate(&lang) }
                                     }
                                 }
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                    div { class: "font-medium text-[#222222] text-[14px]",
+                                    button {
+                                        class: "font-medium text-[#222222] text-[14px]",
+                                        onclick: move |_| async move {
+                                            ctrl.open_setting_salary_modal(lang, index).await;
+                                        },
                                         PanelLabel { label: panel.salary.translate(&lang) }
                                     }
                                 }

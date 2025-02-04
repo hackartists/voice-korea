@@ -171,6 +171,32 @@ translate! {
         ko: "10000만원 이상",
         en: "More than 100 million won"
     }
+
+    set_salary_properties: {
+        ko: "연봉 속성 설정",
+        en: "Set Salary Properties"
+    }
+    set_region_properties: {
+        ko: "지역 속성 설정",
+        en: "Set Region Properties"
+    }
+    set_gender_properties: {
+        ko: "성별 속성 설정",
+        en: "Set Gender Properties"
+    }
+    set_age_properties: {
+        ko: "연령 속성 설정",
+        en: "Set Age Properties"
+    }
+
+    save: {
+        ko: "저장",
+        en: "Save"
+    }
+    cancel: {
+        ko: "취소",
+        en: "Cancel"
+    }
 }
 
 translate! {
