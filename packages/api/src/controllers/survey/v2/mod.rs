@@ -11,15 +11,13 @@ use models::*;
 #[derive(Clone, Debug)]
 pub struct SurveyControllerV2 {
     repo: SurveyV2Repository,
-    user: UserRepository,
 }
 
 impl SurveyControllerV2 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
-        let user = User::get_repository(pool.clone());
         let repo = SurveyV2::get_repository(pool);
 
-        let ctrl = SurveyControllerV2 { repo, user };
+        let ctrl = SurveyControllerV2 { repo };
 
         Ok(by_axum::axum::Router::new()
             .route("/:id", get(Self::get_survey_v2))

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use by_axum::{
     auth::{authorization_middleware, set_auth_config},
     axum::middleware,
