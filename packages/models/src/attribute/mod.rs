@@ -4,6 +4,8 @@ use by_axum::aide;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+pub mod attribute_v2;
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 

@@ -3,7 +3,7 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
-use models::{v2::PanelV2, *};
+use models::{panel_v2::PanelV2, *};
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
 // use sqlx::postgres::PgPoolOptions;
