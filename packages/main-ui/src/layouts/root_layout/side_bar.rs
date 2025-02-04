@@ -20,11 +20,12 @@ pub struct SidebarProps {
 #[component]
 pub fn SideBar(props: SidebarProps) -> Element {
     let mut srv: LoginService = use_context();
+    tracing::debug!("selected menu: {}", props.selected_menu,);
 
     let organizations = srv.get_orgs();
     let selected_organization = srv.get_selected_org().unwrap_or_default();
 
-    tracing::debug!("selected organization: {}", selected_organization.name);
+    tracing::debug!("selected organization: {}", selected_organization.name,);
 
     let organization_menus: Vec<MenuItem> = organizations
         .iter()
@@ -103,30 +104,16 @@ pub fn SideBar(props: SidebarProps) -> Element {
                             menus: vec![
                                 MenuItem {
                                     id: "".to_string(),
-                                    title: "조사 관리".to_string(),
-                                    is_selected: props.selected_menu == "조사 관리",
+                                    title: "여론 조사".to_string(),
+                                    is_selected: props.selected_menu == "여론 조사",
                                     link: Some(Route::SurveyPage {
                                         lang: props.lang,
                                     }),
                                 },
                                 MenuItem {
                                     id: "".to_string(),
-                                    title: "질문 뱅크".to_string(),
-                                    is_selected: props.selected_menu == "질문 뱅크",
-                                    link: Some(Route::DashboardPage {
-                                        lang: props.lang,
-                                    }),
-                                },
-                            ],
-                        }
-                        SectionMenus {
-                            onselected: props.onselected,
-                            title: "공론 관리".to_string(),
-                            menus: vec![
-                                MenuItem {
-                                    id: "".to_string(),
-                                    title: "공론 관리".to_string(),
-                                    is_selected: props.selected_menu == "공론 관리",
+                                    title: "공론 조사".to_string(),
+                                    is_selected: props.selected_menu == "공론 조사",
                                     link: Some(Route::OpinionPage {
                                         lang: props.lang,
                                     }),

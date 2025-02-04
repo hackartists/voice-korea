@@ -3,7 +3,7 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
-use models::*;
+use models::{v2::PanelV2, *};
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
 // use sqlx::postgres::PgPoolOptions;
@@ -11,11 +11,17 @@ use tokio::net::TcpListener;
 
 mod common;
 mod controllers {
+    pub mod panels {
+        pub mod v2;
+    }
     pub mod auth {
         pub mod v1;
     }
     pub mod resources {
         pub mod v1;
+    }
+    pub mod survey {
+        pub mod v2;
     }
     // pub mod members {
     //     pub mod v1;
@@ -36,9 +42,7 @@ mod controllers {
     // pub mod search {
     //     pub mod v1;
     // }
-    // pub mod panels {
-    //     pub mod v1;
-    // }
+
     // pub mod public_opinions {
     //     pub mod v1;
     // }
@@ -62,6 +66,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let u = User::get_repository(pool.clone());
     let resource = Resource::get_repository(pool.clone());
     // let files = Files::get_repository(pool.clone());
+    let p = PanelV2::get_repository(pool.clone());
+    let s = SurveyV2::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
@@ -69,6 +75,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
 
     resource.create_this_table().await?;
     // files.create_table().await?;
+    s.create_this_table().await?;
+    p.create_this_table().await?;
 
     v.create_related_tables().await?;
     o.create_related_tables().await?;
@@ -76,6 +84,8 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
 
     resource.create_related_tables().await?;
     // files.create_related_tables().await?;
+    s.create_related_tables().await?;
+    p.create_related_tables().await?;
 
     tracing::info!("Migration done");
     Ok(())
@@ -101,12 +111,20 @@ async fn main() -> Result<()> {
 
     let app = app
         .nest(
+            "/panels/v2",
+            controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
+        )
+        .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
         )
         .nest(
             "/resource/v1",
             controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
+        )
+        .nest(
+            "/surveys/v2",
+            controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
         )
         .layer(middleware::from_fn(authorization_middleware));
     // .nest(
@@ -139,10 +157,7 @@ async fn main() -> Result<()> {
     //     "/search/v1",
     //     controllers::search::v1::SearchControllerV1::router(),
     // )
-    // .nest(
-    //     "/panels/v1",
-    //     controllers::panels::v1::PanelControllerV1::router(),
-    // )
+
     // .nest(
     //     "/public-opinions/v1",
     //     controllers::public_opinions::v1::PublicOpinionControllerV1::router(),
