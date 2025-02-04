@@ -36,7 +36,6 @@ impl PanelControllerV2 {
         Path(panel_id): Path<String>,
         Extension(_auth): Extension<Option<Authorization>>,
     ) -> Result<Json<PanelV2>> {
-        //FIXME: fix to bigint parsing bug
         tracing::debug!("get_panel: {:?}", panel_id);
 
         let panel = ctrl
