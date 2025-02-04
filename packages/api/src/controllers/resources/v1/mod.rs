@@ -9,15 +9,14 @@ use by_axum::{
 
 use models::{
     // ResourceDeleteRequest,
-    QueryResponse,
     Resource,
     ResourceAction,
     ResourceByIdAction,
     ResourceCreateRequest,
-    ResourceQuery,
+    ResourceGetResponse,
+    ResourceParam,
     ResourceReadAction,
     ResourceRepository,
-    ResourceSummary,
     ResourceUpdateRequest,
 };
 
@@ -54,9 +53,16 @@ impl ResourceConterollerV1 {
     async fn list_resources(
         State(ctrl): State<ResourceConterollerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Query(params): Query<ResourceQuery>,
-    ) -> models::Result<Json<QueryResponse<ResourceSummary>>> {
-        Ok(Json(ctrl.repo.find(&params).await?))
+        Query(params): Query<ResourceParam>,
+    ) -> models::Result<Json<ResourceGetResponse>> {
+        match params {
+            ResourceParam::Query(q) => {
+                Ok(Json(ResourceGetResponse::Query(ctrl.repo.find(&q).await?)))
+            }
+            ResourceParam::Read(q) => Ok(Json(ResourceGetResponse::Read(
+                ctrl.repo.find_one(&q).await?,
+            ))),
+        }
     }
 
     async fn act_resource(
@@ -66,7 +72,7 @@ impl ResourceConterollerV1 {
     ) -> models::Result<Json<Resource>> {
         match body {
             ResourceAction::Create(req) => {
-                let res = Self::create(ctrl.repo.clone(), req).await?;
+                let res = ctrl.create(req).await?;
                 Ok(Json(res))
             }
         }
@@ -80,7 +86,7 @@ impl ResourceConterollerV1 {
         //TODO: Check Permission
         match body {
             ResourceByIdAction::Update(req) => {
-                let res = Self::update(ctrl.repo.clone(), req).await?;
+                let res = ctrl.update(req).await?;
                 Ok(Json(res))
             } // ResourceByIdAction::Delete(reqwest) => {
               //     let res = Self::delete(ctrl.repo.clone(), reqwest.id).await?;
@@ -90,12 +96,10 @@ impl ResourceConterollerV1 {
     }
 }
 impl ResourceConterollerV1 {
-    async fn create(
-        repo: ResourceRepository,
-        req: ResourceCreateRequest,
-    ) -> models::Result<Resource> {
+    async fn create(&self, req: ResourceCreateRequest) -> models::Result<Resource> {
         tracing::debug!("create_resource: {:?}", req);
-        let resource = repo
+        let resource = self
+            .repo
             .insert(
                 req.title,
                 req.resource_type,
@@ -108,16 +112,13 @@ impl ResourceConterollerV1 {
             .await?;
         Ok(resource)
     }
-    async fn update(
-        _repo: ResourceRepository,
-        req: ResourceUpdateRequest,
-    ) -> models::Result<Resource> {
+    async fn update(&self, req: ResourceUpdateRequest) -> models::Result<Resource> {
         tracing::debug!("update_resource: {:?}", req);
         // TODO: Update Resource
         Ok(Resource::default())
     }
     #[allow(unused)]
-    async fn delete(_repo: ResourceRepository, id: String) -> models::Result<Resource> {
+    async fn delete(&self, id: String) -> models::Result<Resource> {
         tracing::debug!("delete_resource: {:?}", id);
         // TODO: Soft-delete Resource
         Ok(Resource::default())
