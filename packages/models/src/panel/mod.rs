@@ -9,7 +9,7 @@ use crate::attribute::AttributeResponse;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-pub mod v2;
+pub mod panel_v2;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

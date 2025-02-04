@@ -7,7 +7,7 @@ use by_axum::{
     },
 };
 use models::{
-    v2::{
+    panel_v2::{
         PanelV2, PanelV2Action, PanelV2ByIdAction, PanelV2CreateRequest, PanelV2Query,
         PanelV2ReadAction, PanelV2Repository, PanelV2Summary, PanelV2UpdateRequest,
     },
