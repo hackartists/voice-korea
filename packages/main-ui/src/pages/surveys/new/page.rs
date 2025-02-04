@@ -1,11 +1,11 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
-use models::prelude::PublicSurveyQuestion;
+use models::{prelude::Question, ProjectArea};
 
 use crate::{
     components::icons::{ArrowLeft, Plus},
     pages::surveys::{
-        components::{introduction::InputIntroduction, survey::ListSurvey},
+        components::{introduction::InputIntroduction, survey::QuestionListView},
         new::{
             controller::Controller,
             i18n::{AddQuestionTranslate, SurveyNewTranslate},
@@ -24,7 +24,7 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
     let translates: SurveyNewTranslate = translate(&props.lang);
     let mut ctrl = Controller::new(props.lang);
     rsx! {
-        div { class: "relative h-full grow",
+        div { class: "flex flex-col gap-[40px] items-end justify-start mb-[40px]",
             div { class: "flex flex-col w-full h-full justify-start items-start",
                 div { class: "text-[#b4b4b4] font-medium text-[14px] mb-[10px]",
                     "{translates.survey_title}"
@@ -44,38 +44,31 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
 
                 InputIntroduction {
                     lang: props.lang,
-                    selected_field: ctrl.get_selected_field(),
-                    fields: ctrl.get_total_fields(),
-                    change_field: move |field: String| {
+                    onchange_area: move |field: ProjectArea| {
                         ctrl.change_selected_field(field);
                     },
 
-                    title: ctrl.get_title(),
-                    change_title: move |title: String| {
+                    onchange_title: move |title: String| {
                         ctrl.change_title(title);
                     },
 
-                    start_date: ctrl.get_start_date(),
-                    change_start_date: move |start_date: i64| {
+                    onchange_start_date: move |start_date: i64| {
                         ctrl.change_start_date(start_date);
                     },
 
-                    end_date: ctrl.get_end_date(),
-                    change_end_date: move |end_date: i64| {
+                    onchange_end_date: move |end_date: i64| {
                         ctrl.change_end_date(end_date);
                     },
 
-                    description: ctrl.get_description(),
-                    change_description: move |description: String| {
+                    onchange_description: move |description: String| {
                         ctrl.change_description(description);
                     },
                 }
 
-                ListSurvey {
+                QuestionListView {
                     lang: props.lang,
-                    surveys: ctrl.get_surveys(),
-                    types: ctrl.get_total_survey_types(),
-                    change_survey: move |(index, survey): (usize, PublicSurveyQuestion)| {
+                    questions: ctrl.get_surveys(),
+                    onchange: move |(index, survey): (usize, Question)| {
                         ctrl.change_survey(index, survey);
                     },
                     onremove: move |index: usize| {
@@ -86,17 +79,34 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                 button {
                     class: "flex flex-row w-full",
                     onclick: move |_| {
-                        ctrl.add_survey();
+                        ctrl.add_question();
                     },
                     AddQuestion { lang: props.lang }
                 }
             }
 
-            div { class: "absolute right-[0px] bottom-[40px]",
-                div {
-                    class: "flex flex-row w-[70px] h-[70px] justify-center items-center bg-white border border-[#ebeff5] rounded-[100px]",
-                    style: "box-shadow: 0px 8px 15px 0px rgba(53, 70, 177, 0.45);",
-                    Plus { width: "18", height: "18", color: "#555462" }
+            div { class: "flex flex-row gap-[20px] text-white",
+                button {
+                    class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
+                    onclick: move |_| {
+                        ctrl.back();
+                    },
+                    "{translates.btn_cancel}"
+                }
+                button {
+                    class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
+                    onclick: move |_| async move {
+                        ctrl.save_survey().await;
+                    },
+                    "{translates.btn_temp_save}"
+                }
+
+                button {
+                    class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
+                    onclick: move |_| async move {
+                        ctrl.save_survey().await;
+                    },
+                    "{translates.btn_complete}"
                 }
             }
         }

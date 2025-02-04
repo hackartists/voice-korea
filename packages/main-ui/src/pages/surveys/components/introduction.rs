@@ -1,6 +1,9 @@
+use std::str::FromStr;
+
 use chrono::{Local, TimeZone};
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
+use models::ProjectArea;
 
 use crate::{
     components::{calendar::Calendar, icons::CalendarIcon},
@@ -10,25 +13,18 @@ use crate::{
 #[component]
 pub fn InputIntroduction(
     lang: Language,
-
-    selected_field: String,
-    fields: Vec<String>,
-    change_field: EventHandler<String>,
-
-    title: String,
-    change_title: EventHandler<String>,
-
-    start_date: i64,
-    change_start_date: EventHandler<i64>,
-
-    end_date: i64,
-    change_end_date: EventHandler<i64>,
-
-    description: String,
-    change_description: EventHandler<String>,
+    onchange_area: EventHandler<ProjectArea>,
+    onchange_title: EventHandler<String>,
+    onchange_start_date: EventHandler<i64>,
+    onchange_end_date: EventHandler<i64>,
+    onchange_description: EventHandler<String>,
 ) -> Element {
     let translate: InputIntroductionTranslate = translate(&lang);
     let mut is_focused = use_signal(|| false);
+    let mut select_field = use_signal(|| None);
+    let mut start_date = use_signal(|| Local::now().timestamp());
+    let mut end_date = use_signal(|| Local::now().timestamp());
+
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "font-medium text-[16px] text-black leading-[22px] mb-[10px]",
@@ -51,21 +47,29 @@ pub fn InputIntroduction(
                     //select box
                     select {
                         class: "focus:outline-none w-[215px] h-[55px] justify-start items-start p-[15px] bg-[#f7f7f7] rounded-[4px] mr-[20px] font-medium text-[15px] text-[#b4b4b4]",
-                        value: selected_field.clone(),
+                        value: match select_field() {
+                            Some(v) => format!("{}", v),
+                            None => "".to_string(),
+                        },
                         onchange: move |e: Event<FormData>| {
-                            change_field.call(e.value());
+                            let v = match ProjectArea::from_str(e.value().as_str()) {
+                                Ok(v) => v,
+                                Err(_) => return,
+                            };
+                            select_field.set(Some(v));
+                            onchange_area.call(v);
                         },
                         option {
                             value: "",
                             disabled: true,
-                            selected: selected_field == "",
+                            selected: select_field() == None,
                             "{translate.select_field}"
                         }
-                        for field in fields {
+                        for field in ProjectArea::all() {
                             option {
-                                value: field.clone(),
-                                selected: selected_field == field,
-                                "{field}"
+                                value: format!("{}", field).as_str(),
+                                selected: Some(field) == select_field(),
+                                {field.translate(&lang)}
                             }
                         }
                     }
@@ -88,9 +92,8 @@ pub fn InputIntroduction(
                         onblur: move |_| {
                             is_focused.set(false);
                         },
-                        value: title,
                         oninput: move |e: Event<FormData>| {
-                            change_title.call(e.value());
+                            onchange_title.call(e.value());
                         },
                     }
 
@@ -98,15 +101,16 @@ pub fn InputIntroduction(
                     div { class: "group relative",
                         button { class: "flex flex-row w-[190px] focus:outline-none h-[55px] justify-between items-center bg-white border border-[#bfc8d9] rounded-[8px] px-[20px]",
                             div { class: "font-normal text-[16px] text-[#9b9b9b] leading-[24px]",
-                                {change_date_from_timestamp(start_date)}
+                                {change_date_from_timestamp(start_date())}
                             }
                             CalendarIcon { width: "28", height: "28" }
                         }
                         nav { class: "invisible border-none rounded w-full absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
                             Calendar {
-                                timestamp: Some(start_date as u64),
+                                timestamp: start_date() as u64,
                                 update_date: move |timestamp: i64| {
-                                    change_start_date.call(timestamp);
+                                    start_date.set(timestamp);
+                                    onchange_start_date.call(timestamp);
                                 },
                             }
                         }
@@ -118,15 +122,16 @@ pub fn InputIntroduction(
                     div { class: "group relative w-[450px]",
                         button { class: "flex flex-row w-[190px]  focus:outline-none h-[55px] justify-between items-center bg-white border border-[#bfc8d9] rounded-[8px] px-[20px]",
                             div { class: "font-normal text-[16px] text-[#9b9b9b] leading-[24px]",
-                                {change_date_from_timestamp(end_date)}
+                                {change_date_from_timestamp(end_date())}
                             }
                             CalendarIcon { width: "28", height: "28" }
                         }
                         nav { class: "invisible border-none rounded w-full absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
                             Calendar {
-                                timestamp: Some(end_date as u64),
+                                timestamp: end_date() as u64,
                                 update_date: move |timestamp: i64| {
-                                    change_end_date.call(timestamp);
+                                    end_date.set(timestamp);
+                                    onchange_end_date.call(timestamp);
                                 },
                             }
                         }
@@ -140,9 +145,8 @@ pub fn InputIntroduction(
                     class: "flex flex-row w-full h-[55px] justify-start items-center bg-white focus:outline-none border-b-[1px] border-[#bfc8d9] px-[15px] py-[15px] font-medium text-[#b4b4b4] text-[15px] leading-[22px]",
                     r#type: "text",
                     placeholder: "{translate.input_description_hint}",
-                    value: description,
                     oninput: move |e: Event<FormData>| {
-                        change_description.call(e.value());
+                        onchange_description.call(e.value());
                     },
                 }
             }

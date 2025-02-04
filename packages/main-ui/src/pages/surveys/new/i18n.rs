@@ -78,4 +78,19 @@ translate! {
         ko: "평가 척도",
         en: "Evaluation Rating"
     }
+
+    btn_complete: {
+        ko: "완료하기",
+        en: "Complete"
+    }
+
+    btn_temp_save: {
+        ko: "임시저장",
+        en: "Save as Draft"
+    }
+
+    btn_cancel: {
+        ko: "취소하기",
+        en: "Cancel"
+    }
 }

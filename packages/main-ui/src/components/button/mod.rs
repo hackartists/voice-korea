@@ -22,9 +22,7 @@ pub fn Button(props: ButtonProps) -> Element {
                     onclick(event)
                 }
             },
-            div { class: "{props.text_class} {DEFAULT_TEXT_STYLES}",
-                "{props.button_text}"
-            }
+            div { class: "{props.text_class} {DEFAULT_TEXT_STYLES}", "{props.button_text}" }
         }
     }
 }
