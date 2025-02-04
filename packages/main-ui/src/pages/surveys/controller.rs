@@ -1,111 +1,123 @@
-use chrono::{TimeZone, Utc};
-use dioxus::prelude::ServerFnError;
 use dioxus::prelude::*;
+use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{Field, PublicSurveyStatus, PublicSurveySummary, SurveyType};
+use models::{QueryResponse, SurveyV2, SurveyV2Query, SurveyV2Summary};
 
-use crate::api::common::CommonQueryResponse;
+use crate::config;
 use crate::pages::surveys::page::RemoveSurveyModal;
+use crate::service::login_service::LoginService;
 use crate::service::popup_service::PopupService;
-use crate::service::survey_api::SurveyApi;
 
 use super::i18n::SurveyTranslate;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
-    public_survey_resource:
-        Resource<Result<CommonQueryResponse<PublicSurveySummary>, ServerFnError>>,
-    surveys: Signal<Vec<PublicSurveySummary>>,
-    popup_service: Signal<PopupService>,
-    public_survey_api: SurveyApi,
+    lang: Language,
+    pub surveys: Resource<QueryResponse<SurveyV2Summary>>,
+    popup_service: PopupService,
+    page: Signal<usize>,
+    pub size: usize,
     translate: Signal<SurveyTranslate>,
 }
 
 impl Controller {
-    pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
+    pub fn new(lang: dioxus_translate::Language) -> std::result::Result<Self, RenderError> {
         let translate: SurveyTranslate = translate(&lang);
-        let public_survey_api: SurveyApi = use_context();
+        let page = use_signal(|| 1);
+        let size = 10;
+        let user: LoginService = use_context();
 
-        let public_survey_resource: Resource<
-            Result<CommonQueryResponse<models::prelude::PublicSurveySummary>, ServerFnError>,
-        > = use_resource(move || {
-            let api = public_survey_api.clone();
+        // FIXME: it causes screen flickering when navigating to this page
+        // let surveys = use_server_future(move || {
+        //     let page = page();
 
-            //FIXME: add bookmark
+        //     async move {
+        //         match SurveyV2::get_client(config::get().api_url)
+        //             .query(SurveyV2Query::new(size).with_page(page))
+        //             .await
+        //         {
+        //             Ok(res) => res,
+        //             Err(e) => {
+        //                 tracing::error!("Failed to list surveys: {:?}", e);
+        //                 QueryResponse::default()
+        //             }
+        //         }
+        //     }
+        // })?;
+
+        let surveys = use_resource(move || {
+            let page = page();
+
             async move {
-                let res = api.list_surveys(Some(100), None).await;
+                let org_id = user.get_selected_org();
+                if org_id.is_none() {
+                    tracing::error!("Organization ID is missing");
+                    return QueryResponse::default();
+                }
 
-                res
+                match SurveyV2::get_client(config::get().api_url)
+                    .query(
+                        &org_id.unwrap().id,
+                        SurveyV2Query::new(size).with_page(page),
+                    )
+                    .await
+                {
+                    Ok(res) => res,
+                    Err(e) => {
+                        tracing::error!("Failed to list surveys: {:?}", e);
+                        QueryResponse::default()
+                    }
+                }
             }
         });
 
-        let mut ctrl = Self {
-            public_survey_resource,
-            surveys: use_signal(|| vec![]),
-            popup_service: use_signal(|| popup_service),
-            public_survey_api,
+        let ctrl = Self {
+            page,
+            size,
+            lang,
+            surveys,
+            popup_service: use_context(),
             translate: use_signal(|| translate),
         };
 
-        match public_survey_resource.value()() {
-            Some(surveys) => {
-                if surveys.is_ok() {
-                    ctrl.surveys.set(surveys.unwrap().items);
-                }
-            }
-            _ => {}
-        }
-        ctrl
+        Ok(ctrl)
     }
 
-    pub fn get_surveys(&self) -> Vec<PublicSurveySummary> {
-        (self.surveys)()
+    pub fn set_page(&mut self, page: usize) {
+        self.page.set(page);
     }
 
-    pub fn translate_survey_type(&self, lang: Language, survey_type: SurveyType) -> &'static str {
-        survey_type.translate(&lang)
+    pub fn page(&self) -> usize {
+        (self.page)()
     }
 
-    pub fn translate_survey_field(&self, lang: Language, survey_field: Field) -> &'static str {
-        survey_field.translate(&lang)
+    pub fn total_pages(&self) -> usize {
+        self.surveys
+            .with(|v| if let Some(v) = v { v.total_count } else { 0 }) as usize
     }
 
-    pub fn translate_survey_status(
-        &self,
-        lang: Language,
-        survey_status: PublicSurveyStatus,
-    ) -> &'static str {
-        survey_status.translate(&lang)
+    pub fn get_surveys(&self) -> Option<QueryResponse<SurveyV2Summary>> {
+        self.surveys.with(|v| v.clone())
     }
 
-    pub fn convert_timestamp_to_date(&self, timestamp: i64) -> String {
-        let datetime = Utc.timestamp_opt(timestamp, 0).unwrap();
-        let formatted_date = datetime.format("%Y.%m.%d").to_string();
-        formatted_date
-    }
-
-    pub async fn open_remove_survey_modal(&self, lang: Language, survey_id: String) {
-        let mut popup_service = (self.popup_service)().clone();
-        let api: SurveyApi = self.public_survey_api;
-
-        let mut public_survey_resource = self.public_survey_resource;
+    pub async fn open_remove_survey_modal(&mut self, survey_id: String) {
+        let mut popup_service = self.popup_service;
+        let mut public_survey_resource = self.surveys;
         let translate = (self.translate)();
 
+        // TODO: implement remove survey
         popup_service
             .open(rsx! {
                 RemoveSurveyModal {
-                    lang,
+                    lang: self.lang,
                     onclose: move |_e: MouseEvent| {
                         popup_service.close();
                     },
                     onremove: {
                         move |_e: MouseEvent| {
-                            let survey_id = survey_id.clone();
-                            async move {
-                                let _ = api.remove_survey(survey_id).await;
-                                public_survey_resource.restart();
-                                popup_service.close();
-                            }
+                            let _survey_id = survey_id.clone();
+                            public_survey_resource.restart();
+                            popup_service.close();
                         }
                     },
                 }

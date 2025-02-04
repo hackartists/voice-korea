@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct CreatePublicSurveyRequest {
     pub introductions: Option<PublicSurveyIntroduction>,
-    pub questions: Option<Vec<PublicSurveyQuestion>>,
+    pub questions: Option<Vec<Question>>,
     pub members: Option<PublicSurveyMemberInfo>,
 }
 
@@ -20,7 +20,7 @@ pub struct CreatePublicSurveyRequest {
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct UpdatePublicSurveyRequest {
     pub introductions: Option<PublicSurveyIntroduction>,
-    pub questions: Option<Vec<PublicSurveyQuestion>>,
+    pub questions: Option<Vec<Question>>,
     pub members: Option<PublicSurveyMemberInfo>,
 }
 
@@ -219,7 +219,7 @@ pub struct PublicSurveyIntroduction {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct PublicSurveyQuestion {
+pub struct PublicQuestion {
     #[serde(rename = "id")]
     pub id: Option<String>,
     pub title: String,

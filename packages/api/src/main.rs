@@ -126,10 +126,6 @@ async fn main() -> Result<()> {
             controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
         )
         .nest(
-            "/surveys/v2",
-            controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
-        )
-        .nest(
             "/organizations/v2",
             controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
         )

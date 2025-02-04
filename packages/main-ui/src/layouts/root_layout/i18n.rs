@@ -4,7 +4,7 @@ translate! {
     RootLayoutTranslate;
 
     logout: {
-        ko: "Logout",
+        ko: "로그아웃",
         en: "Logout",
     },
     overview: {
