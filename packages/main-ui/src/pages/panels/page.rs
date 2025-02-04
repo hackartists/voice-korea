@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::panel_v2::{PanelV2CreateRequest, PanelV2Summary};
+use models::prelude::{PanelV2CreateRequest, PanelV2Summary};
 
 use crate::{
     components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},

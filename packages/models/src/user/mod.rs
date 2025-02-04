@@ -1,4 +1,5 @@
 #![allow(unused_variables)]
+use crate::organization::Organization;
 #[allow(unused)]
 use crate::Result;
 #[cfg(feature = "server")]
@@ -12,18 +13,18 @@ use validator::ValidationError;
 pub struct User {
     #[api_model(primary_key, read_action = find_by_id)]
     pub id: String,
-    #[api_model(auto = insert)]
+    #[api_model(auto = [insert])]
     pub created_at: i64,
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
-    #[api_model(action = [signup, login, reset], unique, read_action = get_user)]
+    #[api_model(action = [signup, login, reset], unique, read_action = [get_user, find_by_email])]
     #[validate(email)]
     pub email: String,
-    #[api_model(action = [signup, login, reset], read_action = [get_user, find_by_email])]
+    #[api_model(action = [signup, login, reset], read_action = get_user)]
     #[validate(custom(function = "validate_hex"))]
     pub password: String,
 
-    #[api_model(many_to_many = user_orgs, foreign_table_name = organizations, foreign_primary_key = org_id, foreign_reference_key = user_id)]
+    #[api_model(many_to_many = organization_members, foreign_table_name = organizations, foreign_primary_key = org_id, foreign_reference_key = user_id)]
     #[serde(default)]
     pub orgs: Vec<Organization>,
 }
@@ -51,22 +52,6 @@ fn validate_hex(value: &str) -> std::result::Result<(), ValidationError> {
     } else {
         Err(ValidationError::new("invalid_hex"))
     }
-}
-
-#[api_model(base = "/auth/v1/organizations", table = organizations, iter_type=QueryResponse)]
-pub struct Organization {
-    #[api_model(summary, primary_key)]
-    pub id: String,
-    #[api_model(summary, auto = insert)]
-    pub created_at: i64,
-    #[api_model(summary, auto = [insert, update])]
-    pub updated_at: i64,
-
-    #[api_model(summary)]
-    pub name: String,
-    #[api_model(many_to_many = user_orgs, foreign_table_name = users, foreign_primary_key = user_id, foreign_reference_key = org_id)]
-    #[serde(default)]
-    pub users: Vec<User>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]

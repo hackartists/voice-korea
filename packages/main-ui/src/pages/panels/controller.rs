@@ -3,10 +3,11 @@ use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::{
     attribute_v2::{AgeV2, GenderV2, RegionV2, SalaryV2},
-    panel_v2::{
+    prelude::{
         PanelV2, PanelV2Client, PanelV2CreateRequest, PanelV2DeleteRequest, PanelV2Summary,
         PanelV2UpdateRequest,
     },
+    PanelV2Action, PanelV2ByIdAction,
 };
 
 use crate::{
@@ -167,9 +168,7 @@ impl Controller {
         let mut panel_resource = self.panel_resource;
         let client = (self.client)().clone();
 
-        let _ = client
-            .act(models::panel_v2::PanelV2Action::Create(req))
-            .await;
+        let _ = client.act(PanelV2Action::Create(req)).await;
         panel_resource.restart();
     }
 
@@ -208,9 +207,7 @@ impl Controller {
                                     let salary = salary.unwrap();
                                     req.salary = salary;
                                     tracing::info!("update salary clicked: {index} {:?}", req);
-                                    let _ = client
-                                        .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
-                                        .await;
+                                    let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
                                     panel_resource.restart();
                                     popup_service.close();
                                 } else {}
@@ -273,9 +270,7 @@ impl Controller {
                                     let region = region.unwrap();
                                     req.region = region;
                                     tracing::info!("update region clicked: {index} {:?}", req);
-                                    let _ = client
-                                        .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
-                                        .await;
+                                    let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
                                     panel_resource.restart();
                                     popup_service.close();
                                 } else {}
@@ -320,9 +315,7 @@ impl Controller {
                                     let gender = gender.unwrap();
                                     req.gender = gender;
                                     tracing::info!("update gender clicked: {index} {:?}", req);
-                                    let _ = client
-                                        .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
-                                        .await;
+                                    let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
                                     panel_resource.restart();
                                     popup_service.close();
                                 } else {}
@@ -375,9 +368,7 @@ impl Controller {
                                     let age = age.unwrap();
                                     req.age = age;
                                     tracing::debug!("update age clicked: {index} {:?}", req);
-                                    let _ = client
-                                        .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
-                                        .await;
+                                    let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
                                     panel_resource.restart();
                                     popup_service.close();
                                 } else {}
@@ -414,7 +405,7 @@ impl Controller {
                             tracing::debug!("remove panel clicked: {index}");
                             let _ = client
                                 .act(
-                                    models::panel_v2::PanelV2Action::Delete(PanelV2DeleteRequest {
+                                    PanelV2Action::Delete(PanelV2DeleteRequest {
                                         id: panel_id,
                                     }),
                                 )
@@ -462,9 +453,7 @@ impl Controller {
                             req.name = name;
                             async move {
                                 tracing::debug!("update panel clicked: {index}");
-                                let _ = client
-                                    .act_by_id(&id, models::panel_v2::PanelV2ByIdAction::Update(req))
-                                    .await;
+                                let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
                                 panel_resource.restart();
                                 popup_service.close();
                             }
@@ -498,7 +487,7 @@ impl Controller {
         };
 
         let _ = client
-            .act_by_id(&panel.id, models::panel_v2::PanelV2ByIdAction::Update(req))
+            .act_by_id(&panel.id, PanelV2ByIdAction::Update(req))
             .await;
 
         panel_resource.restart();

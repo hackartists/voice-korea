@@ -6,13 +6,7 @@ use by_axum::{
         Extension, Json,
     },
 };
-use models::{
-    panel_v2::{
-        PanelV2, PanelV2Action, PanelV2ByIdAction, PanelV2CreateRequest, PanelV2Query,
-        PanelV2ReadAction, PanelV2Repository, PanelV2Summary, PanelV2UpdateRequest,
-    },
-    *,
-};
+use models::*;
 
 #[derive(Clone, Debug)]
 pub struct PanelControllerV2 {
