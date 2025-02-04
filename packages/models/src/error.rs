@@ -122,6 +122,7 @@ impl IntoResponse for ApiError {
             ApiError::AlreadyExists => StatusCode::ALREADY_REPORTED,
             ApiError::InvalidPermissions => StatusCode::FORBIDDEN,
             ApiError::OrganizationNotFound => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::ResourceNotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::BAD_REQUEST,
         };
 
