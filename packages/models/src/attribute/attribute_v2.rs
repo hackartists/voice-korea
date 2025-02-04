@@ -4,44 +4,30 @@ use crate::Result;
 #[cfg(feature = "server")]
 use by_axum::aide;
 use by_macros::ApiModel;
-use dioxus_translate::{Language, Translate};
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel)]
+use dioxus_translate::Translate;
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
+)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum AgeV2 {
     #[default]
+    #[translate(ko = "17세 이하", en = "Under 17 years old")]
     Teenager = 1, //17세 이하
+    #[translate(ko = "18~29세", en = "18-29 years old")]
     Twenty = 2, //18~29세
+    #[translate(ko = "30대", en = "30-39 years old")]
     Thirty = 3, //30대
+    #[translate(ko = "40대", en = "40-49 years old")]
     Fourty = 4, //40대
-    Fifty = 5,  //50대
-    Sixty = 6,  //60대
-    Over = 7,   //70대 이상
+    #[translate(ko = "50대", en = "50-59 years old")]
+    Fifty = 5, //50대
+    #[translate(ko = "60대", en = "60-69 years old")]
+    Sixty = 6, //60대
+    #[translate(ko = "70대 이상", en = "Over 70s")]
+    Over = 7, //70대 이상
 }
-impl AgeV2 {
-    pub fn translate(&self, lang: &Language) -> &'static str {
-        match lang {
-            Language::En => match self {
-                AgeV2::Teenager => "Under 17 years old",
-                AgeV2::Twenty => "18-29 years old",
-                AgeV2::Thirty => "30-39 years old",
-                AgeV2::Fourty => "40-49 years old",
-                AgeV2::Fifty => "50-59 years old",
-                AgeV2::Sixty => "60-69 years old",
-                AgeV2::Over => "Over 70s",
-            },
-            Language::Ko => match self {
-                AgeV2::Teenager => "17세 이하",
-                AgeV2::Twenty => "18~29세",
-                AgeV2::Thirty => "30대",
-                AgeV2::Fourty => "40대",
-                AgeV2::Fifty => "50대",
-                AgeV2::Sixty => "60대",
-                AgeV2::Over => "70대",
-            },
-        }
-    }
-}
+
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
 )]
@@ -96,34 +82,21 @@ pub enum RegionV2 {
     #[translate(ko = "제주")]
     Jeju = 17, //제주
 }
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
+)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum SalaryV2 {
     #[default]
+    #[translate(ko = "2400만원 이하", en = "Less than 24 million won")]
     TierOne = 1, //2400만원 이하
-    TierTwo = 2,   //2400만원 ~ 5000만원
+    #[translate(ko = "2400만원 ~ 5000만원", en = "24 million won ~ 50 million won")]
+    TierTwo = 2, //2400만원 ~ 5000만원
+    #[translate(ko = "5000만원 ~ 8000만원", en = "50 million won ~ 80 million won")]
     TierThree = 3, //5000만원 ~ 8000만원
-    TierFour = 4,  //8000만원 ~ 10000만원
-    TierFive = 5,  //10000만원 이상
-}
-impl SalaryV2 {
-    pub fn translate(&self, lang: &Language) -> &'static str {
-        match lang {
-            Language::En => match self {
-                SalaryV2::TierOne => "Less than 24 million won",
-                SalaryV2::TierTwo => "24 million won ~ 50 million won",
-                SalaryV2::TierThree => "50 million won ~ 80 million won",
-                SalaryV2::TierFour => "80 million won ~ 100 million won",
-                SalaryV2::TierFive => "More than 100 million won",
-            },
-            Language::Ko => match self {
-                SalaryV2::TierOne => "2400만원 이하",
-                SalaryV2::TierTwo => "2400만원 ~ 5000만원",
-                SalaryV2::TierThree => "5000만원 ~ 8000만원",
-                SalaryV2::TierFour => "8000만원 ~ 10000만원",
-                SalaryV2::TierFive => "10000만원 이상",
-            },
-        }
-    }
+    #[translate(ko = "8000만원 ~ 10000만원", en = "80 million won ~ 100 million won")]
+    TierFour = 4, //8000만원 ~ 10000만원
+    #[translate(ko = "10000만원 이상", en = "More than 100 million won")]
+    TierFive = 5, //10000만원 이상
 }

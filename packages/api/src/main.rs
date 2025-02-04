@@ -17,6 +17,9 @@ mod controllers {
     pub mod auth {
         pub mod v1;
     }
+    pub mod resources {
+        pub mod v1;
+    }
     pub mod survey {
         pub mod v2;
     }
@@ -61,18 +64,26 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let v = Verification::get_repository(pool.clone());
     let o = Organization::get_repository(pool.clone());
     let u = User::get_repository(pool.clone());
+    let resource = Resource::get_repository(pool.clone());
+    // let files = Files::get_repository(pool.clone());
     let p = PanelV2::get_repository(pool.clone());
     let s = SurveyV2::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
     u.create_this_table().await?;
+
+    resource.create_this_table().await?;
+    // files.create_table().await?;
     s.create_this_table().await?;
     p.create_this_table().await?;
 
     v.create_related_tables().await?;
     o.create_related_tables().await?;
     u.create_related_tables().await?;
+
+    resource.create_related_tables().await?;
+    // files.create_related_tables().await?;
     s.create_related_tables().await?;
     p.create_related_tables().await?;
 
@@ -106,6 +117,10 @@ async fn main() -> Result<()> {
         .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
+        )
+        .nest(
+            "/resource/v1",
+            controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
         )
         .nest(
             "/surveys/v2",

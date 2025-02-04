@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: referendum
+      POSTGRES_DB: voicekorea
     ports:
       - 5432:5432
 
