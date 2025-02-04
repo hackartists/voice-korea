@@ -9,7 +9,6 @@ pub fn Pagination(
     current_page: usize,
     onclick: EventHandler<usize>,
     #[props(default = 10)] size: usize,
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     if total_page == 0 {
@@ -31,7 +30,6 @@ pub fn Pagination(
     });
 
     rsx! {
-
         div { class: "flex flex-row w-full justify-center items-center mt-[30px]",
             if current_slot() > 0 {
                 button {
