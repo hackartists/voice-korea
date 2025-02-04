@@ -23,7 +23,7 @@ pub struct AttributeInfo {
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
     panels: Signal<Vec<PanelV2Summary>>,
-    popup_service: Signal<PopupService>,
+    popup_service: PopupService,
     translate: Signal<PanelTranslate>,
 
     panel_resource: Resource<Vec<PanelV2Summary>>,
@@ -58,7 +58,7 @@ impl Controller {
 
         let mut ctrl = Self {
             panels: use_signal(|| vec![]),
-            popup_service: use_signal(|| popup_service),
+            popup_service,
             translate: use_signal(|| trans),
 
             attributes: use_signal(|| vec![]),
@@ -159,8 +159,20 @@ impl Controller {
         panel_resource.restart();
     }
 
+    pub async fn open_setting_age_modal(&self, _lang: Language, index: usize) {
+        let mut popup_service = self.popup_service.clone();
+        let _translate = (self.translate)().clone();
+        let panels = self.get_panels();
+        let _panel_id = panels[index].id.clone();
+
+        popup_service
+            .open(rsx! {})
+            .with_id("setting_age")
+            .with_title("연령 속성 설정");
+    }
+
     pub async fn open_remove_panel(&self, lang: Language, index: usize) {
-        let mut popup_service = (self.popup_service)().clone();
+        let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let api: PanelApi = self.panel_api;
         let panels = self.get_panels();
@@ -191,7 +203,7 @@ impl Controller {
     }
 
     pub async fn open_update_panel_name(&self, lang: Language, index: usize) {
-        let mut popup_service = (self.popup_service)().clone();
+        let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let _api: PanelApi = self.panel_api;
         let panels = self.get_panels();

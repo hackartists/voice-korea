@@ -67,27 +67,7 @@ impl PanelControllerV2 {
         tracing::debug!("list_panels: {:?}", params);
 
         let items = ctrl.repo.find(&params).await?;
-
-        let mut res: Vec<PanelV2Summary> = vec![];
-
-        for item in items.items {
-            res.push(PanelV2Summary {
-                id: item.id,
-                created_at: item.created_at,
-                name: item.name,
-                user_count: item.user_count,
-                age: item.age,
-                gender: item.gender,
-                region: item.region,
-                salary: item.salary,
-                org_id: item.org_id,
-            });
-        }
-
-        Ok(Json(QueryResponse {
-            items: res,
-            total_count: items.total_count,
-        }))
+        Ok(Json(items))
     }
 
     pub async fn act_panel(
