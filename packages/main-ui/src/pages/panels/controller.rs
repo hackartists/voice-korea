@@ -2,8 +2,7 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::{
-    panel_v2::{PanelV2, PanelV2Summary},
-    prelude::CreatePanelRequest,
+    prelude::{CreatePanelRequest, PanelV2, PanelV2Summary},
     AttributeResponse,
 };
 

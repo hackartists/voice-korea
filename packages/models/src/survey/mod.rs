@@ -1,5 +1,4 @@
-pub mod v2;
-
+mod v2;
 pub use v2::*;
 
 #[cfg(feature = "server")]

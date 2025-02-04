@@ -3,7 +3,6 @@ mod auth;
 pub mod error;
 mod field;
 mod group;
-mod member;
 mod metadata;
 mod organization;
 mod pagination;
@@ -26,7 +25,6 @@ pub mod prelude {
     pub use crate::error::*;
     pub use crate::field::*;
     pub use crate::group::*;
-    pub use crate::member::*;
     pub use crate::metadata::*;
     pub use crate::organization::*;
     pub use crate::pagination::*;

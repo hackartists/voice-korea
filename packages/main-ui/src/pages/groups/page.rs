@@ -11,7 +11,7 @@ use dioxus_translate::Language;
 use i18n::GroupTranslate;
 use models::prelude::CreateGroupMember;
 use models::prelude::CreateGroupRequest;
-use models::prelude::GroupMemberRelationship;
+use models::prelude::MemberSummary;
 
 use crate::{
     components::{
@@ -288,8 +288,8 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                                                     }
                                                                 }
 
-                                                                for (j , member) in members.clone().iter().enumerate() {
-                                                                    if !groups[index].member_list.iter().any(|m| m.id == member.member.id.clone()) {
+                                                                for (j , mem) in members.clone().iter().enumerate() {
+                                                                    if !groups[index].member_list.iter().any(|m| m.id == mem.member.id.clone()) {
                                                                         button {
                                                                             class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
                                                                             onclick: {
@@ -298,9 +298,9 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                                                                 move |_| {
                                                                                     let group_id = groups[index].group_id.clone();
                                                                                     let name = members[j].member.name.clone();
-                                                                                    let email = members[j].member.email.clone();
+                                                                                    let email = members[j].email.clone();
                                                                                     async move {
-                                                                                        ctrl.invite_team_member(group_id, email, name).await;
+                                                                                        ctrl.invite_team_member(group_id, email, Some(name)).await;
                                                                                         let mut extended = member_add_extended.clone()();
                                                                                         extended[index] = false;
                                                                                         member_add_extended.set(extended);
@@ -308,14 +308,14 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                                                                 }
                                                                             },
                                                                             div { class: "font-bold text-[#222222] text-[15px] mb-[5px]",
-                                                                                if member.member.name.clone().is_none() {
-                                                                                    "{member.member.email}"
+                                                                                if mem.member.name == "" {
+                                                                                    "{mem.email}"
                                                                                 } else {
-                                                                                    {format!("{}", member.member.name.clone().unwrap_or_default().clone())}
+                                                                                    {format!("{}", mem.member.name.clone())}
                                                                                 }
                                                                             }
                                                                             div { class: "font-medium text-[#222222] text-[10px]",
-                                                                                "{member.member.email}"
+                                                                                "{mem.email}"
                                                                             }
                                                                         }
                                                                     }
@@ -482,7 +482,7 @@ pub fn RemoveGroupModal(
 #[component]
 pub fn CreateGroupModal(
     lang: Language,
-    members: Vec<GroupMemberRelationship>,
+    members: Vec<MemberSummary>,
     onclose: EventHandler<MouseEvent>,
     oncreate: EventHandler<CreateGroupRequest>,
 ) -> Element {
@@ -572,23 +572,19 @@ pub fn CreateGroupModal(
                                             },
                                         }
 
-                                        for (_i , member) in members.clone().iter().enumerate() {
-                                            if !added_members().iter().any(|m| m.member_email == member.member.email.clone()) {
+                                        for (_i , mem) in members.clone().iter().enumerate() {
+                                            if !added_members().iter().any(|m| m.member_email == mem.email.clone()) {
                                                 button {
                                                     class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
                                                     onclick: {
-                                                        let name = member.member.name.clone();
-                                                        let email = member.member.email.clone();
+                                                        let name = mem.member.name.clone();
+                                                        let email = mem.email.clone();
                                                         move |event: Event<MouseData>| {
                                                             event.stop_propagation();
                                                             event.prevent_default();
                                                             let mut ms = added_members();
                                                             ms.push(CreateGroupMember {
-                                                                member_name: if name.is_none() {
-                                                                    "".to_string()
-                                                                } else {
-                                                                    name.clone().unwrap()
-                                                                },
+                                                                member_name: name.clone(),
                                                                 member_email: email.clone(),
                                                             });
                                                             added_members.set(ms);
@@ -596,14 +592,14 @@ pub fn CreateGroupModal(
                                                         }
                                                     },
                                                     div { class: "font-bold text-[#222222] text-[15px] mb-[5px]",
-                                                        if member.member.name.clone().is_none() {
-                                                            "{member.member.email}"
+                                                        if mem.member.name.clone() == "" {
+                                                            "{mem.email}"
                                                         } else {
-                                                            {format!("{}", member.member.name.clone().unwrap_or_default().clone())}
+                                                            {format!("{}", mem.member.name.clone())}
                                                         }
                                                     }
                                                     div { class: "font-medium text-[#222222] text-[10px]",
-                                                        "{member.member.email}"
+                                                        "{mem.email}"
                                                     }
                                                 }
                                             }
