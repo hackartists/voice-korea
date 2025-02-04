@@ -30,6 +30,7 @@ impl PanelControllerV2 {
         Path(panel_id): Path<String>,
         Extension(_auth): Extension<Option<Authorization>>,
     ) -> Result<Json<PanelV2>> {
+        // TODO: check permission
         tracing::debug!("get_panel: {:?}", panel_id);
 
         let panel = ctrl
@@ -46,6 +47,7 @@ impl PanelControllerV2 {
         Path(panel_id): Path<String>,
         Json(body): Json<PanelV2ByIdAction>,
     ) -> Result<Json<PanelV2>> {
+        // TODO: check permission
         tracing::debug!("act_by_id: {:?} {:?}", panel_id, body);
 
         match body {
@@ -57,6 +59,7 @@ impl PanelControllerV2 {
         State(ctrl): State<PanelControllerV2>,
         Query(params): Query<PanelV2Query>,
     ) -> Result<Json<QueryResponse<PanelV2Summary>>> {
+        // TODO: check permission
         tracing::debug!("list_panels: {:?}", params);
 
         let items = ctrl.repo.find(&params).await?;
@@ -68,6 +71,7 @@ impl PanelControllerV2 {
         Extension(_auth): Extension<Option<Authorization>>,
         Json(body): Json<PanelV2Action>,
     ) -> Result<Json<PanelV2>> {
+        // TODO: check permission
         tracing::debug!("act_panel {:?}", body);
 
         match body {

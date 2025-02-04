@@ -72,6 +72,9 @@ pub fn PanelPage(props: PanelProps) -> Element {
                 update_panel_name: move |(index, name): (usize, String)| async move {
                     ctrl.update_panel_name(index, name).await;
                 },
+                update_panel_count: move |(index, count): (usize, u64)| async move {
+                    ctrl.update_panel_count(index, count).await;
+                },
             }
             AttributeList { lang: props.lang, attributes }
         }
@@ -145,6 +148,7 @@ pub fn PanelList(
     size: usize,
 
     update_panel_name: EventHandler<(usize, String)>,
+    update_panel_count: EventHandler<(usize, u64)>,
 ) -> Element {
     let login_service: LoginService = use_context();
     let ctrl: Controller = use_context();
@@ -263,7 +267,6 @@ pub fn PanelList(
                         div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center gap-[10px]",
                             button {
                                 class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
-                                //FIXME: implement add attribute logic
                                 onclick: {
                                     let org_id = org_id.clone();
                                     move |_| {
@@ -355,24 +358,8 @@ pub fn PanelList(
                                             onkeydown: move |e: KeyboardEvent| {
                                                 let key = e.key();
                                                 if key == Key::Enter {
-                                                    let value = panel_counts()[index].clone();
-                                                    tracing::debug!("Enter key pressed! {value}");
-                                                    #[cfg(feature = "web")]
-                                                    {
-                                                        use wasm_bindgen::JsCast;
-                                                        if let Some(input) = web_sys::window()
-                                                            .unwrap()
-                                                            .document()
-                                                            .unwrap()
-                                                            .get_element_by_id(format!("input_panel_count {index}").as_str())
-                                                        {
-                                                            input
-                                                                .dyn_ref::<web_sys::HtmlInputElement>()
-                                                                .unwrap()
-                                                                .blur()
-                                                                .unwrap();
-                                                        }
-                                                    }
+                                                    let value = panel_counts()[index].clone().parse::<u64>().unwrap();
+                                                    update_panel_count.call((index, value));
                                                 } else if key != Key::Backspace && key != Key::Delete {
                                                     let s = match key {
                                                         Key::Character(c) => c,

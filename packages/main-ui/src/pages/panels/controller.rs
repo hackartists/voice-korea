@@ -501,6 +501,30 @@ impl Controller {
             .with_title(translate.update_panel_name);
     }
 
+    pub async fn update_panel_count(&self, index: usize, count: u64) {
+        tracing::debug!("update_panel_count: {} {:?}", index, count);
+        let panels = self.get_panels();
+        let panel = panels[index].clone();
+        let client = (self.client)().clone();
+
+        let mut panel_resource = self.panel_resource;
+
+        let req = PanelV2UpdateRequest {
+            name: panel.name,
+            user_count: count,
+            age: panel.age,
+            gender: panel.gender,
+            region: panel.region,
+            salary: panel.salary,
+        };
+
+        let _ = client
+            .act_by_id(&panel.id, PanelV2ByIdAction::Update(req))
+            .await;
+
+        panel_resource.restart();
+    }
+
     pub async fn update_panel_name(&self, index: usize, name: String) {
         tracing::debug!("update update_panel_name: {} {:?}", index, name);
         let panels = self.get_panels();
