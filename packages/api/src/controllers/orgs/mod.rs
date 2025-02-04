@@ -7,8 +7,10 @@ use by_axum::{
         middleware::{self, Next},
     },
 };
+use by_types::DatabaseConfig;
 use models::*;
 use reqwest::StatusCode;
+use sqlx::postgres::PgPoolOptions;
 
 // FIXME: migrate to organizations controller. this is workaround to avoid conflict.
 #[derive(Clone, Debug)]
@@ -61,7 +63,7 @@ pub async fn authorize_organization(
         }
     };
 
-    let conf = config::get();
+    let conf = crate::config::get();
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
         PgPoolOptions::new()
             .max_connections(pool_size)

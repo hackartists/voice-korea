@@ -98,11 +98,6 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     Ok(())
 }
 
-#[derive(Clone)]
-struct AppState {
-    pool: sqlx::Pool<sqlx::Postgres>,
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = by_axum::new();
@@ -120,7 +115,6 @@ async fn main() -> Result<()> {
     };
 
     migration(&pool).await?;
-    let app_state = Arc::new(AppState { pool: pool.clone() });
 
     let app = app
         .nest(
