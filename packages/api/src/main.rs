@@ -57,16 +57,16 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let v = Verification::get_repository(pool.clone());
     let o = Organization::get_repository(pool.clone());
     let u = User::get_repository(pool.clone());
-    let o_m = OrganizationMember::get_repository(pool.clone());
+    let om = OrganizationMember::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
     u.create_this_table().await?;
-    o_m.create_this_table().await?;
+    om.create_this_table().await?;
 
-    // v.create_related_tables().await?;
-    // o.create_related_tables().await?;
-    // u.create_related_tables().await?;
+    v.create_related_tables().await?;
+    o.create_related_tables().await?;
+    u.create_related_tables().await?;
 
     tracing::info!("Migration done");
     Ok(())
