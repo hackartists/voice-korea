@@ -1,14 +1,17 @@
 use chrono::Local;
 use dioxus::prelude::*;
 use dioxus_translate::translate;
-use models::prelude::{PublicSurveyQuestion, PublicSurveyQuestionType};
+use models::{
+    prelude::{PublicSurveyQuestion, PublicSurveyQuestionType},
+    ProjectArea,
+};
 
 use super::i18n::SurveyNewTranslate;
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Controller {
     total_fields: Signal<Vec<String>>,
-    selected_field: Signal<String>,
+    selected_field: Signal<Option<ProjectArea>>,
     title: Signal<String>,
     description: Signal<String>,
     start_date: Signal<i64>,
@@ -38,7 +41,7 @@ impl Controller {
                     translates.politic.to_string(),
                 ]
             }),
-            selected_field: use_signal(|| "".to_string()),
+            selected_field: use_signal(|| None),
             title: use_signal(|| "".to_string()),
 
             start_date: use_signal(|| timestamp),
@@ -64,16 +67,8 @@ impl Controller {
         (self.total_survey_types)()
     }
 
-    pub fn get_total_fields(&self) -> Vec<String> {
-        (self.total_fields)()
-    }
-
-    pub fn get_selected_field(&self) -> String {
-        (self.selected_field)()
-    }
-
-    pub fn change_selected_field(&mut self, field: String) {
-        self.selected_field.set(field);
+    pub fn change_selected_field(&mut self, field: ProjectArea) {
+        self.selected_field.set(Some(field));
     }
 
     pub fn get_title(&self) -> String {

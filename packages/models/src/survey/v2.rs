@@ -78,7 +78,16 @@ pub struct ChoiceQuestion {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    Default,
+    ApiModel,
+    Translate,
+    Copy,
 )]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -104,6 +113,23 @@ pub enum ProjectArea {
     Health = 9,
     #[translate(ko = "정치")]
     Politics = 10,
+}
+
+impl ProjectArea {
+    pub fn all() -> Vec<ProjectArea> {
+        vec![
+            ProjectArea::Economy,
+            ProjectArea::Society,
+            ProjectArea::Environment,
+            ProjectArea::Education,
+            ProjectArea::Culture,
+            ProjectArea::Labor,
+            ProjectArea::City,
+            ProjectArea::Technology,
+            ProjectArea::Health,
+            ProjectArea::Politics,
+        ]
+    }
 }
 
 #[derive(
