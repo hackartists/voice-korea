@@ -9,7 +9,7 @@ use dioxus_translate::{Language, Translate};
 use validator::ValidationError;
 
 // If you want to know how to use Y macro, refer to https://github.com/biyard/rust-sdk/tree/main/packages/by-macros
-#[api_model(base = "/orgs/:org-id/surveys/v2", table = surveys, iter_type=QueryResponse)]
+#[api_model(base = "/organizations/v2/:org-id/surveys", table = surveys, iter_type=QueryResponse)]
 pub struct SurveyV2 {
     #[api_model(summary, primary_key, read_action = find_by_id)]
     pub id: String,

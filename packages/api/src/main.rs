@@ -11,8 +11,6 @@ use tokio::net::TcpListener;
 
 mod common;
 mod controllers {
-    pub mod orgs;
-
     pub mod panels {
         pub mod v2;
     }
@@ -126,10 +124,6 @@ async fn main() -> Result<()> {
         .nest(
             "/resource/v1",
             controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
-        )
-        .nest(
-            "/orgs",
-            controllers::orgs::OrgControllerV1::route(pool.clone())?,
         )
         .nest(
             "/organizations/v2",
