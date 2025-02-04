@@ -4,8 +4,9 @@ use dioxus_translate::{translate, Language};
 use models::prelude::{PanelV2CreateRequest, PanelV2Summary};
 
 use crate::{
-    components::icons::{ArrowLeft, ArrowRight, RowOption, Search, Switch},
+    components::icons::{RowOption, Search, Switch},
     pages::panels::{
+        components::table_pagination::TablePagination,
         controller::Controller,
         i18n::{
             AttributeListTranslate, PanelListTranslate, PanelTranslate,
@@ -26,7 +27,7 @@ pub struct PanelProps {
 #[component]
 pub fn PanelPage(props: PanelProps) -> Element {
     let popup_service: PopupService = use_context();
-    let ctrl = Controller::new(props.lang, popup_service);
+    let mut ctrl = Controller::new(props.lang, popup_service);
     let panels = ctrl.get_panels();
     let attributes = ctrl.get_attributes();
 
@@ -58,6 +59,15 @@ pub fn PanelPage(props: PanelProps) -> Element {
                 onremove: move |index: usize| async move {
                     ctrl.open_remove_panel(props.lang, index).await;
                 },
+
+                onnext: move |page: usize| async move {
+                    ctrl.set_page(page);
+                },
+                onprev: move |page: usize| async move {
+                    ctrl.set_page(page);
+                },
+                page: ctrl.page(),
+                size: ctrl.get_size(),
 
                 update_panel_name: move |(index, name): (usize, String)| async move {
                     ctrl.update_panel_name(index, name).await;
@@ -129,10 +139,15 @@ pub fn PanelList(
     oncreate: EventHandler<PanelV2CreateRequest>,
     onremove: EventHandler<usize>,
 
+    onprev: EventHandler<usize>,
+    onnext: EventHandler<usize>,
+    page: usize,
+    size: usize,
+
     update_panel_name: EventHandler<(usize, String)>,
 ) -> Element {
     let login_service: LoginService = use_context();
-    let mut ctrl: Controller = use_context();
+    let ctrl: Controller = use_context();
     let mut is_focused = use_signal(|| false);
     let mut panel_name = use_signal(|| "".to_string());
     let translate: PanelListTranslate = translate(&lang);
@@ -195,17 +210,16 @@ pub fn PanelList(
                         }
                         Search { width: "18", height: "18", color: "#7c8292" }
                     }
-                    div { class: "flex flex-row gap-[10px]",
-                        div { class: "w-[25px] h-[25px]",
-                            ArrowLeft { width: "25", height: "25", color: "#555462" }
-                        }
-                        button {
-                            class: "w-[25px] h-[25px]",
-                            onclick: move |_| async move {
-                                let _ = ctrl.next_panel_clicked().await;
-                            },
-                            ArrowRight { width: "25", height: "25", color: "#555462" }
-                        }
+                    TablePagination {
+                        onprev: move |page: usize| {
+                            onprev.call(page);
+                        },
+                        onnext: move |page: usize| {
+                            onnext.call(page);
+                        },
+                        size,
+                        maximum_size: 10,
+                        page,
                     }
                 }
                 div { class: "flex flex-col w-full justify-start items-start border rounded-lg border-[#bfc8d9]",
@@ -280,7 +294,7 @@ pub fn PanelList(
                                     }
                                 },
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                    if panel.name == "" && panel_names.len() != 0 {
+                                    if panel.name == "" && panel_names.len() == panels.len() {
                                         input {
                                             id: "input_panel {index}",
                                             class: "text-black text-base placeholder-gray-500 focus:outline-none",
@@ -330,7 +344,7 @@ pub fn PanelList(
                                     }
                                 }
                                 div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                    if panel.user_count == 0 && panel_counts.len() != 0 {
+                                    if panel.user_count == 0 && panel_counts.len() == panels.len() {
                                         input {
                                             id: "input_panel_count {index}",
                                             class: "text-black text-base placeholder-gray-500 focus:outline-none",

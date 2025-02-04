@@ -7,7 +7,7 @@ use models::{
         PanelV2, PanelV2Client, PanelV2CreateRequest, PanelV2DeleteRequest, PanelV2Summary,
         PanelV2UpdateRequest,
     },
-    PanelV2Action, PanelV2ByIdAction,
+    PanelV2Action, PanelV2ByIdAction, PanelV2Query, QueryResponse,
 };
 
 use crate::{
@@ -33,9 +33,12 @@ pub struct Controller {
     popup_service: PopupService,
     translate: Signal<PanelTranslate>,
 
-    panel_resource: Resource<Vec<PanelV2Summary>>,
+    panel_resource: Resource<QueryResponse<PanelV2Summary>>,
     panel_bookmark: Signal<Option<String>>,
     attributes: Signal<Vec<AttributeInfo>>,
+
+    page: Signal<usize>,
+    pub size: usize,
 }
 
 impl Controller {
@@ -48,6 +51,8 @@ impl Controller {
         let translate: PanelTranslate = translate(&lang);
         let panel_bookmark = Signal::new(None);
         let client = PanelV2::get_client(&crate::config::get().api_url);
+        let page = use_signal(|| 1);
+        let size = 10;
 
         let panel_resource = use_resource({
             let client = client.clone();
@@ -56,11 +61,13 @@ impl Controller {
                 let org_id = org_id.clone();
 
                 async move {
-                    match client.list_panels(100, None, org_id.clone()).await {
-                        Ok(d) => d.items,
+                    let mut query = PanelV2Query::new(size).with_page(page());
+                    query.org_id = Some(org_id);
+                    match client.query(query).await {
+                        Ok(d) => d,
                         Err(e) => {
                             tracing::error!("list panels failed: {e}");
-                            vec![]
+                            QueryResponse::default()
                         }
                     }
                 }
@@ -78,6 +85,9 @@ impl Controller {
             attributes: use_signal(|| vec![]),
             panel_resource,
             panel_bookmark,
+
+            page,
+            size,
         };
 
         if ctrl.attributes.len() == 0 {
@@ -139,7 +149,7 @@ impl Controller {
 
         match panel_resource.value()() {
             Some(panel) => {
-                ctrl.panels.set(panel);
+                ctrl.panels.set(panel.items);
             }
             _ => {}
         }
@@ -152,8 +162,29 @@ impl Controller {
         self.panel_resource.restart();
     }
 
+    pub fn set_page(&mut self, page: usize) {
+        self.page.set(page);
+        let mut panel_resource = self.panel_resource;
+        panel_resource.restart();
+    }
+
+    pub fn page(&self) -> usize {
+        (self.page)()
+    }
+
+    pub fn get_size(&self) -> usize {
+        self.panel_resource
+            .with(|v| if let Some(v) = v { v.total_count } else { 0 }) as usize
+    }
+
     pub fn get_panels(&self) -> Vec<PanelV2Summary> {
-        (self.panels)()
+        self.panel_resource.with(|v| {
+            if let Some(v) = v {
+                v.items.clone()
+            } else {
+                vec![]
+            }
+        })
     }
 
     pub fn get_attributes(&self) -> Vec<AttributeInfo> {
@@ -164,11 +195,12 @@ impl Controller {
         (self.panel_bookmark)()
     }
 
-    pub async fn create_panel(&self, req: PanelV2CreateRequest) {
+    pub async fn create_panel(&mut self, req: PanelV2CreateRequest) {
         let mut panel_resource = self.panel_resource;
         let client = (self.client)().clone();
 
         let _ = client.act(PanelV2Action::Create(req)).await;
+        self.set_page(1);
         panel_resource.restart();
     }
 
