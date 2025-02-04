@@ -2,7 +2,7 @@ use chrono::Local;
 use dioxus::prelude::*;
 use dioxus_translate::translate;
 use models::{
-    prelude::{PublicSurveyQuestion, PublicSurveyQuestionType},
+    prelude::{PublicSurveyQuestionType, Question},
     ProjectArea,
 };
 
@@ -17,7 +17,7 @@ pub struct Controller {
     end_date: Signal<i64>,
     nav: Navigator,
 
-    surveys: Signal<Vec<PublicSurveyQuestion>>,
+    surveys: Signal<Vec<Question>>,
     total_survey_types: Signal<Vec<String>>,
 }
 
@@ -90,11 +90,11 @@ impl Controller {
         self.end_date.set(end_date);
     }
 
-    pub fn get_surveys(&self) -> Vec<PublicSurveyQuestion> {
+    pub fn get_surveys(&self) -> Vec<Question> {
         (self.surveys)()
     }
 
-    pub fn change_survey(&mut self, index: usize, survey: PublicSurveyQuestion) {
+    pub fn change_survey(&mut self, index: usize, survey: Question) {
         let mut surveys = (self.surveys)();
         surveys[index] = survey;
         self.surveys.set(surveys);
@@ -108,7 +108,7 @@ impl Controller {
 
     pub fn add_survey(&mut self) {
         let mut surveys = (self.surveys)();
-        surveys.push(PublicSurveyQuestion {
+        surveys.push(Question {
             id: None,
             title: "".to_string(),
             description: None,

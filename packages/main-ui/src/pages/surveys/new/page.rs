@@ -1,11 +1,11 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
-use models::{prelude::PublicSurveyQuestion, ProjectArea};
+use models::{prelude::Question, ProjectArea};
 
 use crate::{
     components::icons::{ArrowLeft, Plus},
     pages::surveys::{
-        components::{introduction::InputIntroduction, survey::ListSurvey},
+        components::{introduction::InputIntroduction, survey::QuestionListView},
         new::{
             controller::Controller,
             i18n::{AddQuestionTranslate, SurveyNewTranslate},
@@ -65,11 +65,11 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                     },
                 }
 
-                ListSurvey {
+                QuestionListView {
                     lang: props.lang,
-                    surveys: ctrl.get_surveys(),
+                    questions: ctrl.get_surveys(),
                     types: ctrl.get_total_survey_types(),
-                    change_survey: move |(index, survey): (usize, PublicSurveyQuestion)| {
+                    onchange_questions: move |(index, survey): (usize, Question)| {
                         ctrl.change_survey(index, survey);
                     },
                     onremove: move |index: usize| {

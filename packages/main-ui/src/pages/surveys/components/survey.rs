@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
-use models::prelude::{PublicSurveyQuestion, PublicSurveyQuestionType};
+use models::prelude::{PublicSurveyQuestionType, Question};
 
 use crate::{
     components::icons::{RowMenuDial, Trash},
@@ -10,15 +10,15 @@ use crate::{
 };
 
 #[component]
-pub fn ListSurvey(
+pub fn QuestionListView(
     lang: Language,
-    surveys: Vec<PublicSurveyQuestion>,
+    questions: Vec<Question>,
     types: Vec<String>,
-    change_survey: EventHandler<(usize, PublicSurveyQuestion)>,
+    onchange_question: EventHandler<(usize, Question)>,
     onremove: EventHandler<usize>,
 ) -> Element {
     rsx! {
-        for (index , survey) in surveys.clone().iter().enumerate() {
+        for (index , survey) in questions.clone().iter().enumerate() {
             div {
                 class: "flex flex-col w-full justify-start items-start pt-[5px] px-[40px] pb-[25px] bg-white rounded-[8px] mt-[20px]",
                 style: "box-shadow: 0 4px 6px rgba(53, 70, 177, 0.05);",
@@ -37,7 +37,7 @@ pub fn ListSurvey(
                             let survey_type = survey_type_from_str(survey_type.clone()).unwrap();
                             let mut survey = survey.clone();
                             survey.question_type = survey_type;
-                            change_survey.call((index, survey));
+                            onchange_question.call((index, survey));
                         }
                     },
 
@@ -47,7 +47,7 @@ pub fn ListSurvey(
                         move |title: String| {
                             let mut survey = survey.clone();
                             survey.title = title;
-                            change_survey.call((index, survey));
+                            onchange_question.call((index, survey));
                         }
                     },
 
@@ -57,7 +57,7 @@ pub fn ListSurvey(
                         move |description: String| {
                             let mut survey = survey.clone();
                             survey.description = Some(description);
-                            change_survey.call((index, survey));
+                            onchange_question.call((index, survey));
                         }
                     },
 
