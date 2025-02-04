@@ -127,6 +127,7 @@ impl Controller {
 
         match cli
             .create(
+                &org.unwrap().id,
                 self.get_title(),
                 area.unwrap(),
                 self.get_start_date(),
@@ -134,7 +135,6 @@ impl Controller {
                 self.get_description(),
                 // TODO: no quetes configuration
                 0,
-                org.unwrap().id.clone(),
                 (self.questions)(),
             )
             .await

@@ -30,6 +30,7 @@ impl SurveyControllerV2 {
 
     pub async fn act_survey_v2(
         State(ctrl): State<SurveyControllerV2>,
+        Path(org_id): Path<String>,
         Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<SurveyV2Action>,
     ) -> Result<Json<SurveyV2>> {
@@ -39,7 +40,7 @@ impl SurveyControllerV2 {
         }
 
         match body {
-            SurveyV2Action::Create(body) => ctrl.create(auth.unwrap(), body).await,
+            SurveyV2Action::Create(body) => ctrl.create(org_id, body).await,
         }
     }
 
@@ -56,7 +57,7 @@ impl SurveyControllerV2 {
     pub async fn get_survey_v2(
         State(ctrl): State<SurveyControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<String>,
+        Path((org_id, id)): Path<(String, String)>,
     ) -> Result<Json<SurveyV2>> {
         tracing::debug!("get_survey_v2 {:?}", id);
         let survey = ctrl
@@ -64,51 +65,37 @@ impl SurveyControllerV2 {
             .find_one(&SurveyV2ReadAction::new().find_by_id(id))
             .await?;
 
+        if survey.org_id != org_id {
+            return Err(ApiError::Unauthorized);
+        }
+
         Ok(Json(survey))
     }
 
     pub async fn list_survey_v2(
-        State(_ctrl): State<SurveyControllerV2>,
+        State(ctrl): State<SurveyControllerV2>,
+        Path(org_id): Path<String>,
         Extension(_auth): Extension<Option<Authorization>>,
         Query(q): Query<SurveyV2Param>,
     ) -> Result<Json<SurveyV2GetResponse>> {
         tracing::debug!("list_survey_v2 {:?}", q);
 
         match q {
-            SurveyV2Param::Query(q) => {
-                Ok(Json(SurveyV2GetResponse::Query(_ctrl.repo.find(&q).await?)))
-            }
+            SurveyV2Param::Query(q) => Ok(Json(SurveyV2GetResponse::Query(
+                ctrl.repo.find(&q.with_org_id(org_id)).await?,
+            ))),
             _ => Err(ApiError::InvalidAction),
         }
     }
 }
 
 impl SurveyControllerV2 {
-    pub async fn has_permission(&self, auth: Authorization, org_id: String) -> Result<bool> {
-        match auth {
-            Authorization::Bearer { claims } => {
-                let user_id = claims.sub;
-                // FIXME: optimize permission check by getting data by user_id and org_id
-                let user = self
-                    .user
-                    .find_one(&UserReadAction::new().find_by_id(user_id))
-                    .await?;
-
-                Ok(user.orgs.iter().filter(|org| org.id == org_id).count() > 0)
-            }
-            _ => Ok(false),
-        }
-    }
-
     pub async fn create(
         &self,
-        auth: Authorization,
+        org_id: String,
         body: SurveyV2CreateRequest,
     ) -> Result<Json<SurveyV2>> {
-        tracing::debug!("create {:?} {:?}", auth, body);
-        if !self.has_permission(auth, body.org_id.clone()).await? {
-            return Err(ApiError::Unauthorized);
-        }
+        tracing::debug!("create {:?} {:?}", org_id, body);
 
         let survey = self
             .repo
@@ -116,10 +103,12 @@ impl SurveyControllerV2 {
                 body.name,
                 ProjectType::Survey,
                 body.project_area,
+                ProjectStatus::Ready,
                 body.started_at,
                 body.ended_at,
                 body.description,
                 body.quotes,
+                org_id,
                 body.questions,
             )
             .await?;

@@ -9,7 +9,7 @@ use dioxus_translate::{Language, Translate};
 use validator::ValidationError;
 
 // If you want to know how to use Y macro, refer to https://github.com/biyard/rust-sdk/tree/main/packages/by-macros
-#[api_model(base = "/surveys/v2", table = surveys, iter_type=QueryResponse)]
+#[api_model(base = "/orgs/:org-id/surveys/v2", table = surveys, iter_type=QueryResponse)]
 pub struct SurveyV2 {
     #[api_model(summary, primary_key, read_action = find_by_id)]
     pub id: String,
@@ -27,7 +27,7 @@ pub struct SurveyV2 {
     #[api_model(summary, action = create, type = INTEGER)]
     pub project_area: ProjectArea,
 
-    #[api_model(summary)]
+    #[api_model(summary, type = INTEGER)]
     pub status: ProjectStatus,
 
     #[api_model(summary, action = create)]
@@ -41,7 +41,7 @@ pub struct SurveyV2 {
     #[api_model(summary, action = create)]
     pub quotes: i64,
 
-    #[api_model(summary, action = create, many_to_one = organizations)]
+    #[api_model(summary, queryable, many_to_one = organizations)]
     pub org_id: String,
     #[api_model(action = create, type = JSONB, version = v0.1)]
     pub questions: Vec<Question>,
@@ -322,7 +322,11 @@ impl SurveyV2Summary {
 
         format!(
             "{}% ({}/{})",
-            responses / self.quotes * 100,
+            if self.quotes == 0 {
+                0
+            } else {
+                responses / self.quotes * 100
+            },
             responses,
             self.quotes
         )

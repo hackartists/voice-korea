@@ -5,6 +5,7 @@ use models::{QueryResponse, SurveyV2, SurveyV2Query, SurveyV2Summary};
 
 use crate::config;
 use crate::pages::surveys::page::RemoveSurveyModal;
+use crate::service::login_service::LoginService;
 use crate::service::popup_service::PopupService;
 
 use super::i18n::SurveyTranslate;
@@ -12,7 +13,7 @@ use super::i18n::SurveyTranslate;
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
     lang: Language,
-    surveys: Resource<QueryResponse<SurveyV2Summary>>,
+    pub surveys: Resource<QueryResponse<SurveyV2Summary>>,
     popup_service: PopupService,
     page: Signal<usize>,
     pub size: usize,
@@ -24,6 +25,7 @@ impl Controller {
         let translate: SurveyTranslate = translate(&lang);
         let page = use_signal(|| 1);
         let size = 10;
+        let user: LoginService = use_context();
 
         // FIXME: it causes screen flickering when navigating to this page
         // let surveys = use_server_future(move || {
@@ -47,8 +49,17 @@ impl Controller {
             let page = page();
 
             async move {
+                let org_id = user.get_selected_org();
+                if org_id.is_none() {
+                    tracing::error!("Organization ID is missing");
+                    return QueryResponse::default();
+                }
+
                 match SurveyV2::get_client(config::get().api_url)
-                    .query(SurveyV2Query::new(size).with_page(page))
+                    .query(
+                        &org_id.unwrap().id,
+                        SurveyV2Query::new(size).with_page(page),
+                    )
                     .await
                 {
                     Ok(res) => res,
@@ -81,14 +92,12 @@ impl Controller {
     }
 
     pub fn total_pages(&self) -> usize {
-        self.surveys.value()()
-            .clone()
-            .unwrap_or_default()
-            .total_count as usize
+        self.surveys
+            .with(|v| if let Some(v) = v { v.total_count } else { 0 }) as usize
     }
 
-    pub fn get_surveys(&self) -> Vec<SurveyV2Summary> {
-        (self.surveys.value())().clone().unwrap_or_default().items
+    pub fn get_surveys(&self) -> Option<QueryResponse<SurveyV2Summary>> {
+        self.surveys.with(|v| v.clone())
     }
 
     pub async fn open_remove_survey_modal(&mut self, survey_id: String) {

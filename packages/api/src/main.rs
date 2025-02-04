@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use by_axum::{
     auth::{authorization_middleware, set_auth_config},
     axum::middleware,
@@ -11,6 +13,8 @@ use tokio::net::TcpListener;
 
 mod common;
 mod controllers {
+    pub mod orgs;
+
     pub mod panels {
         pub mod v2;
     }
@@ -94,6 +98,11 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     Ok(())
 }
 
+#[derive(Clone)]
+struct AppState {
+    pool: sqlx::Pool<sqlx::Postgres>,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = by_axum::new();
@@ -111,6 +120,7 @@ async fn main() -> Result<()> {
     };
 
     migration(&pool).await?;
+    let app_state = Arc::new(AppState { pool: pool.clone() });
 
     let app = app
         .nest(
@@ -126,8 +136,8 @@ async fn main() -> Result<()> {
             controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
         )
         .nest(
-            "/surveys/v2",
-            controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
+            "/orgs",
+            controllers::orgs::OrgControllerV1::route(pool.clone())?,
         )
         .nest(
             "/organizations/v2",
