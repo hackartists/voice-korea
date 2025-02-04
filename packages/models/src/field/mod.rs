@@ -1,27 +1,28 @@
 use std::str::FromStr;
 
-use dioxus_translate::Language;
-use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 use by_axum::aide;
+use by_macros::ApiModel;
+use dioxus_translate::Language;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default, ApiModel)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Field {
     #[default]
-    Economy,
-    Society,
-    Environment,
-    Education,
-    Culture,
-    Labor,
-    City,
-    Technology,
-    Health,
-    Politics,
+    Economy = 1,
+    Society = 2,
+    Environment = 3,
+    Education = 4,
+    Culture = 5,
+    Labor = 6,
+    City = 7,
+    Technology = 8,
+    Health = 9,
+    Politics = 10,
 }
 
 impl Field {
