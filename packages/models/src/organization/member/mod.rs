@@ -34,14 +34,14 @@ pub struct OrganizationMember {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(many_to_one = users, unique, read_action = get_member_by_email)]
+    #[api_model(many_to_one = users)]
     pub user_id: String,
-    #[api_model(many_to_one = organizations, read_action = list_member_by_organization)]
+    #[api_model(many_to_one = organizations)]
     pub org_id: String,
 
-    #[api_model(summary)]
+    #[api_model(summary, nullable)]
     pub name: String,
-    #[api_model(summary)]
+    #[api_model(summary, type = INTEGER, nullable)]
     pub role: Option<Role>,
     #[api_model(summary)]
     pub contact: Option<String>,

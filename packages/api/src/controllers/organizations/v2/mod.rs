@@ -36,10 +36,6 @@ impl OrganizationControllerV2 {
                 let organizations: QueryResponse<OrganizationSummary> = ctrl.repo.find(&q).await?;
                 Ok(Json(OrganizationGetResponse::Query(organizations)))
             }
-            OrganizationParam::Read(_action) => {
-                // FIXME: return filtered organization
-                Ok(Json(OrganizationGetResponse::Read(Organization::default())))
-            }
         }
     }
 }

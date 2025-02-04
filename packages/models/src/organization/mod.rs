@@ -9,7 +9,8 @@ use by_types::QueryResponse;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-pub mod organization_member;
+mod member;
+pub use member::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
@@ -17,7 +18,7 @@ pub struct OrganizationMiddlewareParams {
     pub id: String,
 }
 
-#[api_model(base = "/organizations/v2", read_action=[list_organization], table = organizations, iter_type=QueryResponse)]
+#[api_model(base = "/organizations/v2", table = organizations, iter_type=QueryResponse)]
 pub struct Organization {
     #[api_model(summary, primary_key)]
     pub id: String,

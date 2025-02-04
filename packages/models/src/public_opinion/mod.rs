@@ -1,4 +1,4 @@
-use crate::{field::Field, group::group_member::MemberInfo};
+use crate::{field::Field, group::MemberInfo};
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]

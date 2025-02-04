@@ -21,6 +21,8 @@ mod controllers {
         pub mod v1;
     }
     pub mod survey {
+        pub mod v2;
+    }
     pub mod organizations {
         pub mod v2;
     }
@@ -81,6 +83,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     v.create_related_tables().await?;
     o.create_related_tables().await?;
     u.create_related_tables().await?;
+    om.create_related_tables().await?;
 
     resource.create_related_tables().await?;
     // files.create_related_tables().await?;
@@ -110,10 +113,10 @@ async fn main() -> Result<()> {
     migration(&pool).await?;
 
     let app = app
-        .nest(
-            "/panels/v2",
-            controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
-        )
+        // .nest(
+        //     "/panels/v2",
+        //     controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
+        // )
         .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
@@ -122,9 +125,11 @@ async fn main() -> Result<()> {
             "/resource/v1",
             controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
         )
+        // .nest(
+        //     "/surveys/v2",
+        //     controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
+        // )
         .nest(
-            "/surveys/v2",
-            controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
             "/organizations/v2",
             controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
         )

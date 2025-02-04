@@ -24,10 +24,8 @@ pub mod prelude {
     pub use crate::auth::*;
     pub use crate::error::*;
     pub use crate::field::*;
-    pub use crate::group::group_member::*;
     pub use crate::group::*;
     pub use crate::metadata::*;
-    pub use crate::organization::organization_member::*;
     pub use crate::organization::*;
     pub use crate::pagination::*;
     pub use crate::panel::*;

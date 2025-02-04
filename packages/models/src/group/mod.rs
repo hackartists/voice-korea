@@ -1,11 +1,11 @@
 #[cfg(feature = "server")]
 use by_axum::aide;
-use group_member::GroupMemberResponse;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-pub mod group_member;
+mod member;
+pub use member::*;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
