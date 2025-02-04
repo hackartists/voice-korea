@@ -10,7 +10,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub mod panel_v2;
-pub use panel_v2::*;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

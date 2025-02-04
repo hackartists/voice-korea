@@ -6,7 +6,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub mod attribute_v2;
-pub use attribute_v2::*;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

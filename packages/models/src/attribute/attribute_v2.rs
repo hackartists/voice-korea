@@ -5,7 +5,6 @@ use crate::Result;
 use by_axum::aide;
 use by_macros::ApiModel;
 use dioxus_translate::{Language, Translate};
-
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -19,7 +18,6 @@ pub enum AgeV2 {
     Sixty = 6,  //60대
     Over = 7,   //70대 이상
 }
-
 impl AgeV2 {
     pub fn translate(&self, lang: &Language) -> &'static str {
         match lang {
@@ -44,7 +42,6 @@ impl AgeV2 {
         }
     }
 }
-
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
 )]
@@ -57,7 +54,6 @@ pub enum GenderV2 {
     #[translate(ko = "여성")]
     Female = 2, //여성
 }
-
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
 )]
@@ -111,7 +107,6 @@ pub enum SalaryV2 {
     TierFour = 4,  //8000만원 ~ 10000만원
     TierFive = 5,  //10000만원 이상
 }
-
 impl SalaryV2 {
     pub fn translate(&self, lang: &Language) -> &'static str {
         match lang {
