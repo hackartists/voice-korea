@@ -172,29 +172,29 @@ impl Region {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum Salary {
     #[default]
-    TearOne = 1, //2400만원 이하
-    TearTwo = 2,   //2400만원 ~ 5000만원
-    TearThree = 3, //5000만원 ~ 8000만원
-    TearFour = 4,  //8000만원 ~ 10000만원
-    TearFive = 5,  //10000만원 이상
+    TierOne = 1, //2400만원 이하
+    TierTwo = 2,   //2400만원 ~ 5000만원
+    TierThree = 3, //5000만원 ~ 8000만원
+    TierFour = 4,  //8000만원 ~ 10000만원
+    TierFive = 5,  //10000만원 이상
 }
 
 impl Salary {
     pub fn translate(&self, lang: &Language) -> &'static str {
         match lang {
             Language::En => match self {
-                Salary::TearOne => "Less than 24 million won",
-                Salary::TearTwo => "24 million won ~ 50 million won",
-                Salary::TearThree => "50 million won ~ 80 million won",
-                Salary::TearFour => "80 million won ~ 100 million won",
-                Salary::TearFive => "More than 100 million won",
+                Salary::TierOne => "Less than 24 million won",
+                Salary::TierTwo => "24 million won ~ 50 million won",
+                Salary::TierThree => "50 million won ~ 80 million won",
+                Salary::TierFour => "80 million won ~ 100 million won",
+                Salary::TierFive => "More than 100 million won",
             },
             Language::Ko => match self {
-                Salary::TearOne => "2400만원 이하",
-                Salary::TearTwo => "2400만원 ~ 5000만원",
-                Salary::TearThree => "5000만원 ~ 8000만원",
-                Salary::TearFour => "8000만원 ~ 10000만원",
-                Salary::TearFive => "10000만원 이상",
+                Salary::TierOne => "2400만원 이하",
+                Salary::TierTwo => "2400만원 ~ 5000만원",
+                Salary::TierThree => "5000만원 ~ 8000만원",
+                Salary::TierFour => "8000만원 ~ 10000만원",
+                Salary::TierFive => "10000만원 이상",
             },
         }
     }
