@@ -70,12 +70,12 @@ fn App() -> Element {
     PrevSurveyApi::init();
 
     rsx! {
+        document::Link {
+            rel: "icon",
+            r#type: "image/x-icon",
+            href: asset!("/public/favicon.ico"),
+        }
         head {
-            link {
-                rel: "icon",
-                r#type: "image/x-icon",
-                href: asset!("/public/favicon.ico"),
-            }
             link { rel: "stylesheet", href: asset!("/public/main.css") }
             link { rel: "stylesheet", href: asset!("/public/tailwind.css") }
             load_tailwindcss {}
