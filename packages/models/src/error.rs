@@ -63,6 +63,8 @@ pub enum ApiError {
     OrganizationNotFound,
 
     ResourceNotFound,
+
+    InvalidType,
 }
 
 impl std::fmt::Display for ApiError {
