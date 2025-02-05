@@ -21,22 +21,25 @@ impl PanelControllerV2 {
 
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_panel).get(Self::list_panels))
-            .route("/:panel_id", post(Self::act_by_id).get(Self::get_panel))
+            .route("/:id", post(Self::act_by_id).get(Self::get_panel))
             .with_state(ctrl.clone()))
     }
 
     pub async fn get_panel(
         State(ctrl): State<PanelControllerV2>,
-        Path(panel_id): Path<String>,
+        Path((org_id, id)): Path<(String, String)>,
         Extension(_auth): Extension<Option<Authorization>>,
     ) -> Result<Json<PanelV2>> {
-        // TODO: check permission
-        tracing::debug!("get_panel: {:?}", panel_id);
+        tracing::debug!("get_panel: {:?} {:?}", org_id, id);
 
         let panel = ctrl
             .repo
-            .find_one(&PanelV2ReadAction::new().find_by_id(panel_id))
+            .find_one(&PanelV2ReadAction::new().find_by_id(id))
             .await?;
+
+        if panel.org_id != org_id {
+            return Err(ApiError::Unauthorized);
+        }
 
         Ok(Json(panel))
     }
@@ -44,39 +47,38 @@ impl PanelControllerV2 {
     pub async fn act_by_id(
         State(ctrl): State<PanelControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(panel_id): Path<String>,
+        Path((org_id, id)): Path<(String, String)>,
         Json(body): Json<PanelV2ByIdAction>,
     ) -> Result<Json<PanelV2>> {
-        // TODO: check permission
-        tracing::debug!("act_by_id: {:?} {:?}", panel_id, body);
+        tracing::debug!("act_by_id: {:?} {:?}", id, body);
 
         match body {
-            PanelV2ByIdAction::Update(params) => ctrl.update(panel_id, params).await,
+            PanelV2ByIdAction::Update(params) => ctrl.update(org_id, id, params).await,
         }
     }
 
     pub async fn list_panels(
         State(ctrl): State<PanelControllerV2>,
+        Path(org_id): Path<String>,
         Query(params): Query<PanelV2Query>,
     ) -> Result<Json<QueryResponse<PanelV2Summary>>> {
-        // TODO: check permission
         tracing::debug!("list_panels: {:?}", params);
 
-        let items = ctrl.repo.find(&params).await?;
+        let items = ctrl.repo.find(&params.with_org_id(org_id)).await?;
         Ok(Json(items))
     }
 
     pub async fn act_panel(
         State(ctrl): State<PanelControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
+        Path(org_id): Path<String>,
         Json(body): Json<PanelV2Action>,
     ) -> Result<Json<PanelV2>> {
-        // TODO: check permission
         tracing::debug!("act_panel {:?}", body);
 
         match body {
             PanelV2Action::Delete(params) => ctrl.delete(params.id).await,
-            PanelV2Action::Create(params) => ctrl.create(params).await,
+            PanelV2Action::Create(params) => ctrl.create(org_id, params).await,
         }
     }
 }
@@ -84,6 +86,7 @@ impl PanelControllerV2 {
 impl PanelControllerV2 {
     pub async fn update(
         &self,
+        org_id: String,
         panel_id: String,
         params: PanelV2UpdateRequest,
     ) -> Result<Json<PanelV2>> {
@@ -100,7 +103,7 @@ impl PanelControllerV2 {
                     gender: Some(params.gender),
                     region: Some(params.region),
                     salary: Some(params.salary),
-                    org_id: None,
+                    org_id: Some(org_id),
                 },
             )
             .await?;
@@ -116,7 +119,11 @@ impl PanelControllerV2 {
         Ok(Json(PanelV2::default()))
     }
 
-    pub async fn create(&self, params: PanelV2CreateRequest) -> Result<Json<PanelV2>> {
+    pub async fn create(
+        &self,
+        org_id: String,
+        params: PanelV2CreateRequest,
+    ) -> Result<Json<PanelV2>> {
         tracing::debug!("create panel: {:?}", params);
 
         let panel = self
@@ -128,13 +135,9 @@ impl PanelControllerV2 {
                 params.gender,
                 params.region,
                 params.salary,
-                params.org_id,
+                org_id,
             )
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to insert panel: {}", e);
-                ApiError::DuplicateUser
-            })?;
+            .await?;
 
         Ok(Json(panel))
     }
