@@ -215,6 +215,7 @@ pub fn PanelList(
                             },
                             oninput: move |event| {
                                 panel_name.set(event.value());
+                                onsearch(panel_name());
                             },
                         }
                         Search { width: "18", height: "18", color: "#7c8292" }
