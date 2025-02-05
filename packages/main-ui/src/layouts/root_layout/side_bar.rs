@@ -226,7 +226,7 @@ pub fn SectionMenus(
                                         "flex flex-row h-[45px] w-full px-[16px] items-center justify-start {}",
                                         if menu.is_selected { "rounded-lg bg-[#182248]" } else { "" },
                                     ),
-                                    div { class: "flex font-medium text-[14px] text-[#daeaff]", "{menu.title}" }
+                                    div { class: "hover-effect flex font-medium text-[14px] text-[#daeaff]", "{menu.title}" }
                                 }
                             } else {
                                 div {
