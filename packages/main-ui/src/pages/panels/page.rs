@@ -53,6 +53,9 @@ pub fn PanelPage(props: PanelProps) -> Element {
                 onupdate: move |index: usize| async move {
                     ctrl.open_update_panel_name(props.lang, index).await;
                 },
+                onsearch: move |name: String| async move {
+                    ctrl.search_keyword.set(name);
+                },
                 oncreate: move |req: PanelV2CreateRequest| async move {
                     ctrl.create_panel(req).await;
                 },
@@ -141,6 +144,7 @@ pub fn PanelList(
     onupdate: EventHandler<usize>,
     oncreate: EventHandler<PanelV2CreateRequest>,
     onremove: EventHandler<usize>,
+    onsearch: EventHandler<String>,
 
     onprev: EventHandler<usize>,
     onnext: EventHandler<usize>,
@@ -201,6 +205,13 @@ pub fn PanelList(
                             },
                             onblur: move |_| {
                                 is_focused.set(false);
+                            },
+                            onkeypress: move |e: KeyboardEvent| {
+                                let key = e.key();
+                                if key == Key::Enter {
+                                    tracing::debug!("search panel name: {panel_name}");
+                                    onsearch(panel_name());
+                                }
                             },
                             oninput: move |event| {
                                 panel_name.set(event.value());
