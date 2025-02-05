@@ -7,7 +7,7 @@ use crate::{
     pages::surveys::{
         components::{introduction::InputIntroduction, survey::QuestionListView},
         new::{
-            controller::Controller,
+            controller::{Controller, CurrentStep},
             i18n::{AddQuestionTranslate, CreateSurveyTranslate},
         },
     },
@@ -88,6 +88,7 @@ pub fn CreateSurvey(props: CreateSurveyProps) -> Element {
                     class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
                     onclick: move |_| async move {
                         ctrl.save_survey().await;
+                        ctrl.change_step(CurrentStep::SettingPanel);
                     },
                     "{translates.btn_next}"
                 }
