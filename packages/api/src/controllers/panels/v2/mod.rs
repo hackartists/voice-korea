@@ -51,7 +51,7 @@ impl PanelControllerV2 {
         tracing::debug!("act_by_id: {:?} {:?}", panel_id, body);
 
         match body {
-            PanelV2ByIdAction::Update(params) => ctrl.update(params).await,
+            PanelV2ByIdAction::Update(params) => ctrl.update(panel_id, params).await,
         }
     }
 
@@ -82,11 +82,30 @@ impl PanelControllerV2 {
 }
 
 impl PanelControllerV2 {
-    //FIXME: implement update panel logic when update method is implemented
-    pub async fn update(&self, params: PanelV2UpdateRequest) -> Result<Json<PanelV2>> {
+    pub async fn update(
+        &self,
+        panel_id: String,
+        params: PanelV2UpdateRequest,
+    ) -> Result<Json<PanelV2>> {
         tracing::debug!("update panel: {:?}", params);
 
-        Ok(Json(PanelV2::default()))
+        let panel = self
+            .repo
+            .update(
+                &panel_id,
+                PanelV2RepositoryUpdateRequest {
+                    name: Some(params.name),
+                    user_count: Some(params.user_count),
+                    age: Some(params.age),
+                    gender: Some(params.gender),
+                    region: Some(params.region),
+                    salary: Some(params.salary),
+                    org_id: None,
+                },
+            )
+            .await?;
+
+        Ok(Json(panel))
     }
 
     //FIXME: implement delete panel logic when update method is implemented
