@@ -49,7 +49,9 @@ jobs:
           RUSTFLAGS: "-A warnings"
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-        run: cargo test --tests
+        run: |
+          echo "" > packages/main-ui/public/tailwind.css
+          cargo test --tests
 
   main-ui:
     runs-on: ubuntu-22.04
