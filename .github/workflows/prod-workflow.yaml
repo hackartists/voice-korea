@@ -45,12 +45,14 @@ jobs:
         run: |
           psql postgresql://postgres:postgres@localhost:5432/test -f ./deps/rust-sdk/fixtures/sql/init.sql
 
-      - name: test with server feature
+      - name: test
         env:
           RUSTFLAGS: "-A warnings"
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-        run: cargo test --tests
+        run: |
+          echo "" > packages/main-ui/public/tailwind.css
+          cargo test --tests
 
   web-deployment:
     runs-on: ubuntu-22.04
