@@ -21,6 +21,27 @@ translate! {
         en: "Start Survey"
     }
 
+    dropdown: {
+        ko: "드랍다운 선택",
+        en: "Select Dropdown"
+    }
+    checkbox: {
+        ko: "체크박스 선택",
+        en: "Select Checkbox"
+    }
+    subjective: {
+        ko: "주관식 답변",
+        en: "Subjective Answer"
+    }
+    rating: {
+        ko: "평가 척도",
+        en: "Evaluation Rating"
+    }
+}
+
+translate! {
+    CreateSurveyTranslate;
+
     economy: {
         ko: "경제",
         en: "Economy"
@@ -79,9 +100,9 @@ translate! {
         en: "Evaluation Rating"
     }
 
-    btn_complete: {
-        ko: "완료하기",
-        en: "Complete"
+    btn_next: {
+        ko: "다음으로",
+        en: "Next"
     }
 
     btn_temp_save: {

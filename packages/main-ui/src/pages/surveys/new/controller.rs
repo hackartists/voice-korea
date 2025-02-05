@@ -20,6 +20,13 @@ pub struct Controller {
 
     questions: Signal<Vec<Question>>,
     total_survey_types: Signal<Vec<String>>,
+    current_step: Signal<CurrentStep>,
+}
+
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum CurrentStep {
+    CreateSurvey,
+    SettingPanel,
 }
 
 impl Controller {
@@ -47,9 +54,20 @@ impl Controller {
                     translates.rating.to_string(),
                 ]
             }),
+
+            current_step: use_signal(|| CurrentStep::CreateSurvey),
         };
+        use_context_provider(|| ctrl);
 
         ctrl
+    }
+
+    pub fn change_step(&mut self, step: CurrentStep) {
+        self.current_step.set(step);
+    }
+
+    pub fn get_current_step(&self) -> CurrentStep {
+        (self.current_step)()
     }
 
     pub fn get_total_survey_types(&self) -> Vec<String> {
