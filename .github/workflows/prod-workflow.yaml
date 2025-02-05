@@ -158,7 +158,7 @@ jobs:
           BASE_DOMAIN: biyard.co
           DOMAIN: voice-korea-api.dev.biyard.co
           DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_BASE_URL }}/voicekorea
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           AUTH_TYPE: jwt
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
           ENABLE_S3: false
