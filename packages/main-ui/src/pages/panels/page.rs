@@ -14,7 +14,7 @@ use crate::{
             UpdateAttributeNameModalTranslate, UpdatePanelNameModalTranslate,
         },
     },
-    service::{login_service::LoginService, popup_service::PopupService},
+    service::popup_service::PopupService,
 };
 
 use super::controller::AttributeInfo;
@@ -150,16 +150,10 @@ pub fn PanelList(
     update_panel_name: EventHandler<(usize, String)>,
     update_panel_count: EventHandler<(usize, u64)>,
 ) -> Element {
-    let login_service: LoginService = use_context();
     let ctrl: Controller = use_context();
     let mut is_focused = use_signal(|| false);
     let mut panel_name = use_signal(|| "".to_string());
     let translate: PanelListTranslate = translate(&lang);
-
-    let org_id = match login_service.get_selected_org() {
-        Some(v) => v.id,
-        None => "".to_string(),
-    };
 
     let mut panel_names = use_signal(|| vec![]);
     let mut panel_name_width = use_signal(|| vec![]);
@@ -268,7 +262,6 @@ pub fn PanelList(
                             button {
                                 class: "flex flex-row w-[24px] h-[24px] justify-center items-center bg-[#d1d1d1] opacity-50 rounded-[4px] font-bold text-[#35343f] text-lg",
                                 onclick: {
-                                    let org_id = org_id.clone();
                                     move |_| {
                                         oncreate
                                             .call(PanelV2CreateRequest {
@@ -278,7 +271,6 @@ pub fn PanelList(
                                                 gender: models::attribute_v2::GenderV2::Male,
                                                 region: models::attribute_v2::RegionV2::Seoul,
                                                 salary: models::attribute_v2::SalaryV2::TierOne,
-                                                org_id: org_id.clone(),
                                             });
                                     }
                                 },

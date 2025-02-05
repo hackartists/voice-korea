@@ -114,10 +114,6 @@ async fn main() -> Result<()> {
 
     let app = app
         .nest(
-            "/panels/v2",
-            controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
-        )
-        .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
         )

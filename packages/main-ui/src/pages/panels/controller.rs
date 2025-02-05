@@ -41,6 +41,7 @@ pub struct Controller {
 
     page: Signal<usize>,
     pub size: usize,
+    org_id: Signal<String>,
 }
 
 impl Controller {
@@ -55,6 +56,7 @@ impl Controller {
         let client = PanelV2::get_client(&crate::config::get().api_url);
         let page = use_signal(|| 1);
         let size = 10;
+        let org_id_copy = org_id.clone();
 
         let panel_resource = use_resource({
             let client = client.clone();
@@ -63,9 +65,8 @@ impl Controller {
                 let org_id = org_id.clone();
 
                 async move {
-                    let mut query = PanelV2Query::new(size).with_page(page());
-                    query.org_id = Some(org_id);
-                    match client.query(query).await {
+                    let query = PanelV2Query::new(size).with_page(page());
+                    match client.query(&org_id, query).await {
                         Ok(d) => d,
                         Err(e) => {
                             tracing::error!("list panels failed: {e}");
@@ -90,6 +91,7 @@ impl Controller {
 
             page,
             size,
+            org_id: use_signal(|| org_id_copy.clone()),
         };
 
         if ctrl.attributes.len() == 0 {
@@ -201,7 +203,9 @@ impl Controller {
         let mut panel_resource = self.panel_resource;
         let client = (self.client)().clone();
 
-        let _ = client.act(PanelV2Action::Create(req)).await;
+        let org_id = (self.org_id)();
+
+        let _ = client.act(&org_id, PanelV2Action::Create(req)).await;
         self.set_page(1);
         panel_resource.restart();
     }
@@ -231,17 +235,21 @@ impl Controller {
                     onsave: {
                         let id = panel.id.clone();
                         let req = self.convert_update_request(panel);
+                        let org_id = (self.org_id)();
                         move |option: String| {
                             let client = client.clone();
                             let salary = SalaryV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
+                            let org_id = org_id.clone();
                             async move {
                                 if salary.is_ok() {
                                     let salary = salary.unwrap();
                                     req.salary = salary;
                                     tracing::info!("update salary clicked: {index} {:?}", req);
-                                    let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
+                                    let _ = client
+                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .await;
                                     panel_resource.restart();
                                     popup_service.close();
                                 } else {}
@@ -294,17 +302,21 @@ impl Controller {
                     onsave: {
                         let id = panel.id.clone();
                         let req = self.convert_update_request(panel);
+                        let org_id = (self.org_id)();
                         move |option: String| {
                             let client = client.clone();
                             let region = RegionV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
+                            let org_id = org_id.clone();
                             async move {
                                 if region.is_ok() {
                                     let region = region.unwrap();
                                     req.region = region;
                                     tracing::info!("update region clicked: {index} {:?}", req);
-                                    let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
+                                    let _ = client
+                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .await;
                                     panel_resource.restart();
                                     popup_service.close();
                                 } else {}
@@ -339,17 +351,21 @@ impl Controller {
                     onsave: {
                         let id = panel.id.clone();
                         let req = self.convert_update_request(panel);
+                        let org_id = (self.org_id)();
                         move |option: String| {
                             let client = client.clone();
                             let gender = GenderV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
+                            let org_id = org_id.clone();
                             async move {
                                 if gender.is_ok() {
                                     let gender = gender.unwrap();
                                     req.gender = gender;
                                     tracing::info!("update gender clicked: {index} {:?}", req);
-                                    let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
+                                    let _ = client
+                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .await;
                                     panel_resource.restart();
                                     popup_service.close();
                                 } else {}
@@ -392,17 +408,21 @@ impl Controller {
                     onsave: {
                         let id = panel.id.clone();
                         let req = self.convert_update_request(panel);
+                        let org_id = (self.org_id)();
                         move |option: String| {
                             let client = client.clone();
                             let age = AgeV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
+                            let org_id = org_id.clone();
                             async move {
                                 if age.is_ok() {
                                     let age = age.unwrap();
                                     req.age = age;
                                     tracing::debug!("update age clicked: {index} {:?}", req);
-                                    let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
+                                    let _ = client
+                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .await;
                                     panel_resource.restart();
                                     popup_service.close();
                                 } else {}
@@ -427,6 +447,7 @@ impl Controller {
         let mut panel_resource = self.panel_resource;
 
         let client = (self.client)().clone();
+        let org_id = (self.org_id)();
 
         popup_service
             .open(rsx! {
@@ -435,10 +456,12 @@ impl Controller {
                     remove_click: move |_e: MouseEvent| {
                         let panel_id = panel_id.clone();
                         let client = client.clone();
+                        let org_id = org_id.clone();
                         async move {
                             tracing::debug!("remove panel clicked: {index}");
                             let _ = client
                                 .act(
+                                    &org_id,
                                     PanelV2Action::Delete(PanelV2DeleteRequest {
                                         id: panel_id,
                                     }),
@@ -465,6 +488,7 @@ impl Controller {
 
         let mut panel_resource = self.panel_resource;
         let client = (self.client)().clone();
+        let org_id = (self.org_id)();
 
         popup_service
             .open(rsx! {
@@ -480,14 +504,18 @@ impl Controller {
                             region: panel.region,
                             salary: panel.salary,
                         };
+                        let org_id = org_id.clone();
                         move |name: String| {
                             let client = client.clone();
                             let id = id.clone();
+                            let org_id = org_id.clone();
                             let mut req = req.clone();
                             req.name = name;
                             async move {
                                 tracing::debug!("update panel clicked: {index}");
-                                let _ = client.act_by_id(&id, PanelV2ByIdAction::Update(req)).await;
+                                let _ = client
+                                    .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                    .await;
                                 panel_resource.restart();
                                 popup_service.close();
                             }
@@ -519,9 +547,10 @@ impl Controller {
             region: panel.region,
             salary: panel.salary,
         };
+        let org_id = (self.org_id)();
 
         let _ = client
-            .act_by_id(&panel.id, PanelV2ByIdAction::Update(req))
+            .act_by_id(&org_id, &panel.id, PanelV2ByIdAction::Update(req))
             .await;
 
         panel_resource.restart();
@@ -544,8 +573,10 @@ impl Controller {
             salary: panel.salary,
         };
 
+        let org_id = (self.org_id)();
+
         let _ = client
-            .act_by_id(&panel.id, PanelV2ByIdAction::Update(req))
+            .act_by_id(&org_id, &panel.id, PanelV2ByIdAction::Update(req))
             .await;
 
         panel_resource.restart();
