@@ -8,6 +8,9 @@ use by_macros::api_model;
 use by_types::QueryResponse;
 use validator::ValidationError;
 
+mod invite;
+pub use invite::*;
+
 #[derive(validator::Validate)]
 #[api_model(base = "/auth/v1", action = [signup(code = String), reset(code = String)], read_action = refresh, table = users, iter_type=QueryResponse)]
 pub struct User {

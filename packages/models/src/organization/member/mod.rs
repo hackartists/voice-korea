@@ -27,23 +27,20 @@ pub struct ListMemberResponse {
 
 #[api_model(base = "/members/v2", table = organization_members, iter_type=QueryResponse)]
 pub struct OrganizationMember {
-    #[api_model(summary, primary_key)]
-    pub id: String,
+    #[api_model(summary, many_to_one = users)]
+    pub user_id: String,
+    #[api_model(summary, many_to_one = organizations)]
+    pub org_id: String,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(many_to_one = users)]
-    pub user_id: String,
-    #[api_model(many_to_one = organizations)]
-    pub org_id: String,
-
-    #[api_model(summary, nullable)]
+    #[api_model(summary, action = [invite, update])]
     pub name: String,
-    #[api_model(summary, type = INTEGER, nullable)]
+    #[api_model(summary, type = INTEGER, nullable, action = [invite, update])]
     pub role: Option<Role>,
-    #[api_model(summary)]
+    #[api_model(summary, action = [update])]
     pub contact: Option<String>,
 }
 
@@ -67,7 +64,6 @@ impl Into<OrganizationMember> for (CreateMemberRequest, String, String, String) 
         let now = chrono::Utc::now().timestamp_millis();
 
         OrganizationMember {
-            id,
             user_id,
             org_id,
             created_at: now,
@@ -114,21 +110,7 @@ impl std::fmt::Display for Role {
     }
 }
 
-// impl std::str::FromStr for Role {
-//     type Err = String;
-
-//     fn from_str(r: &str) -> Result<Self, Self::Err> {
-//         match r {
-//             "admin" => Ok(Role::Admin),
-//             "public_admin" => Ok(Role::PublicAdmin),
-//             "analyst" => Ok(Role::Analyst),
-//             "mediator" => Ok(Role::Mediator),
-//             "speaker" => Ok(Role::Speaker),
-//             _ => Err("Invalid role".to_string()),
-//         }
-//     }
-// }
-
+// FIXME: deprecated
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct InviteMember {
@@ -146,6 +128,7 @@ pub struct InviteMember {
     pub projects: Option<Vec<MemberProject>>, //FIXME: implement project model sepalately after public opinion, investigation api implemented
 }
 
+// FIXME: deprecated
 impl InviteMember {
     pub fn new(
         id: String,
