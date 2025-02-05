@@ -108,9 +108,10 @@ impl PanelControllerV2 {
         Ok(Json(panel))
     }
 
-    //FIXME: implement delete panel logic when update method is implemented
     pub async fn delete(&self, panel_id: String) -> Result<Json<PanelV2>> {
         tracing::debug!("delete panel: {:?}", panel_id);
+
+        let _ = self.repo.delete(&panel_id).await?;
 
         Ok(Json(PanelV2::default()))
     }

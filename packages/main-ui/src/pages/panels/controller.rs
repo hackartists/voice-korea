@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
@@ -231,11 +233,11 @@ impl Controller {
                         let req = self.convert_update_request(panel);
                         move |option: String| {
                             let client = client.clone();
-                            let salary = SalaryV2::convert_str_to_salary(&option);
+                            let salary = SalaryV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
                             async move {
-                                if salary.is_some() {
+                                if salary.is_ok() {
                                     let salary = salary.unwrap();
                                     req.salary = salary;
                                     tracing::info!("update salary clicked: {index} {:?}", req);
@@ -294,11 +296,11 @@ impl Controller {
                         let req = self.convert_update_request(panel);
                         move |option: String| {
                             let client = client.clone();
-                            let region = RegionV2::convert_str_to_region(&option);
+                            let region = RegionV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
                             async move {
-                                if region.is_some() {
+                                if region.is_ok() {
                                     let region = region.unwrap();
                                     req.region = region;
                                     tracing::info!("update region clicked: {index} {:?}", req);
@@ -339,11 +341,11 @@ impl Controller {
                         let req = self.convert_update_request(panel);
                         move |option: String| {
                             let client = client.clone();
-                            let gender = GenderV2::convert_str_to_gender(&option);
+                            let gender = GenderV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
                             async move {
-                                if gender.is_some() {
+                                if gender.is_ok() {
                                     let gender = gender.unwrap();
                                     req.gender = gender;
                                     tracing::info!("update gender clicked: {index} {:?}", req);
@@ -392,11 +394,11 @@ impl Controller {
                         let req = self.convert_update_request(panel);
                         move |option: String| {
                             let client = client.clone();
-                            let age = AgeV2::convert_str_to_age(&option);
+                            let age = AgeV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
                             async move {
-                                if age.is_some() {
+                                if age.is_ok() {
                                     let age = age.unwrap();
                                     req.age = age;
                                     tracing::debug!("update age clicked: {index} {:?}", req);

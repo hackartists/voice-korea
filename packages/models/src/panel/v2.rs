@@ -20,7 +20,7 @@ pub struct PanelV2 {
     #[api_model(summary, action = [create], action_by_id = update)]
     pub name: String,
     #[api_model(summary, action = [create], action_by_id = update)]
-    pub user_count: i64,
+    pub user_count: u64,
 
     #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable, rename = "age")]
     pub age: AgeV2,

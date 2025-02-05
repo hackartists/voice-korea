@@ -28,28 +28,6 @@ pub enum AgeV2 {
     Over = 7, //70대 이상
 }
 
-impl AgeV2 {
-    pub fn convert_str_to_age(str: &str) -> Option<Self> {
-        if str == "17세 이하" || str == "Under 17 years old" {
-            Some(AgeV2::Teenager)
-        } else if str == "18~29세" || str == "18-29 years old" {
-            Some(AgeV2::Twenty)
-        } else if str == "30대" || str == "30-39 years old" {
-            Some(AgeV2::Thirty)
-        } else if str == "40대" || str == "40-49 years old" {
-            Some(AgeV2::Fourty)
-        } else if str == "50대" || str == "50-59 years old" {
-            Some(AgeV2::Fifty)
-        } else if str == "60대" || str == "60-69 years old" {
-            Some(AgeV2::Sixty)
-        } else if str == "70대 이상" || str == "Over 70s" {
-            Some(AgeV2::Over)
-        } else {
-            None
-        }
-    }
-}
-
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
 )]
@@ -61,18 +39,6 @@ pub enum GenderV2 {
     Male = 1, //남성
     #[translate(ko = "여성")]
     Female = 2, //여성
-}
-
-impl GenderV2 {
-    pub fn convert_str_to_gender(str: &str) -> Option<Self> {
-        if str == "남성" || str == "male" {
-            Some(GenderV2::Male)
-        } else if str == "여성" || str == "female" {
-            Some(GenderV2::Female)
-        } else {
-            None
-        }
-    }
 }
 
 #[derive(
@@ -118,48 +84,6 @@ pub enum RegionV2 {
     Jeju = 17, //제주
 }
 
-impl RegionV2 {
-    pub fn convert_str_to_region(str: &str) -> Option<Self> {
-        if str == "서울" || str == "seoul" {
-            Some(RegionV2::Seoul)
-        } else if str == "부산" || str == "busan" {
-            Some(RegionV2::Busan)
-        } else if str == "대구" || str == "daegu" {
-            Some(RegionV2::Daegu)
-        } else if str == "인천" || str == "incheon" {
-            Some(RegionV2::Incheon)
-        } else if str == "광주" || str == "gwangju" {
-            Some(RegionV2::Gwangju)
-        } else if str == "대전" || str == "daejeon" {
-            Some(RegionV2::Daejeon)
-        } else if str == "울산" || str == "ulsan" {
-            Some(RegionV2::Ulsan)
-        } else if str == "세종" || str == "sejong" {
-            Some(RegionV2::Sejong)
-        } else if str == "경기" || str == "gyeonggi" {
-            Some(RegionV2::Gyeonggi)
-        } else if str == "강원" || str == "gangwon" {
-            Some(RegionV2::Gangwon)
-        } else if str == "충북" || str == "chungbuk" {
-            Some(RegionV2::Chungbuk)
-        } else if str == "충남" || str == "chungnam" {
-            Some(RegionV2::Chungnam)
-        } else if str == "전북" || str == "jeonbuk" {
-            Some(RegionV2::Jeonbuk)
-        } else if str == "전남" || str == "jeonnam" {
-            Some(RegionV2::Jeonnam)
-        } else if str == "경북" || str == "gyeongbuk" {
-            Some(RegionV2::Gyeongbuk)
-        } else if str == "경남" || str == "gyeongnam" {
-            Some(RegionV2::Gyeongnam)
-        } else if str == "제주" || str == "jeju" {
-            Some(RegionV2::Jeju)
-        } else {
-            None
-        }
-    }
-}
-
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
 )]
@@ -177,22 +101,4 @@ pub enum SalaryV2 {
     TierFour = 4, //8000만원 ~ 10000만원
     #[translate(ko = "10000만원 이상", en = "More than 100 million won")]
     TierFive = 5, //10000만원 이상
-}
-
-impl SalaryV2 {
-    pub fn convert_str_to_salary(str: &str) -> Option<Self> {
-        if str == "2400만원 이하" || str == "Less than 24 million won" {
-            Some(SalaryV2::TierOne)
-        } else if str == "2400만원 ~ 5000만원" || str == "24 million won ~ 50 million won" {
-            Some(SalaryV2::TierTwo)
-        } else if str == "5000만원 ~ 8000만원" || str == "50 million won ~ 80 million won" {
-            Some(SalaryV2::TierThree)
-        } else if str == "8000만원 ~ 10000만원" || str == "80 million won ~ 100 million won" {
-            Some(SalaryV2::TierFour)
-        } else if str == "10000만원 이상" || str == "More than 100 million won" {
-            Some(SalaryV2::TierFive)
-        } else {
-            None
-        }
-    }
 }
