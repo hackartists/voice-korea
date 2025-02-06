@@ -69,6 +69,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let p = PanelV2::get_repository(pool.clone());
     let s = SurveyV2::get_repository(pool.clone());
     let om = OrganizationMember::get_repository(pool.clone());
+    let ps = PanelSurveys::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
@@ -79,6 +80,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     // files.create_table().await?;
     s.create_this_table().await?;
     p.create_this_table().await?;
+    ps.create_this_table().await?;
 
     v.create_related_tables().await?;
     o.create_related_tables().await?;
@@ -89,6 +91,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     // files.create_related_tables().await?;
     s.create_related_tables().await?;
     p.create_related_tables().await?;
+    ps.create_related_tables().await?;
 
     tracing::info!("Migration done");
     Ok(())

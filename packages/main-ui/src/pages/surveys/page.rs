@@ -169,29 +169,27 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                                         }
 
                                         // TODO: implement panel in survey list view
-                                        // button {
-                                        //     class: "flex flex-row flex-1 h-full justify-center items-center",
-                                        //     onclick: move |_| {
-                                        //         clicked_panel_index.set(index);
-                                        //     },
-                                        //     if survey.panels.clone().len() != 0 {
-                                        //         if clicked_panel_index() == index {
-                                        //             div { class: "flex flex-wrap w-full justify-center items-center gap-[5px]",
-                                        //                 for panel in survey.panels.clone() {
-                                        //                     PanelLabel {
-                                        //                         label: panel.name.clone(),
-                                        //                         background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
-                                        //                     }
+                                        button {
+                                            class: "flex flex-row flex-1 h-full justify-center items-center",
+                                            onclick: move |_| {},
+                                                                                // if survey.panels.clone().len() != 0 {
+                                        //     if clicked_panel_index() == index {
+                                        //         div { class: "flex flex-wrap w-full justify-center items-center gap-[5px]",
+                                        //             for panel in survey.panels.clone() {
+                                        //                 PanelLabel {
+                                        //                     label: panel.name.clone(),
+                                        //                     background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
                                         //                 }
                                         //             }
-                                        //         } else {
-                                        //             PanelLabel {
-                                        //                 label: survey.panels[0].name.clone(),
-                                        //                 background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
-                                        //             }
+                                        //         }
+                                        //     } else {
+                                        //         PanelLabel {
+                                        //             label: survey.panels[0].name.clone(),
+                                        //             background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
                                         //         }
                                         //     }
                                         // }
+                                        }
 
                                         div { class: "flex flex-row flex-1 h-full justify-center items-center",
                                             div { class: "text-[#35343f] font-semibold text-[14px]",

@@ -76,18 +76,17 @@ pub fn CreateSurvey(props: CreateSurveyProps) -> Element {
                     },
                     "{translates.btn_cancel}"
                 }
-                button {
-                    class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
-                    onclick: move |_| async move {
-                        ctrl.save_survey().await;
-                    },
-                    "{translates.btn_temp_save}"
-                }
+                // button {
+                //     class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
+                //     onclick: move |_| async move {
+                //         ctrl.save_survey().await;
+                //     },
+                //     "{translates.btn_temp_save}"
+                // }
 
                 button {
                     class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
                     onclick: move |_| async move {
-                        ctrl.save_survey().await;
                         ctrl.change_step(CurrentStep::SettingPanel);
                     },
                     "{translates.btn_next}"

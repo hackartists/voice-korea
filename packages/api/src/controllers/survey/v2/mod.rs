@@ -10,14 +10,19 @@ use models::*;
 
 #[derive(Clone, Debug)]
 pub struct SurveyControllerV2 {
+    panel_survey_repo: PanelSurveysRepository,
     repo: SurveyV2Repository,
 }
 
 impl SurveyControllerV2 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
-        let repo = SurveyV2::get_repository(pool);
+        let repo = SurveyV2::get_repository(pool.clone());
+        let panel_survey_repo = PanelSurveys::get_repository(pool);
 
-        let ctrl = SurveyControllerV2 { repo };
+        let ctrl = SurveyControllerV2 {
+            repo,
+            panel_survey_repo,
+        };
 
         Ok(by_axum::axum::Router::new()
             .route("/:id", get(Self::get_survey_v2))
@@ -98,18 +103,25 @@ impl SurveyControllerV2 {
         let survey = self
             .repo
             .insert(
-                body.name,
+                body.name.clone(),
                 ProjectType::Survey,
                 body.project_area,
                 ProjectStatus::Ready,
                 body.started_at,
                 body.ended_at,
-                body.description,
+                body.description.clone(),
                 body.quotes,
-                org_id,
-                body.questions,
+                org_id.clone(),
+                body.questions.clone(),
             )
             .await?;
+
+        for panel in body.panels.clone() {
+            let _ = self
+                .panel_survey_repo
+                .insert(panel.id.clone(), survey.id.clone())
+                .await?;
+        }
 
         Ok(Json(survey))
     }

@@ -1,10 +1,11 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
+use models::PanelV2;
 
 use crate::{
     components::icons::{Clear, Remove},
     pages::surveys::new::{
-        controller::{Controller, CurrentStep, SelectedPanel},
+        controller::{Controller, CurrentStep},
         i18n::SettingPanelTranslate,
     },
 };
@@ -119,13 +120,24 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                         if !selected_panels.iter().any(|selected| selected.name == panel.name) {
                                             div {
                                                 class: "flex flex-col w-full h-[60px] justify-start items-start py-[9px] bg-white hover:bg-[#f7f7f7] hover:border-l hover:border-l-[#2a60d3] cursor-pointer",
-                                                onclick: move |_| {
-                                                    ctrl.add_selected_panel(SelectedPanel {
-                                                        id: panel.id.clone(),
-                                                        name: panel.name.clone(),
-                                                        total_count: panel.user_count,
-                                                    });
-                                                    is_open.set(false);
+                                                onclick: {
+                                                    let panel = panel.clone();
+                                                    move |_| {
+                                                        ctrl.add_selected_panel(PanelV2 {
+                                                            id: panel.id.clone(),
+                                                            created_at: panel.created_at.clone(),
+                                                            updated_at: panel.updated_at.clone(),
+                                                            name: panel.name.clone(),
+                                                            user_count: panel.user_count.clone(),
+                                                            age: panel.age.clone(),
+                                                            gender: panel.gender.clone(),
+                                                            region: panel.region.clone(),
+                                                            salary: panel.salary.clone(),
+                                                            org_id: panel.org_id.clone(),
+                                                            surveys: panel.surveys.clone(),
+                                                        });
+                                                        is_open.set(false);
+                                                    }
                                                 },
                                                 div { class: "flex flex-col w-full px-4",
                                                     div { class: "font-bold text-[15px] text-[#222222] mb-[5px]",
@@ -157,7 +169,7 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                         class: "flex flex-row w-[215px] h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px]",
                                         r#type: "text",
                                         placeholder: "0",
-                                        value: panel.total_count,
+                                        value: panel.user_count,
                                         onkeydown: move |e: KeyboardEvent| {
                                             let key = e.key();
                                             if key != Key::Backspace && key != Key::Delete {
@@ -172,7 +184,7 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                         },
                                         oninput: {
                                             let mut ctrl = ctrl.clone();
-                                            let prev_count = ctrl.selected_panels()[index].clone().total_count;
+                                            let prev_count = ctrl.selected_panels()[index].clone().user_count;
                                             move |e: Event<FormData>| {
                                                 let maximum_value = ctrl.get_maximum_count(index);
                                                 let value = e.value().parse::<u64>().unwrap_or(0);
@@ -207,13 +219,13 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                     },
                     "{translate.btn_cancel}"
                 }
-                button {
-                    class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
-                    onclick: move |_| async move {
-                        ctrl.save_survey().await;
-                    },
-                    "{translate.btn_temp_save}"
-                }
+                // button {
+                //     class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
+                //     onclick: move |_| async move {
+                //         ctrl.save_survey().await;
+                //     },
+                //     "{translate.btn_temp_save}"
+                // }
 
                 button {
                     class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
