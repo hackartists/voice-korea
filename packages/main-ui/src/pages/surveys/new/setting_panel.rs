@@ -31,7 +31,7 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                     "{translate.composition_panel}"
                 }
                 button {
-                    class: "bg-[#2a60d3] rounded-4px px-[14px] py-[8px] font-semibold text-white text-[16px]",
+                    class: "bg-[#2a60d3] rounded-4px px-[14px] py-[8px] font-semibold text-white text-[16px] rounded-[4px]",
                     onclick: move |_| async move {
                         ctrl.open_create_panel_modal().await;
                     },

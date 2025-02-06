@@ -39,6 +39,7 @@ pub struct Controller {
     total_panel_members: Signal<u64>,
     popup_service: PopupService,
 
+    page: Signal<usize>,
     translates: Signal<SurveyNewTranslate>,
 }
 
@@ -64,18 +65,21 @@ impl Controller {
             None => "".to_string(),
         };
         let client = PanelV2::get_client(&crate::config::get().api_url);
+        let page = use_signal(|| 1);
 
         let org_id_copy = org_id.clone();
 
         let panel_resource = use_resource({
             let client = client.clone();
+            let page = page();
+            let size = 100;
             move || {
                 let client = client.clone();
                 let org_id = org_id.clone();
 
                 async move {
                     //FIMXE: fix to get total data
-                    let query = PanelV2Query::new(100).with_page(1);
+                    let query = PanelV2Query::new(size).with_page(page);
                     match client.query(&org_id, query).await {
                         Ok(d) => d,
                         Err(e) => {
@@ -122,18 +126,23 @@ impl Controller {
             popup_service: use_context(),
             lang,
             translates: use_signal(|| translates),
+            page,
         };
 
-        match panel_resource.value()() {
+        let _ = use_effect(move || match panel_resource.value()() {
             Some(panel) => {
                 ctrl.panels.set(panel.items);
             }
             _ => {}
-        }
+        });
 
         use_context_provider(|| ctrl);
 
         ctrl
+    }
+
+    pub fn get_page(&self) -> usize {
+        (self.page)()
     }
 
     pub fn change_step(&mut self, step: CurrentStep) {
