@@ -261,17 +261,20 @@ impl Controller {
 
     pub fn remove_selected_panel(&mut self, index: usize) {
         let mut panels = (self.selected_panels)();
-        let panel = panels[index].clone();
-        panels.remove(index);
-        self.selected_panels.set(panels);
 
-        let mut maximum_count = (self.maximum_panel_count)();
-        maximum_count.remove(index);
-        self.maximum_panel_count.set(maximum_count);
+        if index < panels.len() {
+            let panel = panels[index].clone();
+            panels.remove(index);
+            self.selected_panels.set(panels);
 
-        let mut members = (self.total_panel_members)();
-        members -= panel.total_count;
-        self.total_panel_members.set(members);
+            let mut maximum_count = (self.maximum_panel_count)();
+            maximum_count.remove(index);
+            self.maximum_panel_count.set(maximum_count);
+
+            let mut members = (self.total_panel_members)();
+            members -= panel.total_count;
+            self.total_panel_members.set(members);
+        }
     }
 
     pub fn get_maximum_count(&mut self, index: usize) -> u64 {

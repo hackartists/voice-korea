@@ -12,6 +12,31 @@ translate! {
 translate! {
     CreatePanelModalTranslate;
 
+    panel_name_error: {
+        ko: "패널명을 2글자 이상 입력해주세요.",
+        en: "Please enter at least 2 characters for the panel name."
+    }
+    panel_count_error: {
+        ko: "패널명을 2글자 이상 입력해주세요.",
+        en: "The panel must consist of at least 1 person."
+    }
+    age_error: {
+        ko: "나이를 선택해주세요.",
+        en: "Please select your age."
+    }
+    gender_error: {
+        ko: "성별을 선택해주세요.",
+        en: "Please select your gender."
+    }
+    region_error: {
+        ko: "지역을 선택해주세요.",
+        en: "Please select your region."
+    }
+    salary_error: {
+        ko: "연봉을 선택해주세요.",
+        en: "Please select your salary."
+    }
+
     panel_name: {
         ko: "패널명",
         en: "Panel Name"
@@ -220,7 +245,7 @@ translate! {
 
     btn_complete: {
         ko: "완료하기",
-        en: "Complate"
+        en: "Complete"
     }
     btn_temp_save: {
         ko: "임시저장",

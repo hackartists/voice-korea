@@ -39,6 +39,15 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
     });
     let mut is_open: Signal<Vec<bool>> = use_signal(|| vec![false, false, false, false]);
 
+    let panel_name_error: Signal<String> = use_signal(|| "".to_string());
+    let panel_count_error: Signal<String> = use_signal(|| "".to_string());
+    let error_signals: Vec<Signal<String>> = vec![
+        use_signal(|| "".to_string()), // age_error
+        use_signal(|| "".to_string()), // gender_error
+        use_signal(|| "".to_string()), // region_error
+        use_signal(|| "".to_string()), // salary_error
+    ];
+
     let total_attributes: Signal<Vec<AttributeInfo>> = use_signal(|| {
         vec![
             AttributeInfo {
@@ -113,6 +122,12 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                 div { class: "font-normal text-[#222222] text-[13px]",
                     "{translate.input_panel_name_description}"
                 }
+
+                if panel_name_error() != "" {
+                    div { class: "font-semibold text-red-600 text-[13px] mt-[10px]",
+                        {panel_name_error()}
+                    }
+                }
             }
 
             div { class: "flex flex-col w-full justify-start items-start bg-white border border-[#bfc8d9] rounded-[8px] p-[24px]",
@@ -120,29 +135,37 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                     div { class: "w-[50px] font-medium text-[#222222] text-[15px]",
                         "{translate.personnel}"
                     }
-                    input {
-                        class: "flex flex-row w-full h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px] focus:outline-none",
-                        r#type: "text",
-                        placeholder: "0",
-                        value: panel_count(),
-                        onkeydown: move |e: KeyboardEvent| {
-                            let key = e.key();
-                            if key != Key::Backspace && key != Key::Delete {
-                                let s = match key {
-                                    Key::Character(c) => c,
-                                    _ => "".to_string(),
-                                };
-                                if !s.chars().all(|c| c.is_ascii_digit()) {
-                                    e.prevent_default();
+                    div { class: "flex flex-col w-full justify-start items-start",
+                        input {
+                            class: "flex flex-row w-full h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px] focus:outline-none",
+                            r#type: "text",
+                            placeholder: "0",
+                            value: panel_count(),
+                            onkeydown: move |e: KeyboardEvent| {
+                                let key = e.key();
+                                if key != Key::Backspace && key != Key::Delete {
+                                    let s = match key {
+                                        Key::Character(c) => c,
+                                        _ => "".to_string(),
+                                    };
+                                    if !s.chars().all(|c| c.is_ascii_digit()) {
+                                        e.prevent_default();
+                                    }
                                 }
+                            },
+                            oninput: {
+                                move |e: Event<FormData>| {
+                                    let value = e.value().parse::<u64>().unwrap_or(0);
+                                    panel_count.set(value);
+                                }
+                            },
+                        }
+
+                        if panel_count_error() != "" {
+                            div { class: "font-semibold text-red-600 text-[13px] mt-[10px]",
+                                {panel_count_error()}
                             }
-                        },
-                        oninput: {
-                            move |e: Event<FormData>| {
-                                let value = e.value().parse::<u64>().unwrap_or(0);
-                                panel_count.set(value);
-                            }
-                        },
+                        }
                     }
                 }
 
@@ -152,23 +175,31 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                             "{attribute.name}"
                         }
                         div { class: "relative w-full",
-                            button {
-                                class: "flex flex-row w-full justify-start items-center bg-[#f7f7f7] rounded-[4px] p-[15px] min-h-[55px]",
-                                onclick: move |_| {
-                                    let mut open = is_open();
-                                    open[index] = true;
-                                    is_open.set(open);
-                                },
-                                if selected_value()[index] != "" {
-                                    AttributeLabel {
-                                        label: selected_value()[index].clone(),
-                                        onclose: move |e: Event<MouseData>| {
-                                            e.stop_propagation();
-                                            e.prevent_default();
-                                            let mut attributes = selected_value();
-                                            attributes[index] = "".to_string();
-                                            selected_value.set(attributes);
-                                        },
+                            div { class: "flex flex-col w-full justify-start items-start",
+                                button {
+                                    class: "flex flex-row w-full justify-start items-center bg-[#f7f7f7] rounded-[4px] p-[15px] min-h-[55px]",
+                                    onclick: move |_| {
+                                        let mut open = is_open();
+                                        open[index] = true;
+                                        is_open.set(open);
+                                    },
+                                    if selected_value()[index] != "" {
+                                        AttributeLabel {
+                                            label: selected_value()[index].clone(),
+                                            onclose: move |e: Event<MouseData>| {
+                                                e.stop_propagation();
+                                                e.prevent_default();
+                                                let mut attributes = selected_value();
+                                                attributes[index] = "".to_string();
+                                                selected_value.set(attributes);
+                                            },
+                                        }
+                                    }
+                                }
+
+                                if error_signals[index]() != "" {
+                                    div { class: "font-semibold text-red-600 text-[13px] mt-[10px]",
+                                        {error_signals[index]()}
                                     }
                                 }
                             }
@@ -226,6 +257,7 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                     class: "flex flex-row bg-[#2a60d3] rounded-[4px] px-[14px] py-[8px] font-semibold text-white text-[16px] leading-[24px]",
                     onclick: {
                         let values = selected_value();
+                        let translate = translate.clone();
                         let mut age: Option<AgeV2> = None;
                         let mut gender: Option<GenderV2> = None;
                         let mut region: Option<RegionV2> = None;
@@ -237,16 +269,32 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                             salary = Some(values[3].parse().unwrap());
                         }
                         move |_| {
-                            props
-                                .onsave
-                                .call(PanelV2CreateRequest {
-                                    name: panel_name(),
-                                    user_count: panel_count(),
-                                    age: age.clone().unwrap(),
-                                    gender: gender.clone().unwrap(),
-                                    region: region.clone().unwrap(),
-                                    salary: salary.clone().unwrap(),
-                                });
+                            if check_condition(
+                                translate.clone(),
+                                panel_name_error,
+                                panel_count_error,
+                                error_signals[0],
+                                error_signals[1],
+                                error_signals[2],
+                                error_signals[3],
+                                panel_name(),
+                                panel_count(),
+                                values[0].clone(),
+                                values[1].clone(),
+                                values[2].clone(),
+                                values[3].clone(),
+                            ) {
+                                props
+                                    .onsave
+                                    .call(PanelV2CreateRequest {
+                                        name: panel_name(),
+                                        user_count: panel_count(),
+                                        age: age.clone().unwrap(),
+                                        gender: gender.clone().unwrap(),
+                                        region: region.clone().unwrap(),
+                                        salary: salary.clone().unwrap(),
+                                    });
+                            }
                         }
                     },
                     "{translate.save}"
@@ -276,4 +324,66 @@ pub fn AttributeLabel(label: String, onclose: EventHandler<MouseEvent>) -> Eleme
             }
         }
     }
+}
+
+pub fn check_condition(
+    tr: CreatePanelModalTranslate,
+
+    mut panel_name_error: Signal<String>,
+    mut panel_count_error: Signal<String>,
+    mut age_error: Signal<String>,
+    mut gender_error: Signal<String>,
+    mut region_error: Signal<String>,
+    mut salary_error: Signal<String>,
+
+    panel_name: String,
+    panel_count: u64,
+    age: String,
+    gender: String,
+    region: String,
+    salary: String,
+) -> bool {
+    if panel_name.len() < 2 {
+        panel_name_error.set(tr.panel_name_error.to_string());
+        return false;
+    } else {
+        panel_name_error.set("".to_string());
+    }
+
+    if panel_count == 0 {
+        panel_count_error.set(tr.panel_count_error.to_string());
+        return false;
+    } else {
+        panel_count_error.set("".to_string());
+    }
+
+    if age == "" {
+        age_error.set(tr.age_error.to_string());
+        return false;
+    } else {
+        age_error.set("".to_string());
+    }
+
+    if gender == "" {
+        gender_error.set(tr.gender_error.to_string());
+        return false;
+    } else {
+        gender_error.set("".to_string());
+    }
+
+    if region == "" {
+        region_error.set(tr.region_error.to_string());
+        return false;
+    } else {
+        region_error.set("".to_string());
+    }
+
+    if salary == "" {
+        salary_error.set(tr.salary_error.to_string());
+        return false;
+    } else {
+        salary_error.set("".to_string());
+    }
+
+    true
 }
