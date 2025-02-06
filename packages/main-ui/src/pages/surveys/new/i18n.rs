@@ -17,7 +17,7 @@ translate! {
         en: "Please enter at least 2 characters for the panel name."
     }
     panel_count_error: {
-        ko: "패널명을 2글자 이상 입력해주세요.",
+        ko: "패널은 1명 이상으로 구성되어야 합니다.",
         en: "The panel must consist of at least 1 person."
     }
     age_error: {

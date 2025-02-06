@@ -219,6 +219,8 @@ impl Controller {
         let client = (self.client)().clone();
         let org_id = (self.org_id)();
 
+        let mut ctrl = self.clone();
+
         popup_service
             .open(rsx! {
                 CreatePanelModal {
@@ -230,9 +232,18 @@ impl Controller {
                             let client = client.clone();
                             let org_id = org_id.clone();
                             async move {
-                                let _ = client.act(&org_id, PanelV2Action::Create(req)).await;
-                                panel_resource.restart();
-                                popup_service.close();
+                                match client.act(&org_id, PanelV2Action::Create(req)).await {
+                                    Ok(v) => {
+                                        ctrl.add_selected_panel(SelectedPanel {
+                                            id: v.id,
+                                            name: v.name,
+                                            total_count: v.user_count,
+                                        });
+                                        panel_resource.restart();
+                                        popup_service.close();
+                                    }
+                                    Err(_) => {}
+                                };
                             }
                         }
                     },
@@ -278,7 +289,11 @@ impl Controller {
     }
 
     pub fn get_maximum_count(&mut self, index: usize) -> u64 {
-        (self.maximum_panel_count)()[index]
+        if (self.maximum_panel_count)().len() > index {
+            (self.maximum_panel_count)()[index]
+        } else {
+            0
+        }
     }
 
     pub fn change_total_panel_members(&mut self, members: u64) {
@@ -291,24 +306,16 @@ impl Controller {
 
     pub fn change_selected_panel_count(&mut self, index: usize, count: u64) {
         let mut panels = (self.selected_panels)();
-        panels[index].total_count = count;
-        self.selected_panels.set(panels);
+        if index < panels.len() {
+            panels[index].total_count = count;
+            self.selected_panels.set(panels);
+        }
     }
 
     pub fn remove_all_selected_panel(&mut self) {
         self.selected_panels.set(vec![]);
         self.maximum_panel_count.set(vec![]);
         self.total_panel_members.set(0);
-    }
-
-    pub async fn create_panel(&mut self, req: PanelV2CreateRequest) {
-        let mut panel_resource = self.panel_resource;
-        let client = (self.client)().clone();
-
-        let org_id = (self.org_id)();
-
-        let _ = client.act(&org_id, PanelV2Action::Create(req)).await;
-        panel_resource.restart();
     }
 
     pub async fn save_survey(&self) {
