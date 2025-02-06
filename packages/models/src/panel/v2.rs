@@ -31,6 +31,6 @@ pub struct PanelV2 {
     #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable, rename = "salary")]
     pub salary: SalaryV2,
 
-    #[api_model(summary, queryable, many_to_one = organizations, version = v0.1)]
+    #[api_model(summary, queryable, many_to_one = organizations)]
     pub org_id: String,
 }

@@ -64,7 +64,12 @@ impl Controller {
             let prev_survey_api = prev_survey_api.clone();
             async move {
                 match prev_survey_api.list_surveys(Some(100), None).await {
-                    Ok(res) => res,
+                    Ok(res) => {
+                        ctrl.surveys.set(res.survey.clone());
+                        ctrl.current_bookmark.set(res.bookmark.clone());
+
+                        res
+                    }
                     _ => ListSurveyResponse {
                         survey: vec![],
                         bookmark: None,
@@ -72,13 +77,6 @@ impl Controller {
                 }
             }
         });
-        match res.value()() {
-            Some(v) => {
-                ctrl.surveys.set(v.survey.clone());
-                ctrl.current_bookmark.set(v.bookmark);
-            }
-            _ => {}
-        }
 
         ctrl
     }

@@ -1,7 +1,7 @@
 pub mod common;
-pub mod aws {
-    pub mod ses;
-}
+// pub mod aws {
+//     pub mod ses;
+// }
 
 use dioxus::fullstack::prelude::*;
 use server_fn::codec::{GetUrl, Json};

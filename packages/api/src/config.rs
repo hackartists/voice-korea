@@ -6,6 +6,8 @@ pub struct Config {
     pub database: DatabaseConfig,
     pub verification_expiration: i64,
     pub auth: AuthConfig,
+    pub aws: AwsConfig,
+    pub from_email: &'static str,
 }
 
 impl Default for Config {
@@ -18,6 +20,8 @@ impl Default for Config {
                 .unwrap_or((60 * 5).to_string().as_str())
                 .parse()
                 .expect("VERIFYCATION_EXPIRATION must be a number"),
+            aws: AwsConfig::default(),
+            from_email: option_env!("FROM_EMAIL").unwrap_or("hi@biyard.co"),
         }
     }
 }

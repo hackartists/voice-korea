@@ -7,17 +7,19 @@ use by_axum::{
     },
 };
 use models::*;
+use sqlx::postgres::PgRow;
 
 #[derive(Clone, Debug)]
 pub struct PanelControllerV2 {
     repo: PanelV2Repository,
+    pool: sqlx::Pool<sqlx::Postgres>,
 }
 
 impl PanelControllerV2 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = PanelV2::get_repository(pool.clone());
 
-        let ctrl = PanelControllerV2 { repo };
+        let ctrl = PanelControllerV2 { repo, pool };
 
         Ok(by_axum::axum::Router::new()
             .route("/", post(Self::act_panel).get(Self::list_panels))
@@ -60,12 +62,23 @@ impl PanelControllerV2 {
     pub async fn list_panels(
         State(ctrl): State<PanelControllerV2>,
         Path(org_id): Path<String>,
-        Query(params): Query<PanelV2Query>,
-    ) -> Result<Json<QueryResponse<PanelV2Summary>>> {
+        Query(params): Query<PanelV2Param>,
+    ) -> Result<Json<PanelV2GetResponse>> {
         tracing::debug!("list_panels: {:?}", params);
 
-        let items = ctrl.repo.find(&params.with_org_id(org_id)).await?;
-        Ok(Json(items))
+        match params {
+            PanelV2Param::Query(params) => match params.action {
+                Some(PanelV2QueryActionType::SearchBy) => {
+                    ctrl.search_by(params.with_org_id(org_id)).await
+                }
+                _ => {
+                    let items = ctrl.repo.find(&params.with_org_id(org_id)).await?;
+
+                    Ok(Json(PanelV2GetResponse::Query(items)))
+                }
+            },
+            _ => Err(ApiError::InvalidAction),
+        }
     }
 
     pub async fn act_panel(
@@ -84,6 +97,42 @@ impl PanelControllerV2 {
 }
 
 impl PanelControllerV2 {
+    pub async fn search_by(
+        &self,
+        PanelV2Query {
+            size,
+            bookmark,
+            org_id,
+            name,
+            ..
+        }: PanelV2Query,
+    ) -> Result<Json<PanelV2GetResponse>> {
+        let mut total_count: i64 = 0;
+
+        let query =
+            PanelV2Summary::base_sql_with("where org_id = $1 and name ilike $2 limit $3 offset $4");
+        tracing::debug!("search_by query: {}", query);
+
+        let items: Vec<PanelV2Summary> = sqlx::query(&query)
+            .bind(org_id.unwrap().parse::<i64>().unwrap())
+            .bind(format!("%{}%", name.unwrap()))
+            .bind(size as i64)
+            .bind(size as i64 * (bookmark.unwrap_or("1".to_string()).parse::<i64>().unwrap() - 1))
+            .map(|r: PgRow| {
+                use sqlx::Row;
+
+                total_count = r.get("total_count");
+                r.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(Json(PanelV2GetResponse::Query(QueryResponse {
+            items,
+            total_count,
+        })))
+    }
+
     pub async fn update(
         &self,
         org_id: String,
