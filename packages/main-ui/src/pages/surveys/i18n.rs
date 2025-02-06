@@ -1,6 +1,32 @@
 use dioxus_translate::translate;
 
 translate! {
+    QuestionListViewTranslate;
+
+    input_title: {
+        ko: "제목을 입력해주세요.",
+        en: "Please enter a title."
+    }
+}
+
+translate! {
+    ObjectiveTranslate;
+
+    option: {
+        ko: "옵션",
+        en: "Option"
+    }
+    add_option: {
+        ko: "옵션 추가하기",
+        en: "Add Option"
+    }
+    remove: {
+        ko: "삭제",
+        en: "Remove"
+    }
+}
+
+translate! {
     SubjectiveTranslate;
 
     input_title_hint: {

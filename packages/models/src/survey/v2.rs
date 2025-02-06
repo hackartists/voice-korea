@@ -144,6 +144,20 @@ impl Question {
         }
     }
 
+    pub fn remove_option(&mut self, index: usize) {
+        match self {
+            Question::SingleChoice(q) => {
+                q.options.remove(index);
+            }
+            Question::MultipleChoice(q) => {
+                q.options.remove(index);
+            }
+            _ => {
+                panic!("Invalid question type for adding option: {:?}", self);
+            }
+        }
+    }
+
     pub fn add_option(&mut self, option: &str) {
         match self {
             Question::SingleChoice(q) => {
@@ -151,6 +165,24 @@ impl Question {
             }
             Question::MultipleChoice(q) => {
                 q.options.push(option.to_string());
+            }
+            _ => {
+                panic!("Invalid question type for adding option: {:?}", self);
+            }
+        }
+    }
+
+    pub fn change_option(&mut self, index: usize, option: &str) {
+        match self {
+            Question::SingleChoice(q) => {
+                let mut options = q.options.clone();
+                options[index] = option.to_string();
+                q.options = options;
+            }
+            Question::MultipleChoice(q) => {
+                let mut options = q.options.clone();
+                options[index] = option.to_string();
+                q.options = options;
             }
             _ => {
                 panic!("Invalid question type for adding option: {:?}", self);
