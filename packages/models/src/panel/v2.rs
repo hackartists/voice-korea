@@ -17,7 +17,7 @@ pub struct PanelV2 {
     #[api_model(auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, action = [create], action_by_id = update, query_action = search_by)]
+    #[api_model(summary, action = [create], action_by_id = update, query_action = search_by, unique)]
     pub name: String,
     #[api_model(summary, action = [create], action_by_id = update)]
     pub user_count: u64,

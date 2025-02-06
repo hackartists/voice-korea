@@ -1,15 +1,23 @@
 use chrono::Local;
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
-use dioxus_translate::translate;
-use models::{prelude::Question, ProjectArea, SurveyV2};
+use dioxus_translate::{translate, Language};
+use models::{
+    prelude::Question, PanelV2, PanelV2Action, PanelV2Client, PanelV2CreateRequest, PanelV2Query,
+    PanelV2Summary, ProjectArea, QueryResponse, SurveyV2,
+};
 
-use crate::service::login_service::LoginService;
+use crate::{
+    pages::surveys::new::components::create_panel_modal::CreatePanelModal,
+    service::{login_service::LoginService, popup_service::PopupService},
+};
 
 use super::i18n::SurveyNewTranslate;
 
 #[derive(Clone, Copy)]
 pub struct Controller {
+    lang: Language,
+
     selected_field: Signal<Option<ProjectArea>>,
     title: Signal<String>,
     description: Signal<String>,
@@ -20,14 +28,71 @@ pub struct Controller {
 
     questions: Signal<Vec<Question>>,
     total_survey_types: Signal<Vec<String>>,
+    current_step: Signal<CurrentStep>,
+
+    panels: Signal<Vec<PanelV2Summary>>,
+    panel_resource: Resource<QueryResponse<PanelV2Summary>>,
+    client: Signal<PanelV2Client>,
+    org_id: Signal<String>,
+    selected_panels: Signal<Vec<SelectedPanel>>,
+    maximum_panel_count: Signal<Vec<u64>>,
+    total_panel_members: Signal<u64>,
+    popup_service: PopupService,
+
+    page: Signal<usize>,
+    translates: Signal<SurveyNewTranslate>,
+}
+
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum CurrentStep {
+    CreateSurvey,
+    SettingPanel,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SelectedPanel {
+    pub id: String,
+    pub name: String,
+    pub total_count: u64,
 }
 
 impl Controller {
     pub fn new(lang: dioxus_translate::Language) -> Self {
-        let translates: SurveyNewTranslate = translate(&lang.clone());
+        let translates: SurveyNewTranslate = translate(&lang);
+        let login_service: LoginService = use_context();
+        let org_id = match login_service.get_selected_org() {
+            Some(v) => v.id,
+            None => "".to_string(),
+        };
+        let client = PanelV2::get_client(&crate::config::get().api_url);
+        let page = use_signal(|| 1);
+
+        let org_id_copy = org_id.clone();
+
+        let panel_resource = use_resource({
+            let client = client.clone();
+            let page = page();
+            let size = 100;
+            move || {
+                let client = client.clone();
+                let org_id = org_id.clone();
+
+                async move {
+                    //FIMXE: fix to get total data
+                    let query = PanelV2Query::new(size).with_page(page);
+                    match client.query(&org_id, query).await {
+                        Ok(d) => d,
+                        Err(e) => {
+                            tracing::error!("list panels failed: {e}");
+                            QueryResponse::default()
+                        }
+                    }
+                }
+            }
+        });
 
         let timestamp = Local::now().timestamp();
-        let ctrl = Self {
+        let mut ctrl = Self {
             nav: use_navigator(),
             user: use_context(),
             selected_field: use_signal(|| None),
@@ -47,9 +112,45 @@ impl Controller {
                     translates.rating.to_string(),
                 ]
             }),
+
+            current_step: use_signal(|| CurrentStep::CreateSurvey),
+            panels: use_signal(|| vec![]),
+            panel_resource,
+            client: use_signal(|| client),
+            org_id: use_signal(|| org_id_copy),
+
+            selected_panels: use_signal(|| vec![]),
+            maximum_panel_count: use_signal(|| vec![]),
+            total_panel_members: use_signal(|| 0),
+
+            popup_service: use_context(),
+            lang,
+            translates: use_signal(|| translates),
+            page,
         };
 
+        let _ = use_effect(move || match panel_resource.value()() {
+            Some(panel) => {
+                ctrl.panels.set(panel.items);
+            }
+            _ => {}
+        });
+
+        use_context_provider(|| ctrl);
+
         ctrl
+    }
+
+    pub fn get_page(&self) -> usize {
+        (self.page)()
+    }
+
+    pub fn change_step(&mut self, step: CurrentStep) {
+        self.current_step.set(step);
+    }
+
+    pub fn get_current_step(&self) -> CurrentStep {
+        (self.current_step)()
     }
 
     pub fn get_total_survey_types(&self) -> Vec<String> {
@@ -110,6 +211,120 @@ impl Controller {
 
     pub fn add_question(&mut self) {
         self.questions.push(Question::default());
+    }
+
+    pub fn total_panels(&self) -> Vec<PanelV2Summary> {
+        (self.panels)()
+    }
+
+    pub fn selected_panels(&self) -> Vec<SelectedPanel> {
+        (self.selected_panels)()
+    }
+
+    pub async fn open_create_panel_modal(&self) {
+        let mut popup_service = self.popup_service;
+        let translates = (self.translates)();
+        let mut panel_resource = self.panel_resource;
+        let client = (self.client)().clone();
+        let org_id = (self.org_id)();
+
+        let mut ctrl = self.clone();
+
+        popup_service
+            .open(rsx! {
+                CreatePanelModal {
+                    lang: self.lang,
+                    onsave: {
+                        let client = client.clone();
+                        let org_id = org_id.clone();
+                        move |req: PanelV2CreateRequest| {
+                            let client = client.clone();
+                            let org_id = org_id.clone();
+                            async move {
+                                match client.act(&org_id, PanelV2Action::Create(req)).await {
+                                    Ok(v) => {
+                                        ctrl.add_selected_panel(SelectedPanel {
+                                            id: v.id,
+                                            name: v.name,
+                                            total_count: v.user_count,
+                                        });
+                                        panel_resource.restart();
+                                        popup_service.close();
+                                    }
+                                    Err(_) => {}
+                                };
+                            }
+                        }
+                    },
+                    oncancel: move |_e: MouseEvent| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("create_panel")
+            .with_title(translates.create_new_panel);
+    }
+
+    pub fn add_selected_panel(&mut self, panel: SelectedPanel) {
+        let mut panels = (self.selected_panels)();
+        panels.push(panel.clone());
+        self.selected_panels.set(panels);
+
+        let mut maximum_count = (self.maximum_panel_count)();
+        maximum_count.push(panel.total_count);
+        self.maximum_panel_count.set(maximum_count);
+
+        let mut members = (self.total_panel_members)();
+        members += panel.total_count;
+        self.total_panel_members.set(members);
+    }
+
+    pub fn remove_selected_panel(&mut self, index: usize) {
+        let mut panels = (self.selected_panels)();
+
+        if index < panels.len() {
+            let panel = panels[index].clone();
+            panels.remove(index);
+            self.selected_panels.set(panels);
+
+            let mut maximum_count = (self.maximum_panel_count)();
+            maximum_count.remove(index);
+            self.maximum_panel_count.set(maximum_count);
+
+            let mut members = (self.total_panel_members)();
+            members -= panel.total_count;
+            self.total_panel_members.set(members);
+        }
+    }
+
+    pub fn get_maximum_count(&mut self, index: usize) -> u64 {
+        if (self.maximum_panel_count)().len() > index {
+            (self.maximum_panel_count)()[index]
+        } else {
+            0
+        }
+    }
+
+    pub fn change_total_panel_members(&mut self, members: u64) {
+        self.total_panel_members.set(members);
+    }
+
+    pub fn get_total_panel_members(&self) -> u64 {
+        (self.total_panel_members)()
+    }
+
+    pub fn change_selected_panel_count(&mut self, index: usize, count: u64) {
+        let mut panels = (self.selected_panels)();
+        if index < panels.len() {
+            panels[index].total_count = count;
+            self.selected_panels.set(panels);
+        }
+    }
+
+    pub fn remove_all_selected_panel(&mut self) {
+        self.selected_panels.set(vec![]);
+        self.maximum_panel_count.set(vec![]);
+        self.total_panel_members.set(0);
     }
 
     pub async fn save_survey(&self) {
