@@ -15,7 +15,7 @@ pub use invite::*;
 #[api_model(base = "/auth/v1", action = [signup(code = String), reset(code = String)], read_action = refresh, table = users, iter_type=QueryResponse)]
 pub struct User {
     #[api_model(primary_key, read_action = find_by_id)]
-    pub id: String,
+    pub id: i64,
     #[api_model(auto = [insert])]
     pub created_at: i64,
     #[api_model(auto = [insert, update])]
@@ -36,7 +36,7 @@ pub struct User {
 #[api_model(base = "/auth/v1/verification", table = verifications, iter_type=QueryResponse)]
 pub struct Verification {
     #[api_model(primary_key)]
-    pub id: String,
+    pub id: i64,
     #[api_model(auto = insert)]
     pub created_at: i64,
     #[api_model(action = send_verification_code, read_action = get_verification_code)]

@@ -12,17 +12,12 @@ pub async fn send_email(
     subject: Content,
     body: Content,
 ) -> Result<String, SdkError<SendEmailError>> {
+    let conf = crate::config::get();
     let config = defaults(BehaviorVersion::latest())
-        .region(Region::new(
-            option_env!("AWS_REGION").unwrap_or("ap-northeast-2"),
-        ))
+        .region(Region::new(conf.aws.region))
         .credentials_provider(Credentials::new(
-            option_env!("AWS_ACCESS_KEY_ID")
-                .expect("AWS_ACCESS_KEY_ID is required")
-                .to_string(),
-            option_env!("AWS_SECRET_ACCESS_KEY")
-                .expect("AWS_SECRET_ACCESS_KEY is required")
-                .to_string(),
+            conf.aws.access_key_id,
+            conf.aws.secret_access_key,
             None,
             None,
             "voice-korea",
@@ -43,7 +38,7 @@ pub async fn send_email(
 
     match sms_client
         .send_email()
-        .from_email_address("hi@biyard.co")
+        .from_email_address(conf.from_email)
         .destination(dest)
         .content(content)
         .send()

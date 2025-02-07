@@ -21,7 +21,7 @@ pub struct OrganizationMiddlewareParams {
 #[api_model(base = "/organizations/v2", table = organizations, iter_type=QueryResponse)]
 pub struct Organization {
     #[api_model(summary, primary_key)]
-    pub id: String,
+    pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]

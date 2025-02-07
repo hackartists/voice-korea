@@ -110,7 +110,7 @@ impl Controller {
                         d.members
                             .iter()
                             .map(|mem| Member {
-                                member_id: mem.member.id.clone(),
+                                member_id: mem.member.id.to_string(),
                                 profile: None,
                                 profile_name: Some(mem.member.name.clone()),
                                 email: mem.email.clone(),

@@ -1,28 +1,24 @@
 use dioxus::prelude::*;
 
 #[cfg(feature = "web")]
-use dioxus_logger::tracing;
-
-#[cfg(feature = "web")]
 use wasm_bindgen::JsCast;
 #[component]
 pub fn UploadButton(
     class: String,
     text: String,
-    onuploaded: Option<EventHandler<Vec<String>>>,
+    onuploaded: EventHandler<FormEvent>,
+    #[props(default = "image/*".to_string())] accept: String,
+    #[props(default = false)] multiple: bool,
 ) -> Element {
     rsx! {
         input {
             id: "file-upload",
             class: "hidden",
             r#type: "file",
-            accept: "image/*",
-            multiple: false,
-            onchange: move |_ev| async move {
-                #[cfg(feature = "web")]
-                if let Some(file_engine) = _ev.files() {
-                    tracing::debug!("files: {:?}", file_engine.files());
-                }
+            accept,
+            multiple,
+            onchange: move |ev| {
+                onuploaded.call(ev);
             },
         }
         button {

@@ -19,22 +19,28 @@ impl OrganizationControllerV2 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
             .nest(
-                "/:id/surveys",
+                "/:org-id/surveys",
                 crate::controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
             )
             .nest(
-                "/:id/panels",
+                "/:org-id/panels",
                 crate::controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
+            )
+            .nest(
+                "/:org-id/resources",
+                crate::controllers::resources::v1::ResourceControllerV1::route(pool.clone())?,
             )
             .layer(middleware::from_fn(authorize_organization)))
     }
 }
 
+#[allow(dead_code)]
 pub async fn authorize_organization(
     req: Request,
     next: Next,
 ) -> std::result::Result<Response<Body>, StatusCode> {
     tracing::debug!("Authorization middleware");
+    tracing::debug!("request: {:?}", req);
     let auth = req.extensions().get::<Option<Authorization>>();
     if auth.is_none() {
         tracing::debug!("No Authorization header");
@@ -58,18 +64,17 @@ pub async fn authorize_organization(
         }
     };
 
-    if !req.uri().path().starts_with("/organizations/v2/") {
+    tracing::debug!("request: {:?} {:?}", user_id, req.uri().path());
+
+    let org_id = req.uri().path().split("/").collect::<Vec<_>>();
+
+    if org_id.len() < 2 {
         return Ok(next.run(req).await);
     }
-    let org_id = req
-        .uri()
-        .path()
-        .replace("/organizations/v2/", "")
-        .split("/")
-        .collect::<Vec<_>>()
-        .first()
-        .unwrap()
-        .to_string();
+
+    let org_id = org_id[1].to_string();
+
+    tracing::debug!("org_id: {}", org_id);
 
     let conf = crate::config::get();
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
@@ -84,12 +89,15 @@ pub async fn authorize_organization(
 
     let repo = User::get_repository(pool);
 
+    let user_id = user_id.parse::<i64>().unwrap();
+    let org_id = org_id.parse::<i64>().unwrap();
+
     match repo
         .find_one(&UserReadAction::new().find_by_id(user_id))
         .await
     {
         Ok(user) => {
-            if !user.orgs.iter().any(move |o| &o.id == &org_id) {
+            if !user.orgs.iter().any(move |o| o.id == org_id) {
                 tracing::error!("User is not member of organization");
                 return Err(StatusCode::UNAUTHORIZED);
             }

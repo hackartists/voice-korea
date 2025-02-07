@@ -1,5 +1,5 @@
 #![allow(unused_variables, unused)]
-use crate::Result;
+use crate::{PanelV2, Result};
 #[cfg(feature = "server")]
 use by_axum::aide;
 use by_macros::{api_model, ApiModel};
@@ -12,7 +12,7 @@ use validator::ValidationError;
 #[api_model(base = "/organizations/v2/:org-id/surveys", table = surveys, iter_type=QueryResponse)]
 pub struct SurveyV2 {
     #[api_model(summary, primary_key, read_action = find_by_id)]
-    pub id: String,
+    pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
@@ -42,9 +42,13 @@ pub struct SurveyV2 {
     pub quotes: i64,
 
     #[api_model(summary, queryable, many_to_one = organizations)]
-    pub org_id: String,
+    pub org_id: i64,
     #[api_model(action = create, type = JSONB, version = v0.1)]
     pub questions: Vec<Question>,
+
+    #[api_model(summary, action = create, many_to_many = panel_surveys, foreign_table_name = panels, foreign_primary_key = survey_id, foreign_reference_key = panel_id)]
+    #[serde(default)]
+    pub panels: Vec<PanelV2>,
     // #[api_model(summary, one_to_many= responses, aggregator = count)]
     // pub response_count: i64,
 
@@ -144,6 +148,20 @@ impl Question {
         }
     }
 
+    pub fn remove_option(&mut self, index: usize) {
+        match self {
+            Question::SingleChoice(q) => {
+                q.options.remove(index);
+            }
+            Question::MultipleChoice(q) => {
+                q.options.remove(index);
+            }
+            _ => {
+                panic!("Invalid question type for adding option: {:?}", self);
+            }
+        }
+    }
+
     pub fn add_option(&mut self, option: &str) {
         match self {
             Question::SingleChoice(q) => {
@@ -151,6 +169,24 @@ impl Question {
             }
             Question::MultipleChoice(q) => {
                 q.options.push(option.to_string());
+            }
+            _ => {
+                panic!("Invalid question type for adding option: {:?}", self);
+            }
+        }
+    }
+
+    pub fn change_option(&mut self, index: usize, option: &str) {
+        match self {
+            Question::SingleChoice(q) => {
+                let mut options = q.options.clone();
+                options[index] = option.to_string();
+                q.options = options;
+            }
+            Question::MultipleChoice(q) => {
+                let mut options = q.options.clone();
+                options[index] = option.to_string();
+                q.options = options;
             }
             _ => {
                 panic!("Invalid question type for adding option: {:?}", self);

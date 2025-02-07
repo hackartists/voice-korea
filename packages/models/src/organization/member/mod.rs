@@ -27,6 +27,8 @@ pub struct ListMemberResponse {
 
 #[api_model(base = "/members/v2", table = organization_members, iter_type=QueryResponse)]
 pub struct OrganizationMember {
+    #[api_model(summary, primary_key)]
+    pub id: i64,
     #[api_model(summary, many_to_one = users)]
     pub user_id: String,
     #[api_model(summary, many_to_one = organizations)]
@@ -36,7 +38,7 @@ pub struct OrganizationMember {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, action = [invite, update])]
+    #[api_model(summary, action = [invite, update], nullable)]
     pub name: String,
     #[api_model(summary, type = INTEGER, nullable, action = [invite, update])]
     pub role: Option<Role>,
@@ -58,7 +60,7 @@ pub struct OrganizationMemberResponse {
     pub creator: String,
 }
 
-impl Into<OrganizationMember> for (CreateMemberRequest, String, String, String) {
+impl Into<OrganizationMember> for (CreateMemberRequest, i64, i64, i64) {
     fn into(self) -> OrganizationMember {
         let (req, id, user_id, org_id) = self;
         let now = chrono::Utc::now().timestamp_millis();

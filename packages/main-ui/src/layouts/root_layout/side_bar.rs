@@ -30,7 +30,7 @@ pub fn SideBar(props: SidebarProps) -> Element {
     let organization_menus: Vec<MenuItem> = organizations
         .iter()
         .map(|v| MenuItem {
-            id: v.id.clone(),
+            id: v.id.to_string(),
             title: v.name.clone(),
             is_selected: false,
             link: None,
@@ -226,7 +226,7 @@ pub fn SectionMenus(
                                         "flex flex-row h-[45px] w-full px-[16px] items-center justify-start {}",
                                         if menu.is_selected { "rounded-lg bg-[#182248]" } else { "" },
                                     ),
-                                    div { class: "flex font-medium text-[14px] text-[#daeaff]", "{menu.title}" }
+                                    div { class: "hover-effect flex font-medium text-[14px] text-[#daeaff]", "{menu.title}" }
                                 }
                             } else {
                                 div {
