@@ -34,7 +34,7 @@ pub struct Controller {
     panel_resource: Resource<QueryResponse<PanelV2Summary>>,
     client: Signal<PanelV2Client>,
     org_id: Signal<String>,
-    selected_panels: Signal<Vec<SelectedPanel>>,
+    selected_panels: Signal<Vec<PanelV2>>,
     maximum_panel_count: Signal<Vec<u64>>,
     total_panel_members: Signal<u64>,
     popup_service: PopupService,
@@ -49,19 +49,12 @@ pub enum CurrentStep {
     SettingPanel,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct SelectedPanel {
-    pub id: String,
-    pub name: String,
-    pub total_count: u64,
-}
-
 impl Controller {
     pub fn new(lang: dioxus_translate::Language) -> Self {
         let translates: SurveyNewTranslate = translate(&lang);
         let login_service: LoginService = use_context();
         let org_id = match login_service.get_selected_org() {
-            Some(v) => v.id,
+            Some(v) => v.id.to_string(),
             None => "".to_string(),
         };
         let client = PanelV2::get_client(&crate::config::get().api_url);
@@ -80,7 +73,7 @@ impl Controller {
                 async move {
                     //FIMXE: fix to get total data
                     let query = PanelV2Query::new(size).with_page(page);
-                    match client.query(&org_id, query).await {
+                    match client.query(org_id.parse::<i64>().unwrap(), query).await {
                         Ok(d) => d,
                         Err(e) => {
                             tracing::error!("list panels failed: {e}");
@@ -217,7 +210,7 @@ impl Controller {
         (self.panels)()
     }
 
-    pub fn selected_panels(&self) -> Vec<SelectedPanel> {
+    pub fn selected_panels(&self) -> Vec<PanelV2> {
         (self.selected_panels)()
     }
 
@@ -241,13 +234,12 @@ impl Controller {
                             let client = client.clone();
                             let org_id = org_id.clone();
                             async move {
-                                match client.act(&org_id, PanelV2Action::Create(req)).await {
+                                match client
+                                    .act(org_id.parse::<i64>().unwrap(), PanelV2Action::Create(req))
+                                    .await
+                                {
                                     Ok(v) => {
-                                        ctrl.add_selected_panel(SelectedPanel {
-                                            id: v.id,
-                                            name: v.name,
-                                            total_count: v.user_count,
-                                        });
+                                        ctrl.add_selected_panel(v);
                                         panel_resource.restart();
                                         popup_service.close();
                                     }
@@ -265,17 +257,17 @@ impl Controller {
             .with_title(translates.create_new_panel);
     }
 
-    pub fn add_selected_panel(&mut self, panel: SelectedPanel) {
+    pub fn add_selected_panel(&mut self, panel: PanelV2) {
         let mut panels = (self.selected_panels)();
         panels.push(panel.clone());
         self.selected_panels.set(panels);
 
         let mut maximum_count = (self.maximum_panel_count)();
-        maximum_count.push(panel.total_count);
+        maximum_count.push(panel.user_count);
         self.maximum_panel_count.set(maximum_count);
 
         let mut members = (self.total_panel_members)();
-        members += panel.total_count;
+        members += panel.user_count;
         self.total_panel_members.set(members);
     }
 
@@ -292,7 +284,7 @@ impl Controller {
             self.maximum_panel_count.set(maximum_count);
 
             let mut members = (self.total_panel_members)();
-            members -= panel.total_count;
+            members -= panel.user_count;
             self.total_panel_members.set(members);
         }
     }
@@ -316,7 +308,7 @@ impl Controller {
     pub fn change_selected_panel_count(&mut self, index: usize, count: u64) {
         let mut panels = (self.selected_panels)();
         if index < panels.len() {
-            panels[index].total_count = count;
+            panels[index].user_count = count;
             self.selected_panels.set(panels);
         }
     }
@@ -342,15 +334,15 @@ impl Controller {
 
         match cli
             .create(
-                &org.unwrap().id,
+                org.unwrap().id,
                 self.get_title(),
                 area.unwrap(),
                 self.get_start_date(),
                 self.get_end_date(),
                 self.get_description(),
-                // TODO: no quetes configuration
-                0,
+                self.get_total_panel_members() as i64,
                 (self.questions)(),
+                self.selected_panels(),
             )
             .await
         {

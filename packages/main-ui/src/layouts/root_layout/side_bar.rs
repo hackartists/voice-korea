@@ -30,7 +30,7 @@ pub fn SideBar(props: SidebarProps) -> Element {
     let organization_menus: Vec<MenuItem> = organizations
         .iter()
         .map(|v| MenuItem {
-            id: v.id.clone(),
+            id: v.id.to_string(),
             title: v.name.clone(),
             is_selected: false,
             link: None,

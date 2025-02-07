@@ -48,7 +48,7 @@ impl Controller {
     pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
         let login_service: LoginService = use_context();
         let org_id = match login_service.get_selected_org() {
-            Some(v) => v.id,
+            Some(v) => v.id.to_string(),
             None => "".to_string(),
         };
         let translate: PanelTranslate = translate(&lang);
@@ -68,10 +68,18 @@ impl Controller {
 
                 if keyword.is_empty() {
                     let query = PanelV2Query::new(size).with_page(page);
-                    client.query(&org_id, query).await.unwrap_or_default()
+                    client
+                        .query(org_id.parse::<i64>().unwrap(), query)
+                        .await
+                        .unwrap_or_default()
                 } else {
                     client
-                        .search_by(size, Some(page.to_string()), &org_id, keyword)
+                        .search_by(
+                            size,
+                            Some(page.to_string()),
+                            org_id.parse::<i64>().unwrap(),
+                            keyword,
+                        )
                         .await
                         .unwrap_or_default()
                 }
@@ -196,7 +204,9 @@ impl Controller {
 
         let org_id = (self.org_id)();
 
-        let _ = client.act(&org_id, PanelV2Action::Create(req)).await;
+        let _ = client
+            .act(org_id.parse::<i64>().unwrap(), PanelV2Action::Create(req))
+            .await;
         self.set_page(1);
         panel_resource.restart();
     }
@@ -239,7 +249,11 @@ impl Controller {
                                     req.salary = salary;
                                     tracing::info!("update salary clicked: {index} {:?}", req);
                                     let _ = client
-                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .act_by_id(
+                                            org_id.parse::<i64>().unwrap(),
+                                            id,
+                                            PanelV2ByIdAction::Update(req),
+                                        )
                                         .await;
                                     panel_resource.restart();
                                     popup_service.close();
@@ -306,7 +320,11 @@ impl Controller {
                                     req.region = region;
                                     tracing::info!("update region clicked: {index} {:?}", req);
                                     let _ = client
-                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .act_by_id(
+                                            org_id.parse::<i64>().unwrap(),
+                                            id,
+                                            PanelV2ByIdAction::Update(req),
+                                        )
                                         .await;
                                     panel_resource.restart();
                                     popup_service.close();
@@ -355,7 +373,11 @@ impl Controller {
                                     req.gender = gender;
                                     tracing::info!("update gender clicked: {index} {:?}", req);
                                     let _ = client
-                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .act_by_id(
+                                            org_id.parse::<i64>().unwrap(),
+                                            id,
+                                            PanelV2ByIdAction::Update(req),
+                                        )
                                         .await;
                                     panel_resource.restart();
                                     popup_service.close();
@@ -412,7 +434,11 @@ impl Controller {
                                     req.age = age;
                                     tracing::debug!("update age clicked: {index} {:?}", req);
                                     let _ = client
-                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .act_by_id(
+                                            org_id.parse::<i64>().unwrap(),
+                                            id,
+                                            PanelV2ByIdAction::Update(req),
+                                        )
                                         .await;
                                     panel_resource.restart();
                                     popup_service.close();
@@ -452,7 +478,7 @@ impl Controller {
                             tracing::debug!("remove panel clicked: {index}");
                             let _ = client
                                 .act(
-                                    &org_id,
+                                    org_id.parse::<i64>().unwrap(),
                                     PanelV2Action::Delete(PanelV2DeleteRequest {
                                         id: panel_id,
                                     }),
@@ -505,7 +531,11 @@ impl Controller {
                             async move {
                                 tracing::debug!("update panel clicked: {index}");
                                 let _ = client
-                                    .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                    .act_by_id(
+                                        org_id.parse::<i64>().unwrap(),
+                                        id,
+                                        PanelV2ByIdAction::Update(req),
+                                    )
                                     .await;
                                 panel_resource.restart();
                                 popup_service.close();
@@ -541,7 +571,11 @@ impl Controller {
         let org_id = (self.org_id)();
 
         let _ = client
-            .act_by_id(&org_id, &panel.id, PanelV2ByIdAction::Update(req))
+            .act_by_id(
+                org_id.parse::<i64>().unwrap(),
+                panel.id,
+                PanelV2ByIdAction::Update(req),
+            )
             .await;
 
         panel_resource.restart();
@@ -567,7 +601,11 @@ impl Controller {
         let org_id = (self.org_id)();
 
         let _ = client
-            .act_by_id(&org_id, &panel.id, PanelV2ByIdAction::Update(req))
+            .act_by_id(
+                org_id.parse::<i64>().unwrap(),
+                panel.id,
+                PanelV2ByIdAction::Update(req),
+            )
             .await;
 
         panel_resource.restart();

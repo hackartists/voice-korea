@@ -29,7 +29,7 @@ impl PanelControllerV2 {
 
     pub async fn get_panel(
         State(ctrl): State<PanelControllerV2>,
-        Path((org_id, id)): Path<(String, String)>,
+        Path((org_id, id)): Path<(i64, i64)>,
         Extension(_auth): Extension<Option<Authorization>>,
     ) -> Result<Json<PanelV2>> {
         tracing::debug!("get_panel: {:?} {:?}", org_id, id);
@@ -49,7 +49,7 @@ impl PanelControllerV2 {
     pub async fn act_by_id(
         State(ctrl): State<PanelControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path((org_id, id)): Path<(String, String)>,
+        Path((org_id, id)): Path<(i64, i64)>,
         Json(body): Json<PanelV2ByIdAction>,
     ) -> Result<Json<PanelV2>> {
         tracing::debug!("act_by_id: {:?} {:?}", id, body);
@@ -61,7 +61,7 @@ impl PanelControllerV2 {
 
     pub async fn list_panels(
         State(ctrl): State<PanelControllerV2>,
-        Path(org_id): Path<String>,
+        Path(org_id): Path<i64>,
         Query(params): Query<PanelV2Param>,
     ) -> Result<Json<PanelV2GetResponse>> {
         tracing::debug!("list_panels: {:?}", params);
@@ -91,7 +91,9 @@ impl PanelControllerV2 {
 
         match body {
             PanelV2Action::Delete(params) => ctrl.delete(params.id).await,
-            PanelV2Action::Create(params) => ctrl.create(org_id, params).await,
+            PanelV2Action::Create(params) => {
+                ctrl.create(org_id.parse::<i64>().unwrap(), params).await
+            }
         }
     }
 }
@@ -114,7 +116,7 @@ impl PanelControllerV2 {
         tracing::debug!("search_by query: {}", query);
 
         let items: Vec<PanelV2Summary> = sqlx::query(&query)
-            .bind(org_id.unwrap().parse::<i64>().unwrap())
+            .bind(org_id.unwrap())
             .bind(format!("%{}%", name.unwrap()))
             .bind(size as i64)
             .bind(size as i64 * (bookmark.unwrap_or("1".to_string()).parse::<i64>().unwrap() - 1))
@@ -135,8 +137,8 @@ impl PanelControllerV2 {
 
     pub async fn update(
         &self,
-        org_id: String,
-        panel_id: String,
+        org_id: i64,
+        panel_id: i64,
         params: PanelV2UpdateRequest,
     ) -> Result<Json<PanelV2>> {
         tracing::debug!("update panel: {:?}", params);
@@ -144,7 +146,7 @@ impl PanelControllerV2 {
         let panel = self
             .repo
             .update(
-                &panel_id,
+                panel_id,
                 PanelV2RepositoryUpdateRequest {
                     name: Some(params.name),
                     user_count: Some(params.user_count),
@@ -160,19 +162,15 @@ impl PanelControllerV2 {
         Ok(Json(panel))
     }
 
-    pub async fn delete(&self, panel_id: String) -> Result<Json<PanelV2>> {
+    pub async fn delete(&self, panel_id: i64) -> Result<Json<PanelV2>> {
         tracing::debug!("delete panel: {:?}", panel_id);
 
-        let _ = self.repo.delete(&panel_id).await?;
+        let _ = self.repo.delete(panel_id).await?;
 
         Ok(Json(PanelV2::default()))
     }
 
-    pub async fn create(
-        &self,
-        org_id: String,
-        params: PanelV2CreateRequest,
-    ) -> Result<Json<PanelV2>> {
+    pub async fn create(&self, org_id: i64, params: PanelV2CreateRequest) -> Result<Json<PanelV2>> {
         tracing::debug!("create panel: {:?}", params);
 
         let panel = self

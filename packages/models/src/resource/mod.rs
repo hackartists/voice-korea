@@ -20,7 +20,7 @@ pub struct Resource {
        |         ^^ used as parameter more than once
         */
     #[api_model(summary, primary_key, read_action = find_by_id )]
-    pub id: String,
+    pub id: i64,
     #[api_model(auto = insert)]
     pub created_at: i64,
     #[api_model(auto = [insert, update])]
@@ -41,7 +41,7 @@ pub struct Resource {
     pub access_level: Option<AccessLevel>,
 
     #[api_model(action = create, query_action = list_resources)]
-    pub org_id: String,
+    pub org_id: i64,
     // TODO: After Implement Deliberation Table
     // #[api_model(many_to_many = resource_delierations, foreign_table_name = delierations, foreign_primary_key = delieration_id, foreign_reference_key = resource_id)]
     // pub deliberations: Option<Vec<Deliberation>>,

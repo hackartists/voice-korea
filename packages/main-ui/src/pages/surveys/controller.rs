@@ -56,10 +56,7 @@ impl Controller {
                 }
 
                 match SurveyV2::get_client(config::get().api_url)
-                    .query(
-                        &org_id.unwrap().id,
-                        SurveyV2Query::new(size).with_page(page),
-                    )
+                    .query(org_id.unwrap().id, SurveyV2Query::new(size).with_page(page))
                     .await
                 {
                     Ok(res) => res,
