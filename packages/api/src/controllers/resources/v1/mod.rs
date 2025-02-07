@@ -33,11 +33,11 @@ impl ResourceControllerV1 {
         let ctrl = Self { repo };
 
         Ok(Router::new()
+            .route("/", get(Self::list_resources).post(Self::act_resource))
             .route(
                 "/:id",
                 get(Self::get_resource).post(Self::act_resource_by_id),
             )
-            .route("/", get(Self::list_resources).post(Self::act_resource))
             .with_state(ctrl))
     }
     async fn get_resource(
