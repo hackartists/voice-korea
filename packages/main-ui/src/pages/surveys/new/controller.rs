@@ -54,7 +54,7 @@ impl Controller {
         let translates: SurveyNewTranslate = translate(&lang);
         let login_service: LoginService = use_context();
         let org_id = match login_service.get_selected_org() {
-            Some(v) => v.id,
+            Some(v) => v.id.to_string(),
             None => "".to_string(),
         };
         let client = PanelV2::get_client(&crate::config::get().api_url);
@@ -73,7 +73,7 @@ impl Controller {
                 async move {
                     //FIMXE: fix to get total data
                     let query = PanelV2Query::new(size).with_page(page);
-                    match client.query(&org_id, query).await {
+                    match client.query(org_id.parse::<i64>().unwrap(), query).await {
                         Ok(d) => d,
                         Err(e) => {
                             tracing::error!("list panels failed: {e}");
@@ -234,7 +234,10 @@ impl Controller {
                             let client = client.clone();
                             let org_id = org_id.clone();
                             async move {
-                                match client.act(&org_id, PanelV2Action::Create(req)).await {
+                                match client
+                                    .act(org_id.parse::<i64>().unwrap(), PanelV2Action::Create(req))
+                                    .await
+                                {
                                     Ok(v) => {
                                         ctrl.add_selected_panel(v);
                                         panel_resource.restart();
@@ -331,7 +334,7 @@ impl Controller {
 
         match cli
             .create(
-                &org.unwrap().id,
+                org.unwrap().id,
                 self.get_title(),
                 area.unwrap(),
                 self.get_start_date(),

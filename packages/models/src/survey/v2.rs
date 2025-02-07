@@ -12,7 +12,7 @@ use validator::ValidationError;
 #[api_model(base = "/organizations/v2/:org-id/surveys", table = surveys, iter_type=QueryResponse)]
 pub struct SurveyV2 {
     #[api_model(summary, primary_key, read_action = find_by_id)]
-    pub id: String,
+    pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
@@ -42,11 +42,11 @@ pub struct SurveyV2 {
     pub quotes: i64,
 
     #[api_model(summary, queryable, many_to_one = organizations)]
-    pub org_id: String,
+    pub org_id: i64,
     #[api_model(action = create, type = JSONB, version = v0.1)]
     pub questions: Vec<Question>,
 
-    #[api_model(summary, action = create, many_to_many = panel_surveys, foreign_table_name = panels, foreign_primary_key = panel_id, foreign_reference_key = survey_id)]
+    #[api_model(summary, action = create, many_to_many = panel_surveys, foreign_table_name = panels, foreign_primary_key = survey_id, foreign_reference_key = panel_id)]
     #[serde(default)]
     pub panels: Vec<PanelV2>,
     // #[api_model(summary, one_to_many= responses, aggregator = count)]

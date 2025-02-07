@@ -289,7 +289,7 @@ pub fn GroupPage(props: GroupPageProps) -> Element {
                                                                 }
 
                                                                 for (j , mem) in members.clone().iter().enumerate() {
-                                                                    if !groups[index].member_list.iter().any(|m| m.id == mem.member.id.clone()) {
+                                                                    if !groups[index].member_list.iter().any(|m| m.id == mem.member.id.to_string()) {
                                                                         button {
                                                                             class: "flex flex-col w-full justify-start items-start px-[12px] py-[10px] hover:bg-[#f7f7f7] hover:border-l-2 hover:border-[#2a60d3]",
                                                                             onclick: {

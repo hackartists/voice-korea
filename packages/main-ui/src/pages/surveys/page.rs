@@ -238,7 +238,7 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                                                                 onclick: move |_| {
                                                                     let id = survey.id.clone();
                                                                     async move {
-                                                                        ctrl.open_remove_survey_modal(id).await;
+                                                                        ctrl.open_remove_survey_modal(id.to_string()).await;
                                                                     }
                                                                 },
                                                                 "{translate.remove_survey}"

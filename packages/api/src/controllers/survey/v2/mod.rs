@@ -33,7 +33,7 @@ impl SurveyControllerV2 {
 
     pub async fn act_survey_v2(
         State(ctrl): State<SurveyControllerV2>,
-        Path(org_id): Path<String>,
+        Path(org_id): Path<i64>,
         Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<SurveyV2Action>,
     ) -> Result<Json<SurveyV2>> {
@@ -60,7 +60,7 @@ impl SurveyControllerV2 {
     pub async fn get_survey_v2(
         State(ctrl): State<SurveyControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path((org_id, id)): Path<(String, String)>,
+        Path((org_id, id)): Path<(i64, i64)>,
     ) -> Result<Json<SurveyV2>> {
         tracing::debug!("get_survey_v2 {:?}", id);
         let survey = ctrl
@@ -77,7 +77,7 @@ impl SurveyControllerV2 {
 
     pub async fn list_survey_v2(
         State(ctrl): State<SurveyControllerV2>,
-        Path(org_id): Path<String>,
+        Path(org_id): Path<i64>,
         Extension(_auth): Extension<Option<Authorization>>,
         Query(q): Query<SurveyV2Param>,
     ) -> Result<Json<SurveyV2GetResponse>> {
@@ -93,11 +93,7 @@ impl SurveyControllerV2 {
 }
 
 impl SurveyControllerV2 {
-    pub async fn create(
-        &self,
-        org_id: String,
-        body: SurveyV2CreateRequest,
-    ) -> Result<Json<SurveyV2>> {
+    pub async fn create(&self, org_id: i64, body: SurveyV2CreateRequest) -> Result<Json<SurveyV2>> {
         tracing::debug!("create {:?} {:?}", org_id, body);
 
         let survey = self

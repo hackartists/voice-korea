@@ -41,7 +41,7 @@ impl ResourceConterollerV1 {
     async fn get_resource(
         State(ctrl): State<ResourceConterollerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<String>,
+        Path(id): Path<i64>,
     ) -> models::Result<Json<Resource>> {
         let resource = ctrl
             .repo

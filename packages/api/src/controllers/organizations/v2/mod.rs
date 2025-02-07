@@ -61,6 +61,8 @@ pub async fn authorize_organization(
     if !req.uri().path().starts_with("/organizations/v2/") {
         return Ok(next.run(req).await);
     }
+    //
+
     let org_id = req
         .uri()
         .path()
@@ -84,12 +86,15 @@ pub async fn authorize_organization(
 
     let repo = User::get_repository(pool);
 
+    let user_id = user_id.parse::<i64>().unwrap();
+    let org_id = org_id.parse::<i64>().unwrap();
+
     match repo
         .find_one(&UserReadAction::new().find_by_id(user_id))
         .await
     {
         Ok(user) => {
-            if !user.orgs.iter().any(move |o| &o.id == &org_id) {
+            if !user.orgs.iter().any(move |o| o.id == org_id) {
                 tracing::error!("User is not member of organization");
                 return Err(StatusCode::UNAUTHORIZED);
             }

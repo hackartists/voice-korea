@@ -134,7 +134,6 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                                             region: panel.region.clone(),
                                                             salary: panel.salary.clone(),
                                                             org_id: panel.org_id.clone(),
-                                                            surveys: panel.surveys.clone(),
                                                         });
                                                         is_open.set(false);
                                                     }

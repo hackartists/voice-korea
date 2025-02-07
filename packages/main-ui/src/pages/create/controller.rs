@@ -293,7 +293,7 @@ impl Controller {
             .await
         {
             Ok(Verification { id, .. }) => {
-                self.auth_key.set(id);
+                self.auth_key.set(id.to_string());
             }
             Err(e) => {
                 tracing::error!("send email failed: {}", e);
