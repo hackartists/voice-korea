@@ -1,12 +1,6 @@
-#![allow(unused)]
-
 use dioxus::prelude::*;
-use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::{
-    AccessLevel, Field, ResourceCreateRequest, ResourceGetResponse, ResourceSummary, ResourceType,
-    ResourceUpdateRequest, Source, UsagePurpose,
-};
+use models::{AccessLevel, ProjectArea, ResourceType, Source, UsagePurpose};
 
 use crate::{
     components::icons::{self, CloseWithBackGround, Pptx},
@@ -14,9 +8,7 @@ use crate::{
 };
 use std::str::FromStr;
 pub mod i18n;
-use i18n::{
-    CreateResourceModalTranslate, ModifyResourceModalTranslate, RemoveResourceModalTranslate,
-};
+use i18n::{CreateResourceModalTranslate, RemoveResourceModalTranslate};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
 pub enum FileExtension {
@@ -61,7 +53,7 @@ pub fn CreateResourceModal(
     onupload: EventHandler<(
         String,
         Option<ResourceType>,
-        Option<Field>,
+        Option<ProjectArea>,
         Option<UsagePurpose>,
         Option<Source>,
         Option<AccessLevel>,
@@ -73,11 +65,11 @@ pub fn CreateResourceModal(
 
     let mut name: Signal<String> = use_signal(|| "".to_string());
 
-    let mut selected_type: Signal<String> = use_signal(|| String::default());
-    let mut selected_field: Signal<String> = use_signal(|| String::default());
-    let mut selected_purpose: Signal<String> = use_signal(|| String::default());
-    let mut selected_source: Signal<String> = use_signal(|| String::default());
-    let mut selected_access_level: Signal<String> = use_signal(|| String::default());
+    let selected_type: Signal<String> = use_signal(|| String::default());
+    let selected_project_area: Signal<String> = use_signal(|| String::default());
+    let selected_purpose: Signal<String> = use_signal(|| String::default());
+    let selected_source: Signal<String> = use_signal(|| String::default());
+    let selected_access_level: Signal<String> = use_signal(|| String::default());
 
     let mut files: Signal<Vec<File>> = use_signal(|| vec![]);
 
@@ -93,11 +85,11 @@ pub fn CreateResourceModal(
         .collect::<Vec<_>>();
     resource_type_options.insert(0, no_selection_text.to_string());
 
-    let mut field_options = Field::VARIANTS
+    let mut project_area_options = ProjectArea::VARIANTS
         .iter()
         .map(|v| v.translate(&lang).to_string())
         .collect::<Vec<_>>();
-    field_options.insert(0, no_selection_text.to_string());
+    project_area_options.insert(0, no_selection_text.to_string());
 
     let mut purpose_options = UsagePurpose::VARIANTS
         .iter()
@@ -165,8 +157,8 @@ pub fn CreateResourceModal(
                             }
                             ClassificationSelect {
                                 label: translate.field,
-                                value: selected_field,
-                                options: field_options,
+                                value: selected_project_area,
+                                options: project_area_options,
                             }
                             ClassificationSelect {
                                 label: translate.purpose_of_use,
@@ -219,7 +211,7 @@ pub fn CreateResourceModal(
                         class: "flex flex-row h-[40px] justify-center items-center px-[14px] py-[8px] bg-[#2a60d3] rounded-[4px] gap-[5px]",
                         onclick: move |_| {
                             let resource_type = ResourceType::from_str(&selected_type()).ok();
-                            let field = Field::from_str(&selected_field()).ok();
+                            let project_area = ProjectArea::from_str(&selected_project_area()).ok();
                             let purpose = UsagePurpose::from_str(&selected_purpose()).ok();
                             let source = Source::from_str(&selected_source()).ok();
                             let access_level = AccessLevel::from_str(&selected_access_level()).ok();
@@ -227,7 +219,7 @@ pub fn CreateResourceModal(
                                 .call((
                                     name(),
                                     resource_type,
-                                    field,
+                                    project_area,
                                     purpose,
                                     source,
                                     access_level,

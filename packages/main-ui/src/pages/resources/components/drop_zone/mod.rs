@@ -9,6 +9,9 @@ use crate::components::{icons::UploadFile, upload_button::UploadButton};
 #[cfg(feature = "web")]
 use dioxus::html::{FileEngine, HasFileData};
 
+#[cfg(feature = "web")]
+use std::sync::Arc;
+
 mod i18n;
 use i18n::DropZoneTranslate;
 
@@ -29,7 +32,7 @@ fn human_readable_size(bytes: usize) -> String {
 
 #[cfg(feature = "web")]
 pub async fn handle_file_upload(file_engine: Arc<dyn FileEngine>) -> Vec<File> {
-    let result: Vec<File> = vec![];
+    let mut result: Vec<File> = vec![];
     let files = file_engine.files();
     for f in files {
         match file_engine.read_file(f.as_str()).await {

@@ -1,14 +1,11 @@
 #![allow(unused)]
-
-use std::{fmt::Display, str::FromStr};
+use std::str::FromStr;
 
 use dioxus::prelude::*;
 
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::{
-    AccessLevel, Field, ResourceGetResponse, ResourceSummary, ResourceType, Source, UsagePurpose,
-};
+use models::{AccessLevel, ProjectArea, ResourceSummary, ResourceType, Source, UsagePurpose};
 
 use crate::{
     components::icons::{Navigation, RowOption, Search as SearchIcon, Switch, Upload},
@@ -26,16 +23,6 @@ use web_sys::window;
 
 use super::controller::{Controller, OrderBy, SortOrder, UpdateResource};
 
-struct DisplayOption<T>(Option<T>);
-
-impl<T: std::fmt::Display> std::fmt::Display for DisplayOption<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self.0 {
-            Some(value) => write!(f, "{}", value),
-            None => write!(f, "값이 없습니다."),
-        }
-    }
-}
 #[component]
 pub fn Badge(value: String, #[props(default = "".to_string())] class: String) -> Element {
     rsx! {
@@ -52,12 +39,10 @@ pub fn TableRow(
     is_editing: bool,
     onedit: EventHandler<bool>,
     onupdate: EventHandler<UpdateResource>,
-    ondownload: EventHandler<String>,
+    ondownload: EventHandler<i64>,
 ) -> Element {
     let translate: ResourceTranslate = translate(&lang);
     let no_selection_text = translate.no_selection;
-
-    let id = resource.id.parse::<i32>().unwrap();
 
     let resource_type = match resource.resource_type {
         Some(v) => v.translate(&lang),
@@ -69,15 +54,15 @@ pub fn TableRow(
         .collect::<Vec<_>>();
     resource_type_options.insert(0, no_selection_text.to_string());
 
-    let field = match resource.field {
+    let project_area = match resource.project_area {
         Some(v) => v.translate(&lang),
         None => no_selection_text,
     };
-    let mut field_options = Field::VARIANTS
+    let mut project_area_options = ProjectArea::VARIANTS
         .iter()
         .map(|v| v.translate(&lang).to_string())
         .collect::<Vec<_>>();
-    field_options.insert(0, no_selection_text.to_string());
+    project_area_options.insert(0, no_selection_text.to_string());
 
     let usage_purpose = match resource.usage_purpose {
         Some(v) => v.translate(&lang),
@@ -132,11 +117,11 @@ pub fn TableRow(
             }
             EditableTableBodyCell {
                 edit_mode: is_editing,
-                default_value: field,
-                options: field_options,
+                default_value: project_area,
+                options: project_area_options,
                 onchange: move |v: String| {
-                    let field = Field::from_str(&v).ok();
-                    onupdate.call(UpdateResource::Field(field));
+                    let project_area = ProjectArea::from_str(&v).ok();
+                    onupdate.call(UpdateResource::ProjectArea(project_area));
                 },
             }
             EditableTableBodyCell {
@@ -186,7 +171,7 @@ pub fn TableRow(
                 button {
                     class: "text-[#2a60d3] font-semibold text-[14px]",
                     onclick: move |_| {
-                        ondownload.call(resource.id.clone());
+                        ondownload.call(resource.id);
                     },
                     "{translate.download}"
                 }
@@ -391,9 +376,9 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                                 }
                                 TableHeaderCell {
                                     value: translate.field,
-                                    order: ctrl.is_sorted_by(OrderBy::Field),
+                                    order: ctrl.is_sorted_by(OrderBy::ProjectArea),
                                     onclick: move |v| {
-                                        ctrl.handle_sorting_order(OrderBy::Field);
+                                        ctrl.handle_sorting_order(OrderBy::ProjectArea);
                                     },
                                 }
                                 TableHeaderCell {

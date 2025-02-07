@@ -9,10 +9,12 @@ use by_macros::{api_model, ApiModel};
 use by_types::QueryResponse;
 use dioxus_translate::Translate;
 
+use crate::survey::ProjectArea;
+
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
 #[derive(validator::Validate)]
-#[api_model(base = "/resource/v1", table = resources, iter_type=QueryResponse)]
+#[api_model(base = "/organizations/v2/:org_id/resource", table = resources, iter_type=QueryResponse)]
 pub struct Resource {
     //FIXME: When add "action_by_id = delete", Error occured.
     /*
@@ -34,7 +36,7 @@ pub struct Resource {
     #[api_model(summary, action = create, action_by_id = update, type = INTEGER, nullable)]
     pub resource_type: Option<ResourceType>,
     #[api_model(summary, action = create, action_by_id = update, type = INTEGER, nullable)]
-    pub field: Option<Field>,
+    pub project_area: Option<ProjectArea>,
     #[api_model(summary, action = create, action_by_id = update, type = INTEGER, nullable)]
     pub usage_purpose: Option<UsagePurpose>,
     #[api_model(summary, action = create, action_by_id = update, type = INTEGER, nullable)]
@@ -42,7 +44,7 @@ pub struct Resource {
     #[api_model(summary, action = create, action_by_id = update, type = INTEGER, nullable)]
     pub access_level: Option<AccessLevel>,
 
-    #[api_model(action = create, query_action = list_resources)]
+    #[api_model(summary, queryable, many_to_one = organizations)]
     pub org_id: i64,
     // TODO: After Implement Deliberation Table
     // #[api_model(many_to_many = resource_delierations, foreign_table_name = delierations, foreign_primary_key = delieration_id, foreign_reference_key = resource_id)]

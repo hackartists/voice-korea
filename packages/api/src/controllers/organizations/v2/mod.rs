@@ -1,6 +1,11 @@
 use by_axum::{
     auth::Authorization,
-    axum::{body::Body, extract::Request, http::Response, middleware::Next},
+    axum::{
+        body::Body,
+        extract::Request,
+        http::Response,
+        middleware::{self, Next},
+    },
 };
 use by_types::DatabaseConfig;
 use models::*;
@@ -20,6 +25,10 @@ impl OrganizationControllerV2 {
             .nest(
                 "/:id/panels",
                 crate::controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
+            )
+            .nest(
+                "/:id/resources",
+                crate::controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
             )
             .layer(middleware::from_fn(authorize_organization)))
     }

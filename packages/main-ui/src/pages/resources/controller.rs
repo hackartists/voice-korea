@@ -5,8 +5,8 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::Language;
 use models::{
-    AccessLevel, Field, QueryResponse, ResourceCreateRequest, ResourceGetResponse, ResourceQuery,
-    ResourceSummary, ResourceType, ResourceUpdateRequest, Source, UsagePurpose,
+    AccessLevel, ProjectArea, QueryResponse, ResourceCreateRequest, ResourceGetResponse,
+    ResourceQuery, ResourceSummary, ResourceType, ResourceUpdateRequest, Source, UsagePurpose,
 };
 
 use crate::{
@@ -24,7 +24,7 @@ use super::i18n::ResourceTranslate;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UpdateResource {
     ResourceType(Option<ResourceType>),
-    Field(Option<Field>),
+    ProjectArea(Option<ProjectArea>),
     UsagePurpose(Option<UsagePurpose>),
     Source(Option<Source>),
     AccessLevel(Option<AccessLevel>),
@@ -39,7 +39,7 @@ pub enum SortOrder {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OrderBy {
     ResourceType,
-    Field,
+    ProjectArea,
     UsagePurpose,
     Source,
     AccessLevel,
@@ -55,7 +55,7 @@ pub struct Controller {
     popup_service: PopupService,
     sort_order: Signal<Option<(SortOrder, OrderBy)>>,
     editing_row_index: Signal<i32>,
-    total_count: i64,
+    total_count: Signal<i64>,
     page: Signal<usize>,
     resources: Signal<Vec<ResourceSummary>>,
 }
@@ -67,18 +67,27 @@ impl Controller {
         let size = 20;
 
         //FIXME:
-        let mut resources = use_signal(Vec::new);
-        let mut total_count = 0;
+        let mut resources: Signal<Vec<ResourceSummary>> = use_signal(Vec::new);
+        let mut total_count = use_signal(|| 0);
+
         let _ = use_resource(move || {
             let page = page();
             async move {
+                let org_id = user.get_selected_org();
+                if org_id.is_none() {
+                    tracing::error!("Organization ID is missing");
+                    return;
+                }
                 match models::Resource::get_client(&config::get().api_url)
-                    .query(models::ResourceQuery::new(size).with_page(page))
+                    .query(
+                        org_id.unwrap().id,
+                        models::ResourceQuery::new(size).with_page(page),
+                    )
                     .await
                 {
                     Ok(v) => {
                         resources.set(v.items);
-                        total_count = v.total_count;
+                        total_count.set(v.total_count);
                     }
                     Err(e) => {
                         tracing::error!("Error: {:?}", e);
@@ -146,7 +155,7 @@ impl Controller {
         let mut resources = self.resources.write();
         match field {
             UpdateResource::ResourceType(v) => resources[index].resource_type = v,
-            UpdateResource::Field(v) => resources[index].field = v,
+            UpdateResource::ProjectArea(v) => resources[index].project_area = v,
             UpdateResource::UsagePurpose(v) => resources[index].usage_purpose = v,
             UpdateResource::Source(v) => resources[index].source = v,
             UpdateResource::AccessLevel(v) => resources[index].access_level = v,
@@ -167,7 +176,7 @@ impl Controller {
         &self,
         title: String,
         resource_type: Option<ResourceType>,
-        field: Option<Field>,
+        project_area: Option<ProjectArea>,
         usage_purpose: Option<UsagePurpose>,
         source: Option<Source>,
         access_level: Option<AccessLevel>,
@@ -178,16 +187,15 @@ impl Controller {
         }
         let org_id = org.unwrap().id;
         let client = models::Resource::get_client(&config::get().api_url);
-
         match client
             .create(
+                org_id,
                 title,
                 resource_type,
-                field,
+                project_area,
                 usage_purpose,
                 source,
                 access_level,
-                org_id,
             )
             .await
         {
@@ -205,16 +213,17 @@ impl Controller {
         title: String,
     ) -> Result<(), models::ApiError> {
         let client = models::Resource::get_client(&config::get().api_url);
-        let req = self.resources.read()[index].clone();
+        let resource = self.resources.read()[index].clone();
         match client
             .update(
-                &req.id,
+                resource.id,
+                resource.id,
                 title,
-                req.resource_type,
-                req.field,
-                req.usage_purpose,
-                req.source,
-                req.access_level,
+                resource.resource_type,
+                resource.project_area,
+                resource.usage_purpose,
+                resource.source,
+                resource.access_level,
             )
             .await
         {
@@ -290,156 +299,3 @@ impl Controller {
             .with_title(translate.update_resource_li);
     }
 }
-// impl Controller {
-//     pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
-//         let client = Resource::get_client(&crate::config::get().api_url);
-
-//         // let metadata_resource: Resource<
-//         //     Result<CommonQueryResponse<ResourceMetadata>, ServerFnError>,
-//         // > = use_resource(move || {
-//         //     let api = resource_api.clone();
-//         //     async move {
-//         //         let res = api.list_metadata(Some(100), None).await;
-//         //         res
-//         //     }
-//         // });
-
-//         let mut ctrl = Self {
-//             resources: use_signal(|| vec![]),
-//             popup_service,
-
-//             resource_api,
-//             metadata_resource,
-//         };
-
-//         match metadata_resource.value()() {
-//             Some(resource) => {
-//                 if resource.is_ok() {
-//                     ctrl.resources.set(resource.unwrap().items);
-//                 }
-//             }
-//             _ => {}
-//         }
-
-//         ctrl
-//     }
-
-//     pub fn open_create_material(&self, lang: Language) {
-//         let mut popup_service = (self.popup_service)().clone();
-//         let translate = (self.translate)().clone();
-
-//         let total_types = self.get_total_types();
-//         let total_fields = self.get_total_fields();
-//         let total_purposes = self.get_total_purposes();
-//         let total_resources = self.get_total_resources();
-//         let total_authorities = self.get_total_authorities();
-
-//         let api: ResourceApi = self.resource_api;
-//         let mut metadata_resource = self.metadata_resource;
-
-//         popup_service
-//             .open(rsx! {
-//                 CreateMaterialModal {
-//                     lang,
-//                     onupload: move |req: Create| async move {
-//                         tracing::debug!("upload material clicked");
-//                         let _ = api.create_metadata(req).await;
-//                         metadata_resource.restart();
-//                         popup_service.close();
-//                     },
-//                     onclose: move |_| {
-//                         popup_service.close();
-//                     },
-
-//                     total_types,
-//                     total_fields,
-//                     total_purposes,
-//                     total_resources,
-//                     total_authorities,
-//                 }
-//             })
-//             .with_id("create material")
-//             .with_title(translate.upload_material);
-//     }
-
-//     pub fn open_update_material(&self, lang: Language, index: usize) {
-//         let mut popup_service = (self.popup_service)().clone();
-//         let translate = (self.translate)().clone();
-//         let api: ResourceApi = self.resource_api;
-
-//         let materials = self.get_resources();
-//         let material = materials[index].clone();
-
-//         let mut metadata_resource = self.metadata_resource;
-//         popup_service
-//             .open(rsx! {
-//                 UpdateMaterialModal {
-//                     lang,
-//                     onupload: move |files: Vec<File>| {
-//                         let id = material.id.clone();
-//                         ResourceUpdateRequest {
-//                             title: material.title.clone(),
-//                             resource_type: material
-//                         }
-//                         async move {
-//                             tracing::debug!("update material clicked: {index}");
-//                             let _ = api.update_metadata(id, req).await;
-//                             metadata_resource.restart();
-//                             popup_service.close();
-//                         }
-//                     },
-//                     initial_title: material.name.clone(),
-//                     onclose: move |_| {
-//                         popup_service.close();
-//                     },
-//                 }
-//             })
-//             .with_id("update_material")
-//             .with_title(translate.update_material_li);
-//     }
-
-//     pub async fn update_metadata(&self, index: usize, req: UpdateMetadataRequest) {
-//         tracing::debug!("update metadata: {index} {:?}", req);
-//         let api: ResourceApi = self.resource_api;
-
-//         let materials = self.get_resources();
-//         let material = materials[index].clone();
-//         let mut metadata_resource = self.metadata_resource;
-
-//         let _ = api.update_metadata(material.id.clone(), req).await;
-//         metadata_resource.restart();
-//     }
-//     pub async fn upload_files(&self, files: Vec<File>) {
-//         tracing::debug!("upload files: {:?}", files);
-//     }
-//     pub fn open_remove_material(&self, lang: Language, index: usize) {
-//         let mut popup_service = (self.popup_service)().clone();
-//         let translate = (self.translate)().clone();
-//         let api: ResourceApi = self.resource_api;
-//         let resources = self.get_resources();
-//         let resource_id = resources[index].id.clone();
-
-//         let mut metadata_resource = self.metadata_resource;
-
-//         popup_service
-//             .open(rsx! {
-//                 RemoveMaterialModal {
-//                     lang,
-//                     onremove: move |_e: MouseEvent| {
-//                         let resource_id = resource_id.clone();
-//                         async move {
-//                             tracing::debug!("remove resource clicked: {index}");
-//                             let _ = api.remove_metadata(resource_id).await;
-//                             metadata_resource.restart();
-//                             popup_service.close();
-//                         }
-//                     },
-//                     onclose: move |_| {
-//                         popup_service.close();
-//                     },
-//                 }
-//             })
-//             .with_id("remove_material")
-//             .with_title(translate.remove_material);
-//     }
-// }
