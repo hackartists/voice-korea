@@ -10,6 +10,56 @@ translate! {
 }
 
 translate! {
+    SettingPanelTranslate;
+
+    composition_panel: {
+        ko: "참여자 패널 구성",
+        en: "Participant panel composition"
+    }
+    create_panel: {
+        ko: "패널 새로 만들기",
+        en: "Create new panel"
+    }
+    total_panel_setting: {
+        ko: "전체 패널 설정",
+        en: "Total Panel Setting"
+    }
+    total_panel_setting_description: {
+        ko: "여론조사에 참여할 패널과 샘플링할 인원을 생성합니다.",
+        en: "Create a panel to participate in the poll and the number of people to sample."
+    }
+    total_panel: {
+        ko: "전체 패널",
+        en: "Total Panel"
+    }
+    person: {
+        ko: "명",
+        en: "person"
+    }
+    select_panel: {
+        ko: "패널 선택",
+        en: "Select Panel"
+    }
+    total_people: {
+        ko: "총 인원 수",
+        en: "Total Number of People"
+    }
+
+    btn_complete: {
+        ko: "완료하기",
+        en: "Complete"
+    }
+    btn_temp_save: {
+        ko: "임시저장",
+        en: "Save as Draft"
+    }
+    btn_cancel: {
+        ko: "취소하기",
+        en: "Cancel"
+    }
+}
+
+translate! {
     ObjectiveTranslate;
 
     option: {

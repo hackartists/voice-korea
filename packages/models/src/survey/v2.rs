@@ -11,42 +11,43 @@ use validator::ValidationError;
 // If you want to know how to use Y macro, refer to https://github.com/biyard/rust-sdk/tree/main/packages/by-macros
 #[api_model(base = "/organizations/v2/:org-id/surveys", table = surveys, iter_type=QueryResponse)]
 pub struct SurveyV2 {
-    #[api_model(summary, primary_key, read_action = find_by_id)]
+    #[api_model(summary, primary_key, action = delete, read_action = find_by_id)]
     pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, action = create)]
+    #[api_model(summary, action = create, action_by_id = update)]
     pub name: String,
 
-    #[api_model(summary, type = INTEGER)]
+    #[api_model(summary, type = INTEGER, action_by_id = update)]
     pub project_type: ProjectType,
 
-    #[api_model(summary, action = create, type = INTEGER)]
+    #[api_model(summary, action = create, type = INTEGER, action_by_id = update)]
     pub project_area: ProjectArea,
 
-    #[api_model(summary, type = INTEGER)]
+    #[api_model(summary, type = INTEGER, action_by_id = update)]
     pub status: ProjectStatus,
 
-    #[api_model(summary, action = create)]
+    #[api_model(summary, action = create, action_by_id = update)]
     pub started_at: i64,
 
-    #[api_model(summary, action = create)]
+    #[api_model(summary, action = create, action_by_id = update)]
     pub ended_at: i64,
 
-    #[api_model(action = create)]
+    #[api_model(action = create, action_by_id = update)]
     pub description: String,
-    #[api_model(summary, action = create)]
+    #[api_model(summary, action = create, action_by_id = update)]
     pub quotes: i64,
 
-    #[api_model(summary, queryable, many_to_one = organizations)]
+    #[api_model(summary, many_to_one = organizations)]
     pub org_id: i64,
-    #[api_model(action = create, type = JSONB, version = v0.1)]
+    #[api_model(action = create, type = JSONB, version = v0.1, action_by_id = update)]
     pub questions: Vec<Question>,
 
-    #[api_model(summary, action = create, many_to_many = panel_surveys, foreign_table_name = panels, foreign_primary_key = survey_id, foreign_reference_key = panel_id)]
+    //FIXME: add action_by_id tag
+    #[api_model(summary, action = create, many_to_many = panel_surveys, foreign_table_name = panels, foreign_primary_key = panel_id, foreign_reference_key = survey_id,)]
     #[serde(default)]
     pub panels: Vec<PanelV2>,
     // #[api_model(summary, one_to_many= responses, aggregator = count)]

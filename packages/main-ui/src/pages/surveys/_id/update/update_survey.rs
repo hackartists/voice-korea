@@ -5,23 +5,21 @@ use models::{prelude::Question, ProjectArea};
 use crate::{
     components::icons::Plus,
     pages::surveys::{
+        _id::update::{controller::Controller, i18n::UpdateSurveyTranslate},
         components::{introduction::InputIntroduction, survey::QuestionListView},
         models::current_step::CurrentStep,
-        new::{
-            controller::Controller,
-            i18n::{AddQuestionTranslate, CreateSurveyTranslate},
-        },
+        new::i18n::AddQuestionTranslate,
     },
 };
 
 #[derive(Props, Clone, PartialEq)]
-pub struct CreateSurveyProps {
+pub struct UpdateSurveyProps {
     lang: Language,
 }
 
 #[component]
-pub fn CreateSurvey(props: CreateSurveyProps) -> Element {
-    let translates: CreateSurveyTranslate = translate(&props.lang);
+pub fn UpdateSurvey(props: UpdateSurveyProps) -> Element {
+    let translates: UpdateSurveyTranslate = translate(&props.lang);
     let mut ctrl: Controller = use_context();
     rsx! {
         div { class: "flex flex-col w-full h-full justify-start items-start",
@@ -47,6 +45,12 @@ pub fn CreateSurvey(props: CreateSurveyProps) -> Element {
                     onchange_description: move |description: String| {
                         ctrl.change_description(description);
                     },
+
+                    selected: ctrl.get_selected_field(),
+                    started: ctrl.get_start_date(),
+                    ended: ctrl.get_end_date(),
+                    ti: ctrl.get_title(),
+                    desc: ctrl.get_description(),
                 }
 
                 QuestionListView {
