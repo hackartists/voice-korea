@@ -58,8 +58,9 @@ pub struct Controller {
     popup_service: PopupService,
     sort_order: Signal<Option<(SortOrder, OrderBy)>>,
     editing_row_index: Signal<i32>,
-    total_count: Signal<i64>,
-    page: Signal<usize>,
+    pub total_count: Signal<i64>,
+    pub page: Signal<usize>,
+    pub size: usize,
     resources: Signal<Vec<ResourceSummary>>,
 }
 
@@ -67,7 +68,7 @@ impl Controller {
     pub fn new(lang: dioxus_translate::Language) -> Result<Self, RenderError> {
         let user: LoginService = use_context();
         let page = use_signal(|| 1);
-        let size = 20;
+        let size = 10;
 
         //FIXME:
         let mut resources: Signal<Vec<ResourceSummary>> = use_signal(Vec::new);
@@ -100,6 +101,7 @@ impl Controller {
         });
         let ctrl = Self {
             lang,
+            size,
             user: use_context(),
             popup_service: use_context(),
             sort_order: use_signal(|| None),

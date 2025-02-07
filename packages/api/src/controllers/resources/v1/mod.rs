@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use by_axum::{
     auth::Authorization,
     axum::{

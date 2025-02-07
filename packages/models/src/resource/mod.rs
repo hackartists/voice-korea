@@ -44,7 +44,7 @@ pub struct Resource {
     #[api_model(summary, action = create, action_by_id = update, type = INTEGER, nullable)]
     pub access_level: Option<AccessLevel>,
 
-    #[api_model(summary, queryable, many_to_one = organizations)]
+    #[api_model(summary, many_to_one = organizations)]
     pub org_id: i64,
     // TODO: After Implement Deliberation Table
     // #[api_model(many_to_many = resource_delierations, foreign_table_name = delierations, foreign_primary_key = delieration_id, foreign_reference_key = resource_id)]

@@ -8,7 +8,10 @@ use dioxus_translate::{translate, Language};
 use models::{AccessLevel, ProjectArea, ResourceSummary, ResourceType, Source, UsagePurpose};
 
 use crate::{
-    components::icons::{Navigation, RowOption, Search as SearchIcon, Switch, Upload},
+    components::{
+        icons::{Navigation, RowOption, Search as SearchIcon, Switch, Upload},
+        pagination::Pagination,
+    },
     pages::resources::i18n::ResourceTranslate,
 };
 
@@ -469,6 +472,14 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                     }
                 }
             }
+        }
+        Pagination {
+            total_page: (ctrl.total_count)() as usize,
+            current_page: (ctrl.page)(),
+            size: ctrl.size,
+            onclick: move |page| {
+                ctrl.change_page(page);
+            },
         }
     }
 }
