@@ -3,6 +3,12 @@ use dioxus_translate::translate;
 translate! {
     ResourceTranslate;
 
+
+    no_selection: {
+        ko: "선택 없음",
+        en: "No Selection"
+    }
+
     select_type: {
         ko: "유형 선택",
         en: "Select Hint"
@@ -23,21 +29,25 @@ translate! {
         ko: "권한 선택",
         en: "Select Authority"
     }
-    resource_title: {
+    title: {
         ko: "자료 관리",
         en: "Resource Management"
     }
-    resource_description: {
+    header_title: {
+        ko: "제목",
+        en: "Title",
+    }
+    description: {
         ko: "자료관리 페이지는 다양한 자료를 체계적으로 관리하고 간편하게 검색, 분류, 활용할 수 있습니다.",
         en: "The data management page systematically manages various data and allows you to easily search, classify, and utilize them."
     }
-    search_hint: {
+    placeholder: {
         ko: "검색어를 입력해주세요.",
         en: "Please enter your search term."
     }
-    upload_material: {
+    upload_resource: {
         ko: "자료 업로드하기",
-        en: "Upload Material"
+        en: "Upload resource"
     }
     metadata_type: {
         ko: "유형",
@@ -51,13 +61,9 @@ translate! {
         ko: "활용 목적",
         en: "Purpose"
     }
-    title: {
-        ko: "제목",
-        en: "Title"
-    }
-    linked_surveys: {
+    linked_deliberation_survey: {
         ko: "연동된 공론 / 조사"
-        en: "Linked public opinion/investigation"
+        en: "Linked Deliberation / Survey"
     }
     source: {
         ko: "출처",
@@ -84,39 +90,39 @@ translate! {
         en: "Download"
     }
 
-    remove_material: {
+    remove_resource: {
         ko: "자료 삭제",
-        en: "Remove Material"
+        en: "Remove Resource"
     }
-    update_material_li: {
+    more_option_update_resource: {
         ko: "자료 수정하기",
-        en: "Update Material"
+        en: "Update Resource"
     }
-    remove_material_li: {
+    more_option_remove_resource: {
         ko: "자료 삭제하기",
-        en: "Remove Material"
+        en: "Remove Resource"
     }
 
-    public_material: {
+    public_resource: {
         ko: "공개 자료",
-        en: "Public Material"
+        en: "Public Resource"
     }
-    private_material: {
+    private_resource: {
         ko: "기밀 자료",
-        en: "Private Material"
+        en: "Private Resource"
     }
-    restricted_material: {
+    restricted_resource: {
         ko: "제한 자료",
-        en: "Restricted Material"
+        en: "Restricted Resource"
     }
 
-    internal_material: {
+    internal_resource: {
         ko: "내부 자료",
-        en: "Internal Material"
+        en: "Internal Resource"
     }
-    external_material: {
+    external_resource: {
         ko: "외부 자료",
-        en: "External Material"
+        en: "External Resource"
     }
     agency: {
         ko: "정부 기관",
@@ -212,41 +218,21 @@ translate! {
 }
 
 translate! {
-    RemoveMaterialModalTranslate;
+    ModifyResourceModalTranslate;
 
-    remove_material_modal_title: {
-        ko: "정말 삭제하시겠습니까?",
-        en: "Are you sure you want to delete it?"
-    }
-    remove_material_modal_description: {
-        ko: "삭제한 자료는 복원할 수 없습니다. 삭제 전에 다시 한번 확인해주세요.",
-        en: "Deleted Materials cannot be restored. Please check again before deleting."
-    }
-    remove: {
-        ko: "삭제하기",
-        en: "Remove"
-    }
-    cancel: {
-        ko: "취소",
-        en: "Cancel"
-    }
-}
-
-translate! {
-    UploadMaterialModalTranslate;
-    upload_material_modal_description: {
+    description: {
         ko: "공론과 조사에 관련된 모든 파일을 업로드합니다. 업로드 전에 내용과 형식을 다시 한 번 확인해 주세요.",
         en: "Upload all files related to public opinion and investigation. Please check the content and format again before uploading."
     }
     input_title: {
         ko: "자료 제목 입력하기",
-        en: "Enter the title of the material"
+        en: "Enter the title of the resource"
     }
-    input_hint: {
+    input_description: {
         ko: "내용 입력",
         en: "Input Content"
     }
-    input_info: {
+    title_label: {
         ko: "입력한 제목은 업로드되는 모든 파일의 제목으로 표시됩니다.",
         en: "The title you enter will appear as the title of all uploaded files."
     }
@@ -261,95 +247,5 @@ translate! {
     cancel: {
         ko: "취소",
         en: "Cancel"
-    }
-}
-
-translate! {
-    CreateMaterialModalTranslate;
-
-    no_selection: {
-        ko: "선택 없음",
-        en: "No Selection"
-    }
-    create_material_modal_translate: {
-        ko: "공론과 조사에 관련된 모든 파일을 업로드합니다. 업로드 전에 내용와 형식을 다시 한 번 확인해 주세요.",
-        en: "Upload all files related to public opinion and investigation. Please check the content and format again before uploading."
-    }
-    input_title: {
-        ko: "자료 제목 입력하기",
-        en: "Enter the title of the material"
-    }
-    input_hint: {
-        ko: "내용 입력",
-        en: "Input Content"
-    }
-    input_info: {
-        ko: "입력한 제목은 업로드되는 모든 파일의 제목으로 표시됩니다.",
-        en: "The title you enter will appear as the title of all uploaded files."
-    }
-    classification: {
-        ko: "분류",
-        en: "Classification"
-    }
-    metadata_type: {
-        ko: "유형",
-        en: "Type"
-    }
-    field: {
-        ko: "분야",
-        en: "Field"
-    }
-    purpose_of_use: {
-        ko: "활용 목적",
-        en: "Purpose of Use"
-    }
-    source: {
-        ko: "출처",
-        en: "Source"
-    }
-    permissions: {
-        ko: "사용 권한",
-        en: "Permissions"
-    }
-    link_to_survey: {
-        ko: "공론 및 조사 연동",
-        en: "Link to public opinion and research"
-    }
-    public_opinion: {
-        ko: "공론",
-        en: "Public Opinion"
-    }
-    input_keyword: {
-        ko: "키워드 입력",
-        en: "Input Keyword"
-    }
-    survey: {
-        ko: "조사",
-        en: "Survey"
-    }
-    upload: {
-        ko: "업로드하기",
-        en: "Upload"
-    }
-    cancel: {
-        ko: "취소하기",
-        en: "Cancel"
-    }
-}
-
-translate! {
-    DirectUploadedTranslate;
-
-    direct_upload_description: {
-        ko: "업로드할 파일을 드래그해주세요.",
-        en: "Please drag the file you want to upload"
-    }
-    load_file: {
-        ko: "파일 불러오기",
-        en: "Load File"
-    }
-    load_file_info: {
-        ko: "jpg, .png, pdf, zip, word, excel, pptx 파일만 업로드 가능합니다.",
-        en: "Only jpg, .png, pdf, zip, word, excel, and pptx files can be uploaded."
     }
 }

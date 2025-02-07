@@ -26,6 +26,10 @@ impl OrganizationControllerV2 {
                 "/:org-id/panels",
                 crate::controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
             )
+            .nest(
+                "/:org-id/resources",
+                crate::controllers::resources::v1::ResourceControllerV1::route(pool.clone())?,
+            )
             .layer(middleware::from_fn(authorize_organization)))
     }
 }

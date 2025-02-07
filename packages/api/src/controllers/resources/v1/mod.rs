@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use by_axum::{
     auth::Authorization,
     axum::{
@@ -21,38 +23,39 @@ use models::{
 };
 
 #[derive(Clone, Debug)]
-pub struct ResourceConterollerV1 {
+pub struct ResourceControllerV1 {
     repo: ResourceRepository,
 }
 
-impl ResourceConterollerV1 {
+impl ResourceControllerV1 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> models::Result<Router> {
         let repo = Resource::get_repository(pool.clone());
         let ctrl = Self { repo };
 
         Ok(Router::new()
+            .route("/", get(Self::list_resources).post(Self::act_resource))
             .route(
                 "/:id",
                 get(Self::get_resource).post(Self::act_resource_by_id),
             )
-            .route("/", get(Self::list_resources).post(Self::act_resource))
             .with_state(ctrl))
     }
     async fn get_resource(
-        State(ctrl): State<ResourceConterollerV1>,
+        State(ctrl): State<ResourceControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<String>,
+        Path((_org_id, id)): Path<(i64, i64)>,
     ) -> models::Result<Json<Resource>> {
         let resource = ctrl
             .repo
-            .find_one(&ResourceReadAction::new().find_by_id(id.parse::<i64>().unwrap()))
+            .find_one(&ResourceReadAction::new().find_by_id(id))
             .await?;
         Ok(Json(resource))
     }
 
     async fn list_resources(
-        State(ctrl): State<ResourceConterollerV1>,
+        State(ctrl): State<ResourceControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
+        Path(_org_id): Path<i64>,
         Query(params): Query<ResourceParam>,
     ) -> models::Result<Json<ResourceGetResponse>> {
         match params {
@@ -66,21 +69,23 @@ impl ResourceConterollerV1 {
     }
 
     async fn act_resource(
-        State(ctrl): State<ResourceConterollerV1>,
+        State(ctrl): State<ResourceControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
+        Path(org_id): Path<i64>,
         Json(body): Json<ResourceAction>,
     ) -> models::Result<Json<Resource>> {
         match body {
             ResourceAction::Create(req) => {
-                let res = ctrl.create(req).await?;
+                let res = ctrl.create(org_id, req).await?;
                 Ok(Json(res))
             }
         }
     }
 
     async fn act_resource_by_id(
-        State(ctrl): State<ResourceConterollerV1>,
+        State(ctrl): State<ResourceControllerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
+        Path((_org_id, _id)): Path<(i64, i64)>,
         Json(body): Json<ResourceByIdAction>,
     ) -> models::Result<Json<Resource>> {
         // TODO:Check Permission
@@ -95,19 +100,19 @@ impl ResourceConterollerV1 {
         }
     }
 }
-impl ResourceConterollerV1 {
-    async fn create(&self, req: ResourceCreateRequest) -> models::Result<Resource> {
+impl ResourceControllerV1 {
+    async fn create(&self, org_id: i64, req: ResourceCreateRequest) -> models::Result<Resource> {
         tracing::debug!("create_resource: {:?}", req);
         let resource = self
             .repo
             .insert(
                 req.title,
                 req.resource_type,
-                req.field,
+                req.project_area,
                 req.usage_purpose,
                 req.source,
                 req.access_level,
-                req.org_id,
+                org_id,
             )
             .await?;
         Ok(resource)
