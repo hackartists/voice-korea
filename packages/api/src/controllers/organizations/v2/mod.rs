@@ -1,6 +1,11 @@
 use by_axum::{
     auth::Authorization,
-    axum::{body::Body, extract::Request, http::Response, middleware::Next},
+    axum::{
+        body::Body,
+        extract::Request,
+        http::Response,
+        middleware::{self, Next},
+    },
 };
 use by_types::DatabaseConfig;
 use models::*;
@@ -14,17 +19,18 @@ impl OrganizationControllerV2 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         Ok(by_axum::axum::Router::new()
             .nest(
-                "/:id/surveys",
+                "/:org-id/surveys",
                 crate::controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
             )
             .nest(
-                "/:id/panels",
+                "/:org-id/panels",
                 crate::controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
             )
             .layer(middleware::from_fn(authorize_organization)))
     }
 }
 
+#[allow(dead_code)]
 pub async fn authorize_organization(
     req: Request,
     next: Next,
@@ -56,20 +62,17 @@ pub async fn authorize_organization(
 
     tracing::debug!("request: {:?} {:?}", user_id, req.uri().path());
 
-    // if !req.uri().path().starts_with("/organizations/v2/") {
-    //     return Ok(next.run(req).await);
-    // }
-    //
+    let org_id = req.uri().path().split("/").collect::<Vec<_>>();
 
-    let org_id = req.uri().path().split("/").collect::<Vec<_>>()[1].to_string();
+    if org_id.len() < 2 {
+        return Ok(next.run(req).await);
+    }
 
-    tracing::debug!(
-        "this line come1: {:?}",
-        req.uri().path().split("/").collect::<Vec<_>>()
-    );
+    let org_id = org_id[1].to_string();
+
+    tracing::debug!("org_id: {}", org_id);
 
     let conf = crate::config::get();
-    tracing::debug!("this line come2");
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
         PgPoolOptions::new()
             .max_connections(pool_size)
@@ -79,15 +82,11 @@ pub async fn authorize_organization(
     } else {
         panic!("Database is not initialized. Call init() first.");
     };
-    tracing::debug!("this line come3");
 
     let repo = User::get_repository(pool);
-    tracing::debug!("this line come4");
 
     let user_id = user_id.parse::<i64>().unwrap();
-    tracing::debug!("this line come5");
     let org_id = org_id.parse::<i64>().unwrap();
-    tracing::debug!("this line come6");
 
     match repo
         .find_one(&UserReadAction::new().find_by_id(user_id))
