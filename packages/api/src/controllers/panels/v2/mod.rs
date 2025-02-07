@@ -98,8 +98,9 @@ impl PanelControllerV2 {
     ) -> Result<Json<PanelV2GetResponse>> {
         let mut total_count: i64 = 0;
 
-        let query = PanelV2Summary::base_sql_with("where org_id = $1 limit $3 offset $4");
-        tracing::debug!("search_by query: {}", query);
+        let mut query = PanelV2Summary::base_sql_with("where org_id = $1 limit $2 offset $3");
+        query.push_str(" order by id desc");
+        tracing::debug!("find query: {}", query);
 
         let items: Vec<PanelV2Summary> = sqlx::query(&query)
             .bind(org_id)
