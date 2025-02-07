@@ -103,7 +103,6 @@ pub async fn authorize_organization(
             return Err(StatusCode::BAD_REQUEST);
         }
     };
-    tracing::debug!("this line come7");
 
     return Ok(next.run(req).await);
 }
