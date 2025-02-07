@@ -8,7 +8,7 @@ use models::{
 };
 
 use crate::{
-    pages::surveys::new::components::create_panel_modal::CreatePanelModal,
+    pages::surveys::components::create_panel_modal::CreatePanelModal,
     service::{login_service::LoginService, popup_service::PopupService},
 };
 
@@ -289,12 +289,8 @@ impl Controller {
         }
     }
 
-    pub fn get_maximum_count(&mut self, index: usize) -> u64 {
-        if (self.maximum_panel_count)().len() > index {
-            (self.maximum_panel_count)()[index]
-        } else {
-            0
-        }
+    pub fn maximum_counts(&mut self) -> Vec<u64> {
+        (self.maximum_panel_count)()
     }
 
     pub fn change_total_panel_members(&mut self, members: u64) {

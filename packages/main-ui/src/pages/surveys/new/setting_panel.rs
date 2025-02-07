@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
-use models::PanelV2;
+use models::{PanelV2, PanelV2Summary};
 
 use crate::{
     components::icons::{Clear, Remove},
@@ -18,11 +18,64 @@ pub struct SettingPanelProps {
 #[component]
 pub fn SettingPanel(props: SettingPanelProps) -> Element {
     let mut ctrl: Controller = use_context();
-    let translate: SettingPanelTranslate = translate(&props.lang);
     let selected_panels = ctrl.selected_panels();
     let panels = ctrl.total_panels();
     let total_members = ctrl.get_total_panel_members();
 
+    rsx! {
+        Setting {
+            lang: props.lang,
+            total_members,
+            selected_panels,
+            panels,
+            maximum_counts: ctrl.maximum_counts(),
+
+            open_create_panel_modal: move |_| async move {
+                ctrl.open_create_panel_modal().await;
+            },
+            remove_selected_panel: move |index: usize| {
+                ctrl.remove_selected_panel(index);
+            },
+            remove_all_selected_panel: move |_| {
+                ctrl.remove_all_selected_panel();
+            },
+            add_selected_panel: move |panel: PanelV2| {
+                ctrl.add_selected_panel(panel);
+            },
+            change_selected_panel_count: move |(index, count): (usize, u64)| {
+                ctrl.change_selected_panel_count(index, count);
+            },
+            change_total_panel_members: move |members: u64| {
+                ctrl.change_total_panel_members(members);
+            },
+            change_step: move |step: CurrentStep| {
+                ctrl.change_step(step);
+            },
+            save_survey: move |_| async move {
+                ctrl.save_survey().await;
+            },
+        }
+    }
+}
+
+#[component]
+pub fn Setting(
+    lang: Language,
+    total_members: u64,
+    selected_panels: Vec<PanelV2>,
+    panels: Vec<PanelV2Summary>,
+    maximum_counts: Vec<u64>,
+
+    open_create_panel_modal: EventHandler<MouseEvent>,
+    remove_selected_panel: EventHandler<usize>,
+    remove_all_selected_panel: EventHandler<MouseEvent>,
+    add_selected_panel: EventHandler<PanelV2>,
+    change_selected_panel_count: EventHandler<(usize, u64)>,
+    change_total_panel_members: EventHandler<u64>,
+    change_step: EventHandler<CurrentStep>,
+    save_survey: EventHandler<MouseEvent>,
+) -> Element {
+    let translate: SettingPanelTranslate = translate(&lang);
     let mut is_open = use_signal(|| false);
 
     rsx! {
@@ -33,8 +86,8 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                 }
                 button {
                     class: "bg-[#2a60d3] rounded-4px px-[14px] py-[8px] font-semibold text-white text-[16px] rounded-[4px]",
-                    onclick: move |_| async move {
-                        ctrl.open_create_panel_modal().await;
+                    onclick: move |e: Event<MouseData>| {
+                        open_create_panel_modal.call(e);
                     },
                     "{translate.create_panel}"
                 }
@@ -83,7 +136,7 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                                 onclose: move |e: Event<MouseData>| {
                                                     e.stop_propagation();
                                                     e.prevent_default();
-                                                    ctrl.remove_selected_panel(i);
+                                                    remove_selected_panel.call(i);
                                                 },
                                             }
                                         }
@@ -92,7 +145,7 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                         onclick: move |e: Event<MouseData>| {
                                             e.stop_propagation();
                                             e.prevent_default();
-                                            ctrl.remove_all_selected_panel();
+                                            remove_all_selected_panel.call(e);
                                         },
                                         Remove {
                                             width: "15",
@@ -123,18 +176,19 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                                 onclick: {
                                                     let panel = panel.clone();
                                                     move |_| {
-                                                        ctrl.add_selected_panel(PanelV2 {
-                                                            id: panel.id.clone(),
-                                                            created_at: panel.created_at.clone(),
-                                                            updated_at: panel.updated_at.clone(),
-                                                            name: panel.name.clone(),
-                                                            user_count: panel.user_count.clone(),
-                                                            age: panel.age.clone(),
-                                                            gender: panel.gender.clone(),
-                                                            region: panel.region.clone(),
-                                                            salary: panel.salary.clone(),
-                                                            org_id: panel.org_id.clone(),
-                                                        });
+                                                        add_selected_panel
+                                                            .call(PanelV2 {
+                                                                id: panel.id.clone(),
+                                                                created_at: panel.created_at.clone(),
+                                                                updated_at: panel.updated_at.clone(),
+                                                                name: panel.name.clone(),
+                                                                user_count: panel.user_count.clone(),
+                                                                age: panel.age.clone(),
+                                                                gender: panel.gender.clone(),
+                                                                region: panel.region.clone(),
+                                                                salary: panel.salary.clone(),
+                                                                org_id: panel.org_id.clone(),
+                                                            });
                                                         is_open.set(false);
                                                     }
                                                 },
@@ -182,19 +236,19 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                             }
                                         },
                                         oninput: {
-                                            let mut ctrl = ctrl.clone();
-                                            let prev_count = ctrl.selected_panels()[index].clone().user_count;
+                                            let prev_count = selected_panels[index].clone().user_count;
+                                            let maximum_counts = maximum_counts.clone();
                                             move |e: Event<FormData>| {
-                                                let maximum_value = ctrl.get_maximum_count(index);
+                                                let maximum_value = maximum_counts[index];
                                                 let value = e.value().parse::<u64>().unwrap_or(0);
                                                 if maximum_value < value {
-                                                    ctrl.change_selected_panel_count(index, maximum_value);
-                                                    ctrl.change_total_panel_members(
-                                                        total_members - prev_count + maximum_value,
-                                                    );
+                                                    change_selected_panel_count.call((index, maximum_value));
+                                                    change_total_panel_members
+                                                        .call(total_members - prev_count + maximum_value);
                                                 } else {
-                                                    ctrl.change_selected_panel_count(index, value);
-                                                    ctrl.change_total_panel_members(total_members - prev_count + value);
+                                                    change_selected_panel_count.call((index, value));
+                                                    change_total_panel_members
+                                                        .call(total_members - prev_count + maximum_value);
                                                 }
                                             }
                                         },
@@ -214,22 +268,15 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                 button {
                     class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
                     onclick: move |_| {
-                        ctrl.change_step(CurrentStep::CreateSurvey);
+                        change_step.call(CurrentStep::CreateSurvey);
                     },
                     "{translate.btn_cancel}"
                 }
-                // button {
-                //     class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
-                //     onclick: move |_| async move {
-                //         ctrl.save_survey().await;
-                //     },
-                //     "{translate.btn_temp_save}"
-                // }
 
                 button {
                     class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
-                    onclick: move |_| async move {
-                        ctrl.save_survey().await;
+                    onclick: move |e: Event<MouseData>| async move {
+                        save_survey.call(e);
                     },
                     "{translate.btn_complete}"
                 }
