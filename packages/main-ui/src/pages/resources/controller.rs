@@ -240,7 +240,7 @@ impl Controller {
         }
     }
 
-    pub async fn remove_resource(&self, id: String) -> Result<(), models::ApiError> {
+    pub async fn remove_resource(&self, id: i64) -> Result<(), models::ApiError> {
         //TODO: remove resource
         Err(models::ApiError::InvalidAction)
     }
@@ -307,6 +307,22 @@ impl Controller {
     pub fn open_remove_resource_modal(&self, index: usize) {
         let resource = self.resources.read()[index].clone();
         let mut popup_service = self.popup_service.clone();
-        let translate: ResourceTranslate = translate(&self.lang);
+        let lang = self.lang;
+        let translate: ResourceTranslate = translate(&lang);
+        let ctrl = self.clone();
+        popup_service
+            .open(rsx! {
+                RemoveResourceModal {
+                    lang,
+                    onremove: move |_| {
+                        ctrl.remove_resource(resource.id);
+                    },
+                    onclose: move |_| {
+                        popup_service.close();
+                    },
+                }
+            })
+            .with_id("remove resource")
+            .with_title(translate.more_option_remove_resource);
     }
 }
