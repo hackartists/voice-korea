@@ -29,17 +29,17 @@ impl PanelControllerV2 {
 
     pub async fn get_panel(
         State(ctrl): State<PanelControllerV2>,
-        Path((org_id, id)): Path<(String, String)>,
+        Path((org_id, id)): Path<(i64, i64)>,
         Extension(_auth): Extension<Option<Authorization>>,
     ) -> Result<Json<PanelV2>> {
         tracing::debug!("get_panel: {:?} {:?}", org_id, id);
 
         let panel = ctrl
             .repo
-            .find_one(&PanelV2ReadAction::new().find_by_id(id.parse::<i64>().unwrap()))
+            .find_one(&PanelV2ReadAction::new().find_by_id(id))
             .await?;
 
-        if panel.org_id != org_id.parse::<i64>().unwrap() {
+        if panel.org_id != org_id {
             return Err(ApiError::Unauthorized);
         }
 
@@ -49,44 +49,27 @@ impl PanelControllerV2 {
     pub async fn act_by_id(
         State(ctrl): State<PanelControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path((org_id, id)): Path<(String, String)>,
+        Path((org_id, id)): Path<(i64, i64)>,
         Json(body): Json<PanelV2ByIdAction>,
     ) -> Result<Json<PanelV2>> {
         tracing::debug!("act_by_id: {:?} {:?}", id, body);
 
         match body {
-            PanelV2ByIdAction::Update(params) => {
-                ctrl.update(
-                    org_id.parse::<i64>().unwrap(),
-                    id.parse::<i64>().unwrap(),
-                    params,
-                )
-                .await
-            }
+            PanelV2ByIdAction::Update(params) => ctrl.update(org_id, id, params).await,
         }
     }
 
     pub async fn list_panels(
         State(ctrl): State<PanelControllerV2>,
-        Path(org_id): Path<String>,
+        Path(org_id): Path<i64>,
         Query(params): Query<PanelV2Param>,
     ) -> Result<Json<PanelV2GetResponse>> {
         tracing::debug!("list_panels: {:?}", params);
 
         match params {
             PanelV2Param::Query(params) => match params.action {
-                Some(PanelV2QueryActionType::SearchBy) => {
-                    ctrl.search_by(params.with_org_id(org_id.parse::<i64>().unwrap()))
-                        .await
-                }
-                _ => {
-                    let items = ctrl
-                        .repo
-                        .find(&params.with_org_id(org_id.parse::<i64>().unwrap()))
-                        .await?;
-
-                    Ok(Json(PanelV2GetResponse::Query(items)))
-                }
+                Some(PanelV2QueryActionType::SearchBy) => ctrl.search_by(org_id, params).await,
+                _ => ctrl.find(org_id, params).await,
             },
             _ => Err(ApiError::InvalidAction),
         }
@@ -95,27 +78,55 @@ impl PanelControllerV2 {
     pub async fn act_panel(
         State(ctrl): State<PanelControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(org_id): Path<String>,
+        Path(org_id): Path<i64>,
         Json(body): Json<PanelV2Action>,
     ) -> Result<Json<PanelV2>> {
         tracing::debug!("act_panel {:?}", body);
 
         match body {
             PanelV2Action::Delete(params) => ctrl.delete(params.id).await,
-            PanelV2Action::Create(params) => {
-                ctrl.create(org_id.parse::<i64>().unwrap(), params).await
-            }
+            PanelV2Action::Create(params) => ctrl.create(org_id, params).await,
         }
     }
 }
 
 impl PanelControllerV2 {
+    pub async fn find(
+        &self,
+        org_id: i64,
+        PanelV2Query { size, bookmark, .. }: PanelV2Query,
+    ) -> Result<Json<PanelV2GetResponse>> {
+        let mut total_count: i64 = 0;
+
+        let mut query = PanelV2Summary::base_sql_with("where org_id = $1 limit $2 offset $3");
+        query.push_str(" order by id desc");
+        tracing::debug!("find query: {}", query);
+
+        let items: Vec<PanelV2Summary> = sqlx::query(&query)
+            .bind(org_id)
+            .bind(size as i64)
+            .bind(size as i64 * (bookmark.unwrap_or("1".to_string()).parse::<i64>().unwrap() - 1))
+            .map(|r: PgRow| {
+                use sqlx::Row;
+
+                total_count = r.get("total_count");
+                r.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(Json(PanelV2GetResponse::Query(QueryResponse {
+            items,
+            total_count,
+        })))
+    }
+
     pub async fn search_by(
         &self,
+        org_id: i64,
         PanelV2Query {
             size,
             bookmark,
-            org_id,
             name,
             ..
         }: PanelV2Query,
@@ -127,7 +138,7 @@ impl PanelControllerV2 {
         tracing::debug!("search_by query: {}", query);
 
         let items: Vec<PanelV2Summary> = sqlx::query(&query)
-            .bind(org_id.unwrap())
+            .bind(org_id)
             .bind(format!("%{}%", name.unwrap()))
             .bind(size as i64)
             .bind(size as i64 * (bookmark.unwrap_or("1".to_string()).parse::<i64>().unwrap() - 1))
