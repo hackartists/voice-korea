@@ -33,7 +33,7 @@ impl SurveyControllerV2 {
 
     pub async fn act_survey_v2(
         State(ctrl): State<SurveyControllerV2>,
-        Path(org_id): Path<i64>,
+        Path(org_id): Path<String>,
         Extension(auth): Extension<Option<Authorization>>,
         Json(body): Json<SurveyV2Action>,
     ) -> Result<Json<SurveyV2>> {
@@ -43,7 +43,7 @@ impl SurveyControllerV2 {
         }
 
         match body {
-            SurveyV2Action::Create(body) => ctrl.create(org_id, body).await,
+            SurveyV2Action::Create(body) => ctrl.create(org_id.parse::<i64>().unwrap(), body).await,
         }
     }
 
@@ -60,15 +60,15 @@ impl SurveyControllerV2 {
     pub async fn get_survey_v2(
         State(ctrl): State<SurveyControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path((org_id, id)): Path<(i64, i64)>,
+        Path((org_id, id)): Path<(String, String)>,
     ) -> Result<Json<SurveyV2>> {
         tracing::debug!("get_survey_v2 {:?}", id);
         let survey = ctrl
             .repo
-            .find_one(&SurveyV2ReadAction::new().find_by_id(id))
+            .find_one(&SurveyV2ReadAction::new().find_by_id(id.parse::<i64>().unwrap()))
             .await?;
 
-        if survey.org_id != org_id {
+        if survey.org_id != org_id.parse::<i64>().unwrap() {
             return Err(ApiError::Unauthorized);
         }
 
@@ -77,7 +77,7 @@ impl SurveyControllerV2 {
 
     pub async fn list_survey_v2(
         State(ctrl): State<SurveyControllerV2>,
-        Path(org_id): Path<i64>,
+        Path(org_id): Path<String>,
         Extension(_auth): Extension<Option<Authorization>>,
         Query(q): Query<SurveyV2Param>,
     ) -> Result<Json<SurveyV2GetResponse>> {
@@ -85,7 +85,9 @@ impl SurveyControllerV2 {
 
         match q {
             SurveyV2Param::Query(q) => Ok(Json(SurveyV2GetResponse::Query(
-                ctrl.repo.find(&q.with_org_id(org_id)).await?,
+                ctrl.repo
+                    .find(&q.with_org_id(org_id.parse::<i64>().unwrap()))
+                    .await?,
             ))),
             _ => Err(ApiError::InvalidAction),
         }

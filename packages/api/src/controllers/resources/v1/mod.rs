@@ -41,11 +41,11 @@ impl ResourceConterollerV1 {
     async fn get_resource(
         State(ctrl): State<ResourceConterollerV1>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path(id): Path<i64>,
+        Path(id): Path<String>,
     ) -> models::Result<Json<Resource>> {
         let resource = ctrl
             .repo
-            .find_one(&ResourceReadAction::new().find_by_id(id))
+            .find_one(&ResourceReadAction::new().find_by_id(id.parse::<i64>().unwrap()))
             .await?;
         Ok(Json(resource))
     }

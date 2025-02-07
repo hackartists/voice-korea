@@ -29,17 +29,17 @@ impl PanelControllerV2 {
 
     pub async fn get_panel(
         State(ctrl): State<PanelControllerV2>,
-        Path((org_id, id)): Path<(i64, i64)>,
+        Path((org_id, id)): Path<(String, String)>,
         Extension(_auth): Extension<Option<Authorization>>,
     ) -> Result<Json<PanelV2>> {
         tracing::debug!("get_panel: {:?} {:?}", org_id, id);
 
         let panel = ctrl
             .repo
-            .find_one(&PanelV2ReadAction::new().find_by_id(id))
+            .find_one(&PanelV2ReadAction::new().find_by_id(id.parse::<i64>().unwrap()))
             .await?;
 
-        if panel.org_id != org_id {
+        if panel.org_id != org_id.parse::<i64>().unwrap() {
             return Err(ApiError::Unauthorized);
         }
 
@@ -49,19 +49,26 @@ impl PanelControllerV2 {
     pub async fn act_by_id(
         State(ctrl): State<PanelControllerV2>,
         Extension(_auth): Extension<Option<Authorization>>,
-        Path((org_id, id)): Path<(i64, i64)>,
+        Path((org_id, id)): Path<(String, String)>,
         Json(body): Json<PanelV2ByIdAction>,
     ) -> Result<Json<PanelV2>> {
         tracing::debug!("act_by_id: {:?} {:?}", id, body);
 
         match body {
-            PanelV2ByIdAction::Update(params) => ctrl.update(org_id, id, params).await,
+            PanelV2ByIdAction::Update(params) => {
+                ctrl.update(
+                    org_id.parse::<i64>().unwrap(),
+                    id.parse::<i64>().unwrap(),
+                    params,
+                )
+                .await
+            }
         }
     }
 
     pub async fn list_panels(
         State(ctrl): State<PanelControllerV2>,
-        Path(org_id): Path<i64>,
+        Path(org_id): Path<String>,
         Query(params): Query<PanelV2Param>,
     ) -> Result<Json<PanelV2GetResponse>> {
         tracing::debug!("list_panels: {:?}", params);
@@ -69,10 +76,14 @@ impl PanelControllerV2 {
         match params {
             PanelV2Param::Query(params) => match params.action {
                 Some(PanelV2QueryActionType::SearchBy) => {
-                    ctrl.search_by(params.with_org_id(org_id)).await
+                    ctrl.search_by(params.with_org_id(org_id.parse::<i64>().unwrap()))
+                        .await
                 }
                 _ => {
-                    let items = ctrl.repo.find(&params.with_org_id(org_id)).await?;
+                    let items = ctrl
+                        .repo
+                        .find(&params.with_org_id(org_id.parse::<i64>().unwrap()))
+                        .await?;
 
                     Ok(Json(PanelV2GetResponse::Query(items)))
                 }
