@@ -43,14 +43,14 @@ pub async fn authorize_organization(
     tracing::debug!("request: {:?}", req);
     let auth = req.extensions().get::<Option<Authorization>>();
     if auth.is_none() {
-        tracing::debug!("No Authorization header 1");
+        tracing::debug!("No Authorization header");
         return Err(StatusCode::UNAUTHORIZED);
     }
 
     let auth = auth.unwrap();
 
     if auth.is_none() {
-        tracing::debug!("No Authorization header 2");
+        tracing::debug!("No Authorization header");
         return Err(StatusCode::UNAUTHORIZED);
     }
 
