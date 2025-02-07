@@ -167,9 +167,7 @@ impl UserControllerV1 {
 
         let jwt = self.generate_token(&user)?;
 
-        Ok(JsonWithHeaders::new(user)
-            .with_bearer_token(&jwt)
-            .with_cookie(&jwt))
+        Ok(JsonWithHeaders::new(user).with_bearer_token(&jwt))
     }
 
     pub async fn login(&self, body: UserLoginRequest) -> Result<JsonWithHeaders<User>> {
@@ -187,9 +185,7 @@ impl UserControllerV1 {
 
         let jwt = self.generate_token(&user)?;
 
-        Ok(JsonWithHeaders::new(user)
-            .with_bearer_token(&jwt)
-            .with_cookie(&jwt))
+        Ok(JsonWithHeaders::new(user).with_bearer_token(&jwt))
     }
 
     pub async fn reset(&self, body: UserResetRequest) -> Result<JsonWithHeaders<User>> {
