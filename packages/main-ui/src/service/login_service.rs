@@ -53,7 +53,7 @@ impl LoginService {
 
     pub fn select_org(&mut self, id: String) {
         let org = self.get_orgs();
-        let org = org.iter().find(|org| org.id == id);
+        let org = org.iter().find(|org| org.id.to_string() == id);
         self.selected_org.set(org.cloned());
     }
 

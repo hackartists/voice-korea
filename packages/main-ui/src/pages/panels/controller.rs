@@ -31,7 +31,6 @@ pub struct AttributeInfo {
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
     client: Signal<PanelV2Client>,
-    panels: Signal<Vec<PanelV2Summary>>,
     popup_service: PopupService,
     translate: Signal<PanelTranslate>,
 
@@ -42,50 +41,114 @@ pub struct Controller {
     page: Signal<usize>,
     pub size: usize,
     org_id: Signal<String>,
+    pub search_keyword: Signal<String>,
 }
 
 impl Controller {
     pub fn new(lang: dioxus_translate::Language, popup_service: PopupService) -> Self {
         let login_service: LoginService = use_context();
         let org_id = match login_service.get_selected_org() {
-            Some(v) => v.id,
+            Some(v) => v.id.to_string(),
             None => "".to_string(),
         };
         let translate: PanelTranslate = translate(&lang);
         let panel_bookmark = Signal::new(None);
-        let client = PanelV2::get_client(&crate::config::get().api_url);
         let page = use_signal(|| 1);
         let size = 10;
         let org_id_copy = org_id.clone();
+        let search_keyword = use_signal(|| "".to_string());
 
-        let panel_resource = use_resource({
-            let client = client.clone();
-            move || {
-                let client = client.clone();
-                let org_id = org_id.clone();
+        let panel_resource = use_resource(move || {
+            let org_id = org_id.clone();
+            let page = page();
+            let keyword = search_keyword().clone();
 
-                async move {
-                    let query = PanelV2Query::new(size).with_page(page());
-                    match client.query(&org_id, query).await {
-                        Ok(d) => d,
-                        Err(e) => {
-                            tracing::error!("list panels failed: {e}");
-                            QueryResponse::default()
-                        }
-                    }
+            async move {
+                let client = PanelV2::get_client(&crate::config::get().api_url);
+
+                if keyword.is_empty() {
+                    let query = PanelV2Query::new(size).with_page(page);
+                    client
+                        .query(org_id.parse::<i64>().unwrap(), query)
+                        .await
+                        .unwrap_or_default()
+                } else {
+                    client
+                        .search_by(
+                            size,
+                            Some(page.to_string()),
+                            org_id.parse::<i64>().unwrap(),
+                            keyword,
+                        )
+                        .await
+                        .unwrap_or_default()
                 }
             }
         });
 
         let trans = translate.clone();
 
-        let mut ctrl = Self {
-            client: use_signal(|| client),
-            panels: use_signal(|| vec![]),
+        let ctrl = Self {
+            client: use_signal(|| PanelV2::get_client(&crate::config::get().api_url)),
             popup_service,
+            search_keyword,
             translate: use_signal(|| trans),
 
-            attributes: use_signal(|| vec![]),
+            attributes: use_signal(|| {
+                vec![
+                    AttributeInfo {
+                        name: translate.clone().age.to_string(),
+                        values: vec![
+                            translate.clone().teenager.to_string(),
+                            translate.clone().twenty.to_string(),
+                            translate.clone().thirty.to_string(),
+                            translate.clone().fourty.to_string(),
+                            translate.clone().fifty.to_string(),
+                            translate.clone().sixty.to_string(),
+                            translate.clone().over.to_string(),
+                        ],
+                    },
+                    AttributeInfo {
+                        name: translate.clone().gender.to_string(),
+                        values: vec![
+                            translate.clone().male.to_string(),
+                            translate.clone().female.to_string(),
+                        ],
+                    },
+                    AttributeInfo {
+                        name: translate.clone().region.to_string(),
+                        values: vec![
+                            translate.clone().seoul.to_string(),
+                            translate.clone().busan.to_string(),
+                            translate.clone().daegu.to_string(),
+                            translate.clone().incheon.to_string(),
+                            translate.clone().gwangju.to_string(),
+                            translate.clone().daejeon.to_string(),
+                            translate.clone().ulsan.to_string(),
+                            translate.clone().sejong.to_string(),
+                            translate.clone().gyeongi.to_string(),
+                            translate.clone().gangwon.to_string(),
+                            translate.clone().chungbuk.to_string(),
+                            translate.clone().chungnam.to_string(),
+                            translate.clone().jeonbuk.to_string(),
+                            translate.clone().jeonnam.to_string(),
+                            translate.clone().gyeonbuk.to_string(),
+                            translate.clone().gyeonnam.to_string(),
+                            translate.clone().jeju.to_string(),
+                        ],
+                    },
+                    AttributeInfo {
+                        name: translate.clone().salary.to_string(),
+                        values: vec![
+                            translate.clone().tier_one.to_string(),
+                            translate.clone().tier_two.to_string(),
+                            translate.clone().tier_three.to_string(),
+                            translate.clone().tier_four.to_string(),
+                            translate.clone().tier_five.to_string(),
+                        ],
+                    },
+                ]
+            }),
             panel_resource,
             panel_bookmark,
 
@@ -93,70 +156,6 @@ impl Controller {
             size,
             org_id: use_signal(|| org_id_copy.clone()),
         };
-
-        if ctrl.attributes.len() == 0 {
-            ctrl.attributes.push(AttributeInfo {
-                name: translate.clone().age.to_string(),
-                values: vec![
-                    translate.clone().teenager.to_string(),
-                    translate.clone().twenty.to_string(),
-                    translate.clone().thirty.to_string(),
-                    translate.clone().fourty.to_string(),
-                    translate.clone().fifty.to_string(),
-                    translate.clone().sixty.to_string(),
-                    translate.clone().over.to_string(),
-                ],
-            });
-
-            ctrl.attributes.push(AttributeInfo {
-                name: translate.clone().gender.to_string(),
-                values: vec![
-                    translate.clone().male.to_string(),
-                    translate.clone().female.to_string(),
-                ],
-            });
-
-            ctrl.attributes.push(AttributeInfo {
-                name: translate.clone().region.to_string(),
-                values: vec![
-                    translate.clone().seoul.to_string(),
-                    translate.clone().busan.to_string(),
-                    translate.clone().daegu.to_string(),
-                    translate.clone().incheon.to_string(),
-                    translate.clone().gwangju.to_string(),
-                    translate.clone().daejeon.to_string(),
-                    translate.clone().ulsan.to_string(),
-                    translate.clone().sejong.to_string(),
-                    translate.clone().gyeongi.to_string(),
-                    translate.clone().gangwon.to_string(),
-                    translate.clone().chungbuk.to_string(),
-                    translate.clone().chungnam.to_string(),
-                    translate.clone().jeonbuk.to_string(),
-                    translate.clone().jeonnam.to_string(),
-                    translate.clone().gyeonbuk.to_string(),
-                    translate.clone().gyeonnam.to_string(),
-                    translate.clone().jeju.to_string(),
-                ],
-            });
-
-            ctrl.attributes.push(AttributeInfo {
-                name: translate.clone().salary.to_string(),
-                values: vec![
-                    translate.clone().tier_one.to_string(),
-                    translate.clone().tier_two.to_string(),
-                    translate.clone().tier_three.to_string(),
-                    translate.clone().tier_four.to_string(),
-                    translate.clone().tier_five.to_string(),
-                ],
-            });
-        }
-
-        match panel_resource.value()() {
-            Some(panel) => {
-                ctrl.panels.set(panel.items);
-            }
-            _ => {}
-        }
 
         use_context_provider(|| ctrl);
         ctrl
@@ -205,7 +204,9 @@ impl Controller {
 
         let org_id = (self.org_id)();
 
-        let _ = client.act(&org_id, PanelV2Action::Create(req)).await;
+        let _ = client
+            .act(org_id.parse::<i64>().unwrap(), PanelV2Action::Create(req))
+            .await;
         self.set_page(1);
         panel_resource.restart();
     }
@@ -248,7 +249,11 @@ impl Controller {
                                     req.salary = salary;
                                     tracing::info!("update salary clicked: {index} {:?}", req);
                                     let _ = client
-                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .act_by_id(
+                                            org_id.parse::<i64>().unwrap(),
+                                            id,
+                                            PanelV2ByIdAction::Update(req),
+                                        )
                                         .await;
                                     panel_resource.restart();
                                     popup_service.close();
@@ -315,7 +320,11 @@ impl Controller {
                                     req.region = region;
                                     tracing::info!("update region clicked: {index} {:?}", req);
                                     let _ = client
-                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .act_by_id(
+                                            org_id.parse::<i64>().unwrap(),
+                                            id,
+                                            PanelV2ByIdAction::Update(req),
+                                        )
                                         .await;
                                     panel_resource.restart();
                                     popup_service.close();
@@ -364,7 +373,11 @@ impl Controller {
                                     req.gender = gender;
                                     tracing::info!("update gender clicked: {index} {:?}", req);
                                     let _ = client
-                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .act_by_id(
+                                            org_id.parse::<i64>().unwrap(),
+                                            id,
+                                            PanelV2ByIdAction::Update(req),
+                                        )
                                         .await;
                                     panel_resource.restart();
                                     popup_service.close();
@@ -421,7 +434,11 @@ impl Controller {
                                     req.age = age;
                                     tracing::debug!("update age clicked: {index} {:?}", req);
                                     let _ = client
-                                        .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                        .act_by_id(
+                                            org_id.parse::<i64>().unwrap(),
+                                            id,
+                                            PanelV2ByIdAction::Update(req),
+                                        )
                                         .await;
                                     panel_resource.restart();
                                     popup_service.close();
@@ -461,7 +478,7 @@ impl Controller {
                             tracing::debug!("remove panel clicked: {index}");
                             let _ = client
                                 .act(
-                                    &org_id,
+                                    org_id.parse::<i64>().unwrap(),
                                     PanelV2Action::Delete(PanelV2DeleteRequest {
                                         id: panel_id,
                                     }),
@@ -514,7 +531,11 @@ impl Controller {
                             async move {
                                 tracing::debug!("update panel clicked: {index}");
                                 let _ = client
-                                    .act_by_id(&org_id, &id, PanelV2ByIdAction::Update(req))
+                                    .act_by_id(
+                                        org_id.parse::<i64>().unwrap(),
+                                        id,
+                                        PanelV2ByIdAction::Update(req),
+                                    )
                                     .await;
                                 panel_resource.restart();
                                 popup_service.close();
@@ -550,7 +571,11 @@ impl Controller {
         let org_id = (self.org_id)();
 
         let _ = client
-            .act_by_id(&org_id, &panel.id, PanelV2ByIdAction::Update(req))
+            .act_by_id(
+                org_id.parse::<i64>().unwrap(),
+                panel.id,
+                PanelV2ByIdAction::Update(req),
+            )
             .await;
 
         panel_resource.restart();
@@ -576,7 +601,11 @@ impl Controller {
         let org_id = (self.org_id)();
 
         let _ = client
-            .act_by_id(&org_id, &panel.id, PanelV2ByIdAction::Update(req))
+            .act_by_id(
+                org_id.parse::<i64>().unwrap(),
+                panel.id,
+                PanelV2ByIdAction::Update(req),
+            )
             .await;
 
         panel_resource.restart();

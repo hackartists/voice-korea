@@ -157,7 +157,7 @@ impl UserControllerV1 {
                 ApiError::DuplicateUser
             })?;
         self.org
-            .insert_with_dependency(user.id.parse().unwrap(), user.clone().email)
+            .insert_with_dependency(user.id, user.clone().email)
             .await?;
 
         let user = self

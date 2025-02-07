@@ -1,15 +1,13 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
-use models::{prelude::Question, ProjectArea};
 
 use crate::{
-    components::icons::{ArrowLeft, Plus},
-    pages::surveys::{
-        components::{introduction::InputIntroduction, survey::QuestionListView},
-        new::{
-            controller::Controller,
-            i18n::{AddQuestionTranslate, SurveyNewTranslate},
-        },
+    components::icons::ArrowLeft,
+    pages::surveys::new::{
+        controller::{Controller, CurrentStep},
+        create_survey::CreateSurvey,
+        i18n::SurveyNewTranslate,
+        setting_panel::SettingPanel,
     },
     routes::Route,
 };
@@ -22,7 +20,9 @@ pub struct SurveyCreateProps {
 #[component]
 pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
     let translates: SurveyNewTranslate = translate(&props.lang);
-    let mut ctrl = Controller::new(props.lang);
+    let ctrl = Controller::new(props.lang);
+
+    let step = ctrl.get_current_step();
     rsx! {
         div { class: "flex flex-col gap-[40px] items-end justify-start mb-[40px]",
             div { class: "flex flex-col w-full h-full justify-start items-start",
@@ -42,87 +42,11 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                     }
                 }
 
-                InputIntroduction {
-                    lang: props.lang,
-                    onchange_area: move |field: ProjectArea| {
-                        ctrl.change_selected_field(field);
-                    },
-
-                    onchange_title: move |title: String| {
-                        ctrl.change_title(title);
-                    },
-
-                    onchange_start_date: move |start_date: i64| {
-                        ctrl.change_start_date(start_date);
-                    },
-
-                    onchange_end_date: move |end_date: i64| {
-                        ctrl.change_end_date(end_date);
-                    },
-
-                    onchange_description: move |description: String| {
-                        ctrl.change_description(description);
-                    },
+                if step == CurrentStep::CreateSurvey {
+                    CreateSurvey { lang: props.lang }
+                } else {
+                    SettingPanel { lang: props.lang }
                 }
-
-                QuestionListView {
-                    lang: props.lang,
-                    questions: ctrl.get_surveys(),
-                    onchange: move |(index, survey): (usize, Question)| {
-                        ctrl.change_survey(index, survey);
-                    },
-                    onremove: move |index: usize| {
-                        ctrl.remove_survey(index);
-                    },
-                }
-
-                button {
-                    class: "flex flex-row w-full",
-                    onclick: move |_| {
-                        ctrl.add_question();
-                    },
-                    AddQuestion { lang: props.lang }
-                }
-            }
-
-            div { class: "flex flex-row gap-[20px] text-white",
-                button {
-                    class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
-                    onclick: move |_| {
-                        ctrl.back();
-                    },
-                    "{translates.btn_cancel}"
-                }
-                button {
-                    class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
-                    onclick: move |_| async move {
-                        ctrl.save_survey().await;
-                    },
-                    "{translates.btn_temp_save}"
-                }
-
-                button {
-                    class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
-                    onclick: move |_| async move {
-                        ctrl.save_survey().await;
-                    },
-                    "{translates.btn_complete}"
-                }
-            }
-        }
-    }
-}
-
-#[component]
-pub fn AddQuestion(lang: Language) -> Element {
-    let translates: AddQuestionTranslate = translate(&lang);
-    rsx! {
-        div { class: "flex flex-col w-full h-[200px] rounded-[8px] justify-center items-center border border-dashed border-[#b4b4b4] mt-[20px]",
-            div { class: "flex flex-row w-[45px] h-[45px] justify-center items-center rounded-[100px] border border-[#b4b4b4]",
-                Plus { width: "12", height: "12", color: "#b4b4b4" }
-            }
-            div { class: "mt-[10px] font-medium text-[15px] text-[#b4b4b4] leading-[22px]",
-                "{translates.add_description}"
             }
         }
     }

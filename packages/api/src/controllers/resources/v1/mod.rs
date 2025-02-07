@@ -45,7 +45,7 @@ impl ResourceConterollerV1 {
     ) -> models::Result<Json<Resource>> {
         let resource = ctrl
             .repo
-            .find_one(&ResourceReadAction::new().find_by_id(id))
+            .find_one(&ResourceReadAction::new().find_by_id(id.parse::<i64>().unwrap()))
             .await?;
         Ok(Json(resource))
     }
