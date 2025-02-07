@@ -3,7 +3,7 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
-use models::{panel_v2::PanelV2, *};
+use models::*;
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
 // use sqlx::postgres::PgPoolOptions;
@@ -23,10 +23,10 @@ mod controllers {
     pub mod survey {
         pub mod v2;
     }
+    pub mod organizations {
+        pub mod v2;
+    }
     // pub mod members {
-    //     pub mod v1;
-    // }
-    // pub mod organizations {
     //     pub mod v1;
     // }
     // pub mod groups {
@@ -68,10 +68,12 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     // let files = Files::get_repository(pool.clone());
     let p = PanelV2::get_repository(pool.clone());
     let s = SurveyV2::get_repository(pool.clone());
+    let om = OrganizationMember::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
     u.create_this_table().await?;
+    om.create_this_table().await?;
 
     resource.create_this_table().await?;
     // files.create_table().await?;
@@ -81,6 +83,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     v.create_related_tables().await?;
     o.create_related_tables().await?;
     u.create_related_tables().await?;
+    om.create_related_tables().await?;
 
     resource.create_related_tables().await?;
     // files.create_related_tables().await?;
@@ -111,10 +114,6 @@ async fn main() -> Result<()> {
 
     let app = app
         .nest(
-            "/panels/v2",
-            controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
-        )
-        .nest(
             "/auth/v1",
             controllers::auth::v1::UserControllerV1::route(pool.clone())?,
         )
@@ -123,17 +122,13 @@ async fn main() -> Result<()> {
             controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
         )
         .nest(
-            "/surveys/v2",
-            controllers::survey::v2::SurveyControllerV2::route(pool.clone())?,
+            "/organizations/v2",
+            controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
         )
         .layer(middleware::from_fn(authorization_middleware));
     // .nest(
     //     "/members/v1",
     //     controllers::members::v1::MemberControllerV1::router(),
-    // )
-    // .nest(
-    //     "/organizations/v1",
-    //     controllers::organizations::v1::OrganizationControllerV1::router(),
     // )
     // .nest(
     //     "/groups/v1",

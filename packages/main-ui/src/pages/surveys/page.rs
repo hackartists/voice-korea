@@ -1,15 +1,17 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
-use models::prelude::PublicSurveyStatus;
+use models::ProjectStatus;
 
 use crate::{
-    components::icons::{ArrowLeft, RowOption, Search, Switch},
+    components::{
+        icons::{RowOption, Search, Switch},
+        pagination::Pagination,
+    },
     pages::surveys::{
         controller::Controller,
         i18n::{RemoveSurveyModalTranslate, SurveyTranslate},
     },
     routes::Route,
-    service::popup_service::PopupService,
 };
 
 #[derive(Props, Clone, PartialEq)]
@@ -19,21 +21,20 @@ pub struct SurveyProps {
 
 #[component]
 pub fn SurveyPage(props: SurveyProps) -> Element {
-    let popup: PopupService = use_context();
-    let ctrl = Controller::new(props.lang, popup);
+    let mut ctrl = Controller::new(props.lang)?;
     let translate: SurveyTranslate = translate(&props.lang);
 
     let mut is_focused = use_signal(|| false);
     let mut project_name = use_signal(|| "".to_string());
 
-    let surveys = ctrl.get_surveys();
-    let survey_len = surveys.len();
+    // let surveys = ctrl.get_surveys();
 
-    let mut clicked_panel_index = use_signal(|| 0);
+    // FIXME: it seems to be anti-pattern due should be refactoring to use_memo when implementing panel
+    // let mut clicked_panel_index = use_signal(|| 0);
 
-    use_effect(use_reactive(&survey_len, move |len| {
-        clicked_panel_index.set(len);
-    }));
+    // use_effect(use_reactive(&survey_len, move |len| {
+    //     clicked_panel_index.set(len);
+    // }));
 
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
@@ -141,121 +142,109 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                             div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center gap-[10px]" }
                         }
 
-                        for (index , survey) in surveys.clone().iter().enumerate() {
-                            div { class: "flex flex-col w-full justify-start items-start",
-                                div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
-                                div { class: "flex flex-row w-full h-[55px]",
-                                    div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
-                                        div { class: "text-[#35343f] font-semibold text-[14px]",
-                                            {ctrl.translate_survey_type(props.lang, survey.survey_type.clone())}
-                                        }
-                                    }
-                                    div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
-                                        div { class: "text-[#35343f] font-semibold text-[14px]",
-                                            {ctrl.translate_survey_field(props.lang, survey.survey_field_type.clone())}
-                                        }
-                                    }
-                                    div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                        div { class: "text-[#35343f] font-semibold text-[14px]",
-                                            "{survey.title}"
-                                        }
-                                    }
-                                    div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                        div { class: "text-[#35343f] font-semibold text-[14px]",
-                                            {
-                                                format!(
-                                                    "{}% ({}/{})",
-                                                    survey.survey_response * 100 / survey.total_response,
-                                                    survey.survey_response,
-                                                    survey.total_response,
-                                                )
+                        if let Some(surveys) = ctrl.get_surveys() {
+                            for survey in surveys.items {
+                                div { class: "flex flex-col w-full justify-start items-start",
+                                    div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
+                                    div { class: "flex flex-row w-full h-[55px]",
+                                        div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
+                                            div { class: "text-[#35343f] font-semibold text-[14px]",
+                                                {survey.project_type.translate(&props.lang)}
                                             }
                                         }
-                                    }
-                                    button {
-                                        class: "flex flex-row flex-1 h-full justify-center items-center",
-                                        onclick: move |_| {
-                                            clicked_panel_index.set(index);
-                                        },
-                                        if survey.panels.clone().len() != 0 {
-                                            if clicked_panel_index() == index {
-                                                div { class: "flex flex-wrap w-full justify-center items-center gap-[5px]",
-                                                    for panel in survey.panels.clone() {
-                                                        PanelLabel {
-                                                            label: panel.name.clone(),
-                                                            background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
+                                        div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
+                                            div { class: "text-[#35343f] font-semibold text-[14px]",
+                                                {survey.project_area.translate(&props.lang)}
+                                            }
+                                        }
+                                        div { class: "flex flex-row flex-1 h-full justify-center items-center",
+                                            div { class: "text-[#35343f] font-semibold text-[14px]",
+                                                "{survey.name}"
+                                            }
+                                        }
+                                        div { class: "flex flex-row flex-1 h-full justify-center items-center",
+                                            div { class: "text-[#35343f] font-semibold text-[14px]",
+                                                {survey.response_rate()}
+                                            }
+                                        }
+
+                                        // TODO: implement panel in survey list view
+                                        // button {
+                                        //     class: "flex flex-row flex-1 h-full justify-center items-center",
+                                        //     onclick: move |_| {
+                                        //         clicked_panel_index.set(index);
+                                        //     },
+                                        //     if survey.panels.clone().len() != 0 {
+                                        //         if clicked_panel_index() == index {
+                                        //             div { class: "flex flex-wrap w-full justify-center items-center gap-[5px]",
+                                        //                 for panel in survey.panels.clone() {
+                                        //                     PanelLabel {
+                                        //                         label: panel.name.clone(),
+                                        //                         background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
+                                        //                     }
+                                        //                 }
+                                        //             }
+                                        //         } else {
+                                        //             PanelLabel {
+                                        //                 label: survey.panels[0].name.clone(),
+                                        //                 background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
+                                        //             }
+                                        //         }
+                                        //     }
+                                        // }
+
+                                        div { class: "flex flex-row flex-1 h-full justify-center items-center",
+                                            div { class: "text-[#35343f] font-semibold text-[14px]",
+                                                "{survey.period()}"
+                                            }
+                                        }
+                                        div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
+                                            div { class: "text-[#35343f] font-semibold text-[14px]",
+                                                {survey.status.translate(&props.lang)}
+                                            }
+                                        }
+                                        div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
+                                            {
+                                                match survey.status {
+                                                    ProjectStatus::Finish => {
+                                                        rsx! {
+                                                            button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.view_results}" }
+                                                        }
+                                                    }
+                                                    _ => {
+                                                        rsx! {
+                                                            button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.detail_more}" }
                                                         }
                                                     }
                                                 }
-                                            } else {
-                                                PanelLabel {
-                                                    label: survey.panels[0].name.clone(),
-                                                    background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
-                                                }
                                             }
                                         }
-                                    }
-                                    div { class: "flex flex-row flex-1 h-full justify-center items-center",
-                                        div { class: "text-[#35343f] font-semibold text-[14px]",
-                                            {
-                                                format!(
-                                                    "{} ~ {}",
-                                                    ctrl.convert_timestamp_to_date(survey.start_date),
-                                                    ctrl.convert_timestamp_to_date(survey.end_date),
-                                                )
-                                            }
-                                        }
-                                    }
-                                    div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                        div { class: "text-[#35343f] font-semibold text-[14px]",
-                                            {ctrl.translate_survey_status(props.lang, survey.status.clone())}
-                                        }
-                                    }
-                                    div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                        {
-                                            match survey.status {
-                                                PublicSurveyStatus::Finish => {
-                                                    rsx! {
-                                                        button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.view_results}" }
-                                                    }
-                                                }
-                                                _ => {
-                                                    rsx! {
-                                                        button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.detail_more}" }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    div { class: "group relative",
-                                        div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
-                                            if survey.status == PublicSurveyStatus::Ready {
-                                                button {
-                                                    RowOption {
-                                                        width: "24",
-                                                        height: "24",
-                                                    }
-                                                }
-                                                nav { class: "border-2 bg-white invisible border-none shadow-lg rounded w-60 absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
-                                                    ul { class: "py-1",
-                                                        li {
-                                                            class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                            onclick: move |_| {},
-                                                            "{translate.update_survey}"
+                                        div { class: "group relative",
+                                            div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
+                                                if survey.status == ProjectStatus::Ready {
+                                                    button {
+                                                        RowOption {
+                                                            width: "24",
+                                                            height: "24",
                                                         }
-                                                        li {
-                                                            class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                            onclick: {
-                                                                let lang = props.lang.clone();
-                                                                let id = survey.id.clone();
-                                                                move |_| {
-                                                                    let id = id.clone();
+                                                    }
+                                                    nav { class: "border-2 bg-white invisible border-none shadow-lg rounded w-60 absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
+                                                        ul { class: "py-1",
+                                                            li {
+                                                                class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
+                                                                onclick: move |_| {},
+                                                                "{translate.update_survey}"
+                                                            }
+                                                            li {
+                                                                class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
+                                                                onclick: move |_| {
+                                                                    let id = survey.id.clone();
                                                                     async move {
-                                                                        ctrl.open_remove_survey_modal(lang, id).await;
+                                                                        ctrl.open_remove_survey_modal(id).await;
                                                                     }
-                                                                }
-                                                            },
-                                                            "{translate.remove_survey}"
+                                                                },
+                                                                "{translate.remove_survey}"
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -267,26 +256,13 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                         }
                     }
 
-                    //pagenation
-                    div { class: "flex flex-row w-full justify-center items-center mt-[30px]",
-                        div { class: "mr-[20px] w-[24px] h-[24px]",
-                            ArrowLeft { width: "24", height: "24" }
-                        }
-                        //FIXME: add pagination by variable(page, index)
-                        for i in 0..10 {
-                            if i == 0 {
-                                div { class: "flex flex-row w-[40px] h-[40px] justify-center items-center bg-[#7c8292] rounded-lg text-white font-bold text-[15px] mr-[8px]",
-                                    "{i + 1}"
-                                }
-                            } else {
-                                div { class: "flex flex-row w-[40px] h-[40px] justify-center items-center bg-white border border-[#dfdfdf] rounded-lg text-[#0d1732] font-bold text-[15px] mr-[8px]",
-                                    "{i + 1}"
-                                }
-                            }
-                        }
-                        div { class: "flex flex-row ml-[12px] w-[60px] h-[40px] justify-center items-center font-bold text-[15px] text-[#0d1732]",
-                            "More"
-                        }
+                    Pagination {
+                        total_page: ctrl.total_pages(),
+                        current_page: ctrl.page(),
+                        size: ctrl.size,
+                        onclick: move |page| {
+                            ctrl.set_page(page);
+                        },
                     }
                 }
             }

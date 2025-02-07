@@ -22,7 +22,6 @@ pub mod service {
     pub mod panel_api;
     pub mod popup_service;
     pub mod prev_survey_api;
-    pub mod survey_api;
     pub mod theme;
     pub mod user_api;
 }
@@ -60,6 +59,7 @@ pub mod components {
     pub mod icons;
     pub mod input;
     pub mod label;
+    pub mod pagination;
     pub mod pi_graph;
     pub mod popup;
     pub mod select;

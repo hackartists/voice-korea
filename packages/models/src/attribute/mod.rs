@@ -1,3 +1,4 @@
+// FIXME: remove this model when attribute page is migrating postgre db fully
 #[cfg(feature = "server")]
 use by_axum::aide;
 #[cfg(feature = "server")]

@@ -40,6 +40,7 @@ pub enum GenderV2 {
     #[translate(ko = "여성")]
     Female = 2, //여성
 }
+
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
 )]
@@ -82,6 +83,7 @@ pub enum RegionV2 {
     #[translate(ko = "제주")]
     Jeju = 17, //제주
 }
+
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
 )]

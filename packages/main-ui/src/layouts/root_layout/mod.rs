@@ -1,13 +1,14 @@
 #![allow(non_snake_case)]
 use crate::{components::icons::Logout, prelude::*, service::popup_service::PopupZone};
 use dioxus::prelude::*;
+use i18n::RootLayoutTranslate;
 use side_bar::{SelectedMenu, SideBar};
 
 pub mod header;
 pub mod i18n;
 pub mod side_bar;
 
-use dioxus_translate::Language;
+use dioxus_translate::{translate, Language};
 
 #[component]
 pub fn RootLayout(lang: Language) -> Element {
@@ -16,6 +17,7 @@ pub fn RootLayout(lang: Language) -> Element {
 
     let route: Route = use_route();
     let current_path = format!("{route}");
+    let tr: RootLayoutTranslate = translate(&lang);
 
     use_effect({
         let current_selected = selected_menu();
@@ -58,13 +60,13 @@ pub fn RootLayout(lang: Language) -> Element {
                 div { class: "flex flex-col grow w-full bg-[#f0f2fc] px-[60px] pt-[25px]",
                     div { class: "flex flex-row w-full justify-end items-end gap-[5px]",
                         Link {
-                            class: "flex flex-row w-min justify-start items-start",
+                            class: "flex flex-row justify-start items-start",
                             to: Route::LoginPage { lang },
                             div { class: "w-[20px] h-[20px]",
                                 Logout { width: "20", height: "20" }
                             }
                             div { class: "ml-[5px] font-bold text-[#555462] text-[15px]",
-                                "logout"
+                                "{tr.logout}"
                             }
                         }
                     }

@@ -2,9 +2,7 @@ use dioxus::prelude::*;
 
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
-use models::prelude::{
-    CreateGroupRequest, GroupMemberRelationship, ListMemberResponse, TeamMemberRequest,
-};
+use models::prelude::{CreateGroupRequest, ListMemberResponse, MemberSummary, TeamMemberRequest};
 
 use crate::service::{group_api::GroupApi, member_api::MemberApi, popup_service::PopupService};
 
@@ -40,7 +38,7 @@ pub struct GroupSummary {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Controller {
-    pub members: Signal<Vec<GroupMemberRelationship>>,
+    pub members: Signal<Vec<MemberSummary>>,
     pub groups: Signal<Vec<GroupSummary>>,
     pub group_resource: Resource<
         Result<
@@ -124,7 +122,7 @@ impl Controller {
         ctrl
     }
 
-    pub fn get_members(&self) -> Vec<GroupMemberRelationship> {
+    pub fn get_members(&self) -> Vec<MemberSummary> {
         tracing::debug!("total members: {:?}", (self.members)());
         (self.members)()
     }
