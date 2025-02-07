@@ -253,8 +253,9 @@ pub fn ModifyResourceModal(
     let translate: CreateResourceModalTranslate = translate(&lang);
 
     let mut name: Signal<String> = use_signal(|| title.clone());
+    let initial_files = files.clone();
 
-    let mut files: Signal<Vec<File>> = use_signal(|| vec![]);
+    let mut files: Signal<Vec<File>> = use_signal(|| initial_files);
 
     let file_count_text = translate
         .file_count_template
