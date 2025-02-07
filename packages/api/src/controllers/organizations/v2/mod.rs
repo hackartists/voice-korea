@@ -1,11 +1,6 @@
 use by_axum::{
     auth::Authorization,
-    axum::{
-        body::Body,
-        extract::Request,
-        http::Response,
-        middleware::{self, Next},
-    },
+    axum::{body::Body, extract::Request, http::Response, middleware::Next},
 };
 use by_types::DatabaseConfig;
 use models::*;
@@ -26,10 +21,6 @@ impl OrganizationControllerV2 {
                 "/:id/panels",
                 crate::controllers::panels::v2::PanelControllerV2::route(pool.clone())?,
             )
-            .nest(
-                "/:id/resources",
-                crate::controllers::resources::v1::ResourceConterollerV1::route(pool.clone())?,
-            )
             .layer(middleware::from_fn(authorize_organization)))
     }
 }
@@ -42,14 +33,14 @@ pub async fn authorize_organization(
     tracing::debug!("request: {:?}", req);
     let auth = req.extensions().get::<Option<Authorization>>();
     if auth.is_none() {
-        tracing::debug!("No Authorization header");
+        tracing::debug!("No Authorization header 1");
         return Err(StatusCode::UNAUTHORIZED);
     }
 
     let auth = auth.unwrap();
 
     if auth.is_none() {
-        tracing::debug!("No Authorization header");
+        tracing::debug!("No Authorization header 2");
         return Err(StatusCode::UNAUTHORIZED);
     }
 

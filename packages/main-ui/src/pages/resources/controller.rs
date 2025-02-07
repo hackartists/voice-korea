@@ -14,7 +14,10 @@ use crate::{
     pages::resources::components::create_resource_modal::{
         CreateResourceModal, File, ModifyResourceModal, RemoveResourceModal,
     },
-    service::{login_service::LoginService, popup_service::PopupService},
+    service::{
+        login_service::LoginService,
+        popup_service::{self, PopupService},
+    },
 };
 use dioxus_translate::translate;
 
@@ -296,6 +299,12 @@ impl Controller {
                 }
             })
             .with_id("modify resource")
-            .with_title(translate.update_resource_li);
+            .with_title(translate.more_option_update_resource);
+    }
+
+    pub fn open_remove_resource_modal(&self, index: usize) {
+        let resource = self.resources.read()[index].clone();
+        let mut popup_service = self.popup_service.clone();
+        let translate: ResourceTranslate = translate(&self.lang);
     }
 }

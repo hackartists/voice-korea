@@ -94,11 +94,11 @@ translate! {
         ko: "자료 삭제",
         en: "Remove Resource"
     }
-    update_resource_li: {
+    more_option_update_resource: {
         ko: "자료 수정하기",
         en: "Update Resource"
     }
-    remove_resource_li: {
+    more_option_remove_resource: {
         ko: "자료 삭제하기",
         en: "Remove Resource"
     }

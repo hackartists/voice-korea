@@ -34,6 +34,7 @@ pub fn Badge(value: String, #[props(default = "".to_string())] class: String) ->
 
 #[component]
 pub fn TableRow(
+    resource_index: usize,
     lang: Language,
     resource: ResourceSummary,
     is_editing: bool,
@@ -43,7 +44,7 @@ pub fn TableRow(
 ) -> Element {
     let translate: ResourceTranslate = translate(&lang);
     let no_selection_text = translate.no_selection;
-
+    let ctrl: Controller = use_context();
     let resource_type = match resource.resource_type {
         Some(v) => v.translate(&lang),
         None => no_selection_text,
@@ -178,9 +179,22 @@ pub fn TableRow(
             }
             td {
                 More {
-                    options: vec!["OK".to_string(), "None".to_string()],
-                    onclick: move |_| {
-                        tracing::debug!("Resource More Clicked");
+                    options: vec![
+                        translate.more_option_update_resource.to_string(),
+                        translate.more_option_remove_resource.to_string(),
+                    ],
+                    onclick: move |option_index| {
+                        match option_index {
+                            0 => {
+                                ctrl.open_modify_resource_modal(resource_index);
+                            }
+                            1 => {
+                                ctrl.open_remove_resource_modal(resource_index);
+                            }
+                            _ => {
+                                tracing::error!("Invalid Option Index: {}", option_index);
+                            }
+                        }
                     },
                 }
             }
@@ -284,7 +298,7 @@ pub struct ResourceProps {
 }
 
 #[component]
-pub fn More(options: Vec<String>, onclick: EventHandler<MouseEvent>) -> Element {
+pub fn More(options: Vec<String>, onclick: EventHandler<usize>) -> Element {
     rsx! {
         div { class: "group relative",
             div {
@@ -292,24 +306,20 @@ pub fn More(options: Vec<String>, onclick: EventHandler<MouseEvent>) -> Element 
                 onclick: move |event: Event<MouseData>| {
                     event.stop_propagation();
                     event.prevent_default();
-                    onclick.call(event);
                 },
                 button {
                     RowOption { width: "24", height: "24" }
                 }
                 nav { class: "border-2 bg-white invisible border-none shadow-lg rounded w-60 absolute right-0 top-full transition-all opacity-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-1 group-focus-within:z-20",
                     ul { class: "py-1",
-                        li {
-                            class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                            onclick: move |_event| {},
-                            // "{translate.update_material_li}"
-                            "OK"
-                        }
-                        li {
-                            class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer whitespace-nowrap ",
-                            onclick: move |_event| {},
-                            "None"
-                                                // "{translate.remove_material_li}"
+                        for (index , option) in options.iter().enumerate() {
+                            li {
+                                class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
+                                onclick: move |_| {
+                                    onclick.call(index);
+                                },
+                                "{option}"
+                            }
                         }
                     }
                 }
@@ -435,7 +445,8 @@ pub fn ResourcePage(props: ResourceProps) -> Element {
                         tbody {
                             for (index , resource) in ctrl.get_resources().into_iter().enumerate() {
                                 TableRow {
-                                    key: format!("resource-{}", index),
+                                    key: format!("resource-{}", resource.id),
+                                    resource_index: index,
                                     lang: props.lang,
                                     is_editing: ctrl.is_editing(index as i32),
                                     resource: resource.clone(),
