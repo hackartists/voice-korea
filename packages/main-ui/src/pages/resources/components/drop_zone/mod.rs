@@ -7,7 +7,7 @@ use dioxus_translate::{translate, Language};
 use crate::components::{icons::UploadFile, upload_button::UploadButton};
 
 #[cfg(feature = "web")]
-use dioxus::html::HasFileData;
+use dioxus::html::{FileEngine, HasFileData};
 
 mod i18n;
 use i18n::DropZoneTranslate;
@@ -25,6 +25,41 @@ fn human_readable_size(bytes: usize) -> String {
     }
 
     format!("{:.2} {}", size, sizes[index])
+}
+
+#[cfg(feature = "web")]
+pub async fn handle_file_upload(file_engine: Arc<dyn FileEngine>) -> Vec<File> {
+    let result: Vec<File> = vec![];
+    let files = file_engine.files();
+    for f in files {
+        match file_engine.read_file(f.as_str()).await {
+            Some(bytes) => {
+                let file_name: String = f.into();
+                let ext = file_name.rsplitn(2, '.').next().unwrap_or("");
+                let extension = ext.parse::<super::create_resource_modal::FileExtension>();
+                match extension {
+                    Ok(ext) => {
+                        result.push(File {
+                            name: file_name,
+                            size: human_readable_size(bytes.len()),
+                            bytes,
+                            ext,
+                            url: None,
+                        });
+                    }
+                    Err(_) => {
+                        tracing::error!("Not Allowed file extension {}", ext);
+                        continue;
+                    }
+                }
+            }
+            None => {
+                tracing::error!("Error reading file");
+                continue;
+            }
+        };
+    }
+    result
 }
 
 #[component]
@@ -64,38 +99,7 @@ pub fn DropZone(lang: Language, onchange: EventHandler<Vec<File>>) -> Element {
                     ev.stop_propagation();
                     #[cfg(feature = "web")]
                     if let Some(file_engine) = ev.files() {
-                        let mut result: Vec<File> = vec![];
-                        let files = file_engine.files();
-                        for f in files {
-                            match file_engine.read_file(f.as_str()).await {
-                                Some(bytes) => {
-                                    let file_name: String = f.into();
-                                    let ext = file_name.rsplitn(2, '.').next().unwrap_or("");
-                                    let extension = ext
-                                        .parse::<super::create_resource_modal::FileExtension>();
-                                    match extension {
-                                        Ok(ext) => {
-                                            result
-                                                .push(File {
-                                                    name: file_name,
-                                                    size: human_readable_size(bytes.len()),
-                                                    bytes,
-                                                    ext,
-                                                    url: None,
-                                                });
-                                        }
-                                        Err(_) => {
-                                            tracing::error!("Not Allowed file extension {}", ext);
-                                            continue;
-                                        }
-                                    }
-                                }
-                                None => {
-                                    tracing::error!("Error reading file");
-                                    continue;
-                                }
-                            };
-                        }
+                        let result = handle_file_upload(file_engine).await;
                         onchange.call(result);
                     }
                     indragzone.set(false);
@@ -119,38 +123,7 @@ pub fn DropZone(lang: Language, onchange: EventHandler<Vec<File>>) -> Element {
                         spawn(async move {
                             #[cfg(feature = "web")]
                             if let Some(file_engine) = ev.files() {
-                                let mut result: Vec<File> = vec![];
-                                let files = file_engine.files();
-                                for f in files {
-                                    match file_engine.read_file(f.as_str()).await {
-                                        Some(bytes) => {
-                                            let file_name: String = f.into();
-                                            let ext = file_name.rsplitn(2, '.').next().unwrap_or("");
-                                            let extension = ext
-                                                .parse::<super::create_resource_modal::FileExtension>();
-                                            match extension {
-                                                Ok(ext) => {
-                                                    result
-                                                        .push(File {
-                                                            name: file_name,
-                                                            size: human_readable_size(bytes.len()),
-                                                            bytes,
-                                                            ext,
-                                                            url: None,
-                                                        });
-                                                }
-                                                Err(_) => {
-                                                    tracing::error!("Not Allowed file extension {}", ext);
-                                                    continue;
-                                                }
-                                            }
-                                        }
-                                        None => {
-                                            tracing::error!("Error reading file");
-                                            continue;
-                                        }
-                                    };
-                                }
+                                let result = handle_file_upload(file_engine).await;
                                 onchange.call(result);
                             }
                         });
