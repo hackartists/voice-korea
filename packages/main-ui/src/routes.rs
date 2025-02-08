@@ -19,6 +19,7 @@ use crate::pages::opinions::page::OpinionPage;
 use crate::pages::panels::page::PanelPage;
 use crate::pages::reset_password::ResetPasswordPage;
 use crate::pages::resources::page::ResourcePage;
+use crate::pages::surveys::_id::update::page::SurveyUpdatePage;
 use crate::pages::surveys::new::page::SurveyCreatePage;
 use crate::pages::surveys::page::SurveyPage;
 use crate::pages::*;
@@ -54,6 +55,8 @@ pub enum Route {
             SurveyPage { lang: Language },
             #[route("/surveys/new")]
             SurveyCreatePage { lang: Language },
+            #[route("/surveys/:survey_id/update")]
+            SurveyUpdatePage { lang: Language, survey_id: String },
         #[end_layout]
 
         //FIXME: remove this route after new ui is implemented

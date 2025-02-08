@@ -27,6 +27,8 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
     let mut is_focused = use_signal(|| false);
     let mut project_name = use_signal(|| "".to_string());
 
+    let navigator = use_navigator();
+
     // let surveys = ctrl.get_surveys();
 
     // FIXME: it seems to be anti-pattern due should be refactoring to use_memo when implementing panel
@@ -146,7 +148,7 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                             for survey in surveys.items {
                                 div { class: "flex flex-col w-full justify-start items-start",
                                     div { class: "flex flex-row w-full h-[1px] bg-[#bfc8d9]" }
-                                    div { class: "flex flex-row w-full h-[55px]",
+                                    div { class: "flex flex-row w-full min-h-[55px]",
                                         div { class: "flex flex-row w-[150px] min-w-[150px] h-full justify-center items-center",
                                             div { class: "text-[#35343f] font-semibold text-[14px]",
                                                 {survey.project_type.translate(&props.lang)}
@@ -169,26 +171,13 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                                         }
 
                                         // TODO: implement panel in survey list view
-                                        button {
-                                            class: "flex flex-row flex-1 h-full justify-center items-center",
-                                            onclick: move |_| {},
-                                                                                // if survey.panels.clone().len() != 0 {
-                                        //     if clicked_panel_index() == index {
-                                        //         div { class: "flex flex-wrap w-full justify-center items-center gap-[5px]",
-                                        //             for panel in survey.panels.clone() {
-                                        //                 PanelLabel {
-                                        //                     label: panel.name.clone(),
-                                        //                     background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
-                                        //                 }
-                                        //             }
-                                        //         }
-                                        //     } else {
-                                        //         PanelLabel {
-                                        //             label: survey.panels[0].name.clone(),
-                                        //             background_color: if survey.status == PublicSurveyStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
-                                        //         }
-                                        //     }
-                                        // }
+                                        div { class: "flex flex-wrap flex-1 min-h-[55px] justify-center items-center gap-[5px] py-[5px]",
+                                            for panel in survey.panels.clone() {
+                                                PanelLabel {
+                                                    label: panel.name.clone(),
+                                                    background_color: if survey.status == ProjectStatus::Ready { "#35343f".to_string() } else { "#b4b4b4".to_string() },
+                                                }
+                                            }
                                         }
 
                                         div { class: "flex flex-row flex-1 h-full justify-center items-center",
@@ -230,7 +219,13 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                                                         ul { class: "py-1",
                                                             li {
                                                                 class: "p-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-                                                                onclick: move |_| {},
+                                                                onclick: move |_| {
+                                                                    navigator
+                                                                        .push(Route::SurveyUpdatePage {
+                                                                            lang: props.lang,
+                                                                            survey_id: survey.id.clone().to_string(),
+                                                                        });
+                                                                },
                                                                 "{translate.update_survey}"
                                                             }
                                                             li {

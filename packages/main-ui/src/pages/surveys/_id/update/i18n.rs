@@ -1,51 +1,16 @@
 use dioxus_translate::translate;
 
 translate! {
-    AddQuestionTranslate;
+    SurveyUpdateTranslate;
 
-    add_description: {
-        ko: "새로운 질문을 추가해주세요.",
-        en: "Please add a new question."
-    }
-}
-
-translate! {
-    SurveyNewTranslate;
-
-    survey_title: {
-        ko: "조사 관리",
-        en: "Survey Management"
-    }
-    start_survey: {
-        ko: "조사 시작하기",
-        en: "Start Survey"
-    }
-
-    dropdown: {
-        ko: "드랍다운 선택",
-        en: "Select Dropdown"
-    }
-    checkbox: {
-        ko: "체크박스 선택",
-        en: "Select Checkbox"
-    }
-    subjective: {
-        ko: "주관식 답변",
-        en: "Subjective Answer"
-    }
-    rating: {
-        ko: "평가 척도",
-        en: "Evaluation Rating"
-    }
-
-    create_new_panel: {
-        ko: "패널 새로 만들기",
+    create_panel: {
+        ko: "새로운 패널 생성하기",
         en: "Create New Panel"
     }
-}
-
-translate! {
-    CreateSurveyTranslate;
+    survey_title: {
+        ko: "조사관리 / 조사 수정하기",
+        en: "Survey management/editing surveys"
+    }
 
     economy: {
         ko: "경제",
@@ -104,6 +69,10 @@ translate! {
         ko: "평가 척도",
         en: "Evaluation Rating"
     }
+}
+
+translate! {
+    UpdateSurveyTranslate;
 
     btn_next: {
         ko: "다음으로",

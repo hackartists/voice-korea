@@ -3,16 +3,17 @@ use dioxus_translate::Language;
 use models::PanelV2;
 
 use crate::pages::surveys::{
-    components::setting::Setting, models::current_step::CurrentStep, new::controller::Controller,
+    _id::update::controller::Controller, components::setting::Setting,
+    models::current_step::CurrentStep,
 };
 
 #[derive(Props, Clone, PartialEq)]
-pub struct SettingPanelProps {
+pub struct UpdatePanelsProps {
     lang: Language,
 }
 
 #[component]
-pub fn SettingPanel(props: SettingPanelProps) -> Element {
+pub fn UpdatePanels(props: UpdatePanelsProps) -> Element {
     let mut ctrl: Controller = use_context();
     let selected_panels = ctrl.selected_panels();
     let panels = ctrl.total_panels();

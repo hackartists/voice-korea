@@ -8,7 +8,7 @@ use models::{
 
 use crate::{
     components::icons::{Clear, Remove},
-    pages::surveys::new::i18n::CreatePanelModalTranslate,
+    pages::surveys::i18n::CreatePanelModalTranslate,
 };
 
 #[derive(Props, Clone, PartialEq)]
