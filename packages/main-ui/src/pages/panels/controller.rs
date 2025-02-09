@@ -59,7 +59,7 @@ impl Controller {
         let size = 10;
         let search_keyword = use_signal(|| "".to_string());
 
-        let panel_resource = use_server_future(move || {
+        let panel_resource = use_resource(move || {
             let page = page();
             let keyword = search_keyword().clone();
 
@@ -76,7 +76,7 @@ impl Controller {
                         .unwrap_or_default()
                 }
             }
-        })?;
+        });
 
         let trans = translate.clone();
 
