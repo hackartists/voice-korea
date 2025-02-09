@@ -21,9 +21,8 @@ pub struct SurveyCreateProps {
 #[component]
 pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
     let translates: SurveyNewTranslate = translate(&props.lang);
-    let ctrl = Controller::new(props.lang);
+    let mut ctrl = Controller::new(props.lang);
 
-    let step = ctrl.get_current_step();
     rsx! {
         div { class: "flex flex-col gap-[40px] items-end justify-start mb-[40px]",
             div { class: "flex flex-col w-full h-full justify-start items-start",
@@ -43,10 +42,14 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                     }
                 }
 
-                if step == CurrentStep::CreateSurvey {
-                    CreateSurvey { lang: props.lang }
-                } else {
-                    SettingPanel { lang: props.lang }
+                CreateSurvey {
+                    lang: props.lang,
+                    visibility: ctrl.get_current_step() == CurrentStep::CreateSurvey,
+                    onnext: move |req| ctrl.handle_survey_request(req),
+                }
+                SettingPanel {
+                    lang: props.lang,
+                    visibility: ctrl.get_current_step() == CurrentStep::SettingPanel,
                 }
             }
         }

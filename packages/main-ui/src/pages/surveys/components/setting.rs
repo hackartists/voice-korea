@@ -23,12 +23,16 @@ pub fn Setting(
     change_total_panel_members: EventHandler<u64>,
     change_step: EventHandler<CurrentStep>,
     save_survey: EventHandler<MouseEvent>,
+
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     let translate: SettingPanelTranslate = translate(&lang);
     let mut is_open = use_signal(|| false);
 
     rsx! {
-        div { class: "flex flex-col w-full justify-start items-start",
+        div {
+            class: "flex flex-col w-full justify-start items-start",
+            ..attributes,
             div { class: "flex flex-row w-full justify-between items-center mb-[10px]",
                 div { class: "font-medium text-black text-[16px] leading-[22.5px]",
                     "{translate.composition_panel}"

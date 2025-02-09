@@ -9,6 +9,7 @@ use crate::pages::surveys::{
 #[derive(Props, Clone, PartialEq)]
 pub struct SettingPanelProps {
     lang: Language,
+    visibility: bool,
 }
 
 #[component]
@@ -20,6 +21,10 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
 
     rsx! {
         Setting {
+            visibility: if !props.visibility { "hidden" },
+            width: if !props.visibility { "0px" },
+            height: if !props.visibility { "0px" },
+
             lang: props.lang,
             total_members,
             selected_panels,
