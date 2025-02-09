@@ -4,10 +4,8 @@ use by_macros::ApiModel;
 use dioxus_translate::Translate;
 #[cfg(feature = "server")]
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default, ApiModel, Translate)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Field {
     #[default]

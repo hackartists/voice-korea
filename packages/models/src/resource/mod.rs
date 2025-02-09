@@ -60,9 +60,7 @@ pub struct Resource {
     // pub files: Vec<Metadata>,
 }
 
-#[derive(
-    Debug, Default, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, ApiModel, Translate,
-)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum ResourceType {
     #[default]
@@ -80,9 +78,7 @@ pub enum ResourceType {
     Media = 6,
 }
 
-#[derive(
-    Debug, Default, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, ApiModel, Translate,
-)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum UsagePurpose {
     #[default]
@@ -96,9 +92,7 @@ pub enum UsagePurpose {
     EducationalMaterial = 4,
 }
 
-#[derive(
-    Debug, Default, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, ApiModel, Translate,
-)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum Source {
     #[default]
@@ -112,9 +106,7 @@ pub enum Source {
     Company = 4,
 }
 
-#[derive(
-    Debug, Default, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, ApiModel, Translate,
-)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub enum AccessLevel {
     #[default]
@@ -145,7 +137,7 @@ pub enum AccessLevel {
 //     // pub resource_id: String,
 // }
 
-// #[derive(Debug, Default, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, ApiModel)]
+// #[derive(Debug, Default, Clone, Eq, PartialEq, ApiModel)]
 // #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 // pub enum Format {
 //     #[default]
