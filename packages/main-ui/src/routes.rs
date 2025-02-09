@@ -56,7 +56,7 @@ pub enum Route {
             #[route("/surveys/new")]
             SurveyCreatePage { lang: Language },
             #[route("/surveys/:survey_id/update")]
-            SurveyUpdatePage { lang: Language, survey_id: String },
+            SurveyUpdatePage { lang: Language, survey_id: i64 },
         #[end_layout]
 
         //FIXME: remove this route after new ui is implemented
