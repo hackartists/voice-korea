@@ -252,19 +252,7 @@ pub struct ChoiceQuestion {
     pub options: Vec<String>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Eq,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    Default,
-    ApiModel,
-    Translate,
-    Copy,
-)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate, Copy)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum ProjectArea {
     #[default]
@@ -307,10 +295,7 @@ impl ProjectArea {
     }
 }
 
-#[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
-)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum ProjectType {
     #[default]
@@ -321,11 +306,8 @@ pub enum ProjectType {
 }
 
 // FIXME: rename to ProjectStatus after finishing migration from public_opinion.
-#[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, ApiModel, Translate,
-)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-#[serde(rename_all = "snake_case")]
 pub enum ProjectStatus {
     #[default]
     #[translate(ko = "준비")]

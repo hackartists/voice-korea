@@ -13,17 +13,12 @@ use crate::{
     routes::Route,
 };
 
-#[derive(Props, Clone, PartialEq)]
-pub struct SurveyCreateProps {
-    lang: Language,
-}
-
 #[component]
-pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
-    let translates: SurveyNewTranslate = translate(&props.lang);
-    let ctrl = Controller::new(props.lang);
+pub fn SurveyCreatePage(lang: Language, survey_id: Option<i64>) -> Element {
+    let translates: SurveyNewTranslate = translate(&lang);
+    // FIXME: impelement handling with survey_id
+    let mut ctrl = Controller::new(lang);
 
-    let step = ctrl.get_current_step();
     rsx! {
         div { class: "flex flex-col gap-[40px] items-end justify-start mb-[40px]",
             div { class: "flex flex-col w-full h-full justify-start items-start",
@@ -31,11 +26,7 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                     "{translates.survey_title}"
                 }
                 div { class: "flex flex-row w-full justify-start items-center mb-[40px]",
-                    Link {
-                        class: "mr-[6px]",
-                        to: Route::SurveyPage {
-                            lang: props.lang,
-                        },
+                    Link { class: "mr-[6px]", to: Route::SurveyPage { lang },
                         ArrowLeft { width: "24", height: "24", color: "#555462" }
                     }
                     div { class: "text-[#222222] font-semibold text-[28px]",
@@ -43,10 +34,14 @@ pub fn SurveyCreatePage(props: SurveyCreateProps) -> Element {
                     }
                 }
 
-                if step == CurrentStep::CreateSurvey {
-                    CreateSurvey { lang: props.lang }
-                } else {
-                    SettingPanel { lang: props.lang }
+                CreateSurvey {
+                    lang,
+                    visibility: ctrl.get_current_step() == CurrentStep::CreateSurvey,
+                    onnext: move |req| ctrl.handle_survey_request(req),
+                }
+                SettingPanel {
+                    lang,
+                    visibility: ctrl.get_current_step() == CurrentStep::SettingPanel,
                 }
             }
         }

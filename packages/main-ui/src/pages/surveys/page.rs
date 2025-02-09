@@ -223,7 +223,7 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                                                                     navigator
                                                                         .push(Route::SurveyUpdatePage {
                                                                             lang: props.lang,
-                                                                            survey_id: survey.id.clone().to_string(),
+                                                                            survey_id: survey.id,
                                                                         });
                                                                 },
                                                                 "{translate.update_survey}"

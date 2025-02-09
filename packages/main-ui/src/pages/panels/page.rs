@@ -27,7 +27,7 @@ pub struct PanelProps {
 #[component]
 pub fn PanelPage(props: PanelProps) -> Element {
     let popup_service: PopupService = use_context();
-    let mut ctrl = Controller::new(props.lang, popup_service);
+    let mut ctrl = Controller::new(props.lang, popup_service)?;
     let panels = ctrl.get_panels();
     let attributes = ctrl.get_attributes();
 

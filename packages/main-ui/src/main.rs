@@ -48,7 +48,7 @@ fn main() {
         );
     }
 
-    tracing::info!("starting app");
+    tracing::debug!("starting app");
     dioxus_aws::launch(App);
 }
 
