@@ -42,6 +42,8 @@ pub fn SurveyCreatePage(lang: Language, survey_id: Option<i64>) -> Element {
                 SettingPanel {
                     lang,
                     visibility: ctrl.get_current_step() == CurrentStep::SettingPanel,
+                    onnext: move |_req| {},
+                    onback: move || ctrl.change_step(CurrentStep::CreateSurvey),
                 }
             }
         }
