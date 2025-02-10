@@ -28,7 +28,6 @@ pub struct AttributeInfo {
 pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
     let translate: CreatePanelModalTranslate = translate(&props.lang);
     let mut panel_name: Signal<String> = use_signal(|| "".to_string());
-    let mut panel_count: Signal<u64> = use_signal(|| 0);
     let mut selected_value: Signal<Vec<String>> = use_signal(|| {
         vec![
             "".to_string(),
@@ -40,7 +39,6 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
     let mut is_open: Signal<Vec<bool>> = use_signal(|| vec![false, false, false, false]);
 
     let panel_name_error: Signal<String> = use_signal(|| "".to_string());
-    let panel_count_error: Signal<String> = use_signal(|| "".to_string());
     let error_signals: Vec<Signal<String>> = vec![
         use_signal(|| "".to_string()), // age_error
         use_signal(|| "".to_string()), // gender_error
@@ -131,43 +129,6 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
             }
 
             div { class: "flex flex-col w-full justify-start items-start bg-white border border-[#bfc8d9] rounded-[8px] p-[24px]",
-                div { class: "flex flex-row w-full justify-start items-center gap-[10px]",
-                    div { class: "w-[50px] font-medium text-[#222222] text-[15px]",
-                        "{translate.personnel}"
-                    }
-                    div { class: "flex flex-col w-full justify-start items-start",
-                        input {
-                            class: "flex flex-row w-full h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px] focus:outline-none",
-                            r#type: "text",
-                            placeholder: "0",
-                            value: panel_count(),
-                            onkeydown: move |e: KeyboardEvent| {
-                                let key = e.key();
-                                if key != Key::Backspace && key != Key::Delete {
-                                    let s = match key {
-                                        Key::Character(c) => c,
-                                        _ => "".to_string(),
-                                    };
-                                    if !s.chars().all(|c| c.is_ascii_digit()) {
-                                        e.prevent_default();
-                                    }
-                                }
-                            },
-                            oninput: {
-                                move |e: Event<FormData>| {
-                                    let value = e.value().parse::<u64>().unwrap_or(0);
-                                    panel_count.set(value);
-                                }
-                            },
-                        }
-
-                        if panel_count_error() != "" {
-                            div { class: "font-semibold text-red-600 text-[13px] mt-[10px]",
-                                {panel_count_error()}
-                            }
-                        }
-                    }
-                }
 
                 for (index , attribute) in total_attributes().iter().enumerate() {
                     div { class: "flex flex-row w-full justify-start items-center gap-[10px] mt-[10px]",
@@ -272,13 +233,11 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                             if check_condition(
                                 translate.clone(),
                                 panel_name_error,
-                                panel_count_error,
                                 error_signals[0],
                                 error_signals[1],
                                 error_signals[2],
                                 error_signals[3],
                                 panel_name(),
-                                panel_count(),
                                 values[0].clone(),
                                 values[1].clone(),
                                 values[2].clone(),
@@ -288,7 +247,7 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                                     .onsave
                                     .call(PanelV2CreateRequest {
                                         name: panel_name(),
-                                        user_count: panel_count(),
+                                        user_count: 0,
                                         age: age.clone().unwrap(),
                                         gender: gender.clone().unwrap(),
                                         region: region.clone().unwrap(),
@@ -330,14 +289,12 @@ pub fn check_condition(
     tr: CreatePanelModalTranslate,
 
     mut panel_name_error: Signal<String>,
-    mut panel_count_error: Signal<String>,
     mut age_error: Signal<String>,
     mut gender_error: Signal<String>,
     mut region_error: Signal<String>,
     mut salary_error: Signal<String>,
 
     panel_name: String,
-    panel_count: u64,
     age: String,
     gender: String,
     region: String,
@@ -348,13 +305,6 @@ pub fn check_condition(
         return false;
     } else {
         panel_name_error.set("".to_string());
-    }
-
-    if panel_count == 0 {
-        panel_count_error.set(tr.panel_count_error.to_string());
-        return false;
-    } else {
-        panel_count_error.set("".to_string());
     }
 
     if age == "" {

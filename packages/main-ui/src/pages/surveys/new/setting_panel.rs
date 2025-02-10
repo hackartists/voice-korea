@@ -136,9 +136,6 @@ pub fn SettingPanel(
                                                         div { class: "font-bold text-[15px] text-[#222222] mb-[5px]",
                                                             "{panel.name}"
                                                         }
-                                                        div { class: "font-medium text-[10px] text-[#222222]",
-                                                            "{translate.total_people}: {panel.user_count}"
-                                                        }
                                                     }
                                                 }
                                             }

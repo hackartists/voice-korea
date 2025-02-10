@@ -240,12 +240,6 @@ pub fn PanelList(
                             }
                             Switch { width: "19", height: "19" }
                         }
-                        div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center gap-[10px]",
-                            div { class: "text-[#555462] font-semibold text-[14px]",
-                                "{translate.personnel}"
-                            }
-                            Switch { width: "19", height: "19" }
-                        }
                         div { class: "flex flex-row flex-1 h-full justify-center items-center gap-[10px]",
                             div { class: "text-[#555462] font-semibold text-[14px]",
                                 "{translate.age}"
@@ -347,47 +341,6 @@ pub fn PanelList(
                                     } else {
                                         div { class: "font-medium text-[#222222] text-[14px]",
                                             {format!("{}", panel.name.clone())}
-                                        }
-                                    }
-                                }
-                                div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                    if panel.user_count == 0 && panel_counts.len() == panels.len() {
-                                        input {
-                                            id: "input_panel_count {index}",
-                                            class: "text-black text-base placeholder-gray-500 focus:outline-none",
-                                            style: "width: {panel_count_width()[index]}; min-width: 50px; max-width: 100%;",
-                                            r#type: "text",
-                                            placeholder: "0",
-                                            value: panel_counts()[index].clone(),
-                                            onkeydown: move |e: KeyboardEvent| {
-                                                let key = e.key();
-                                                if key == Key::Enter {
-                                                    let value = panel_counts()[index].clone().parse::<u64>().unwrap();
-                                                    update_panel_count.call((index, value));
-                                                } else if key != Key::Backspace && key != Key::Delete {
-                                                    let s = match key {
-                                                        Key::Character(c) => c,
-                                                        _ => "".to_string(),
-                                                    };
-                                                    if !s.chars().all(|c| c.is_ascii_digit()) {
-                                                        e.prevent_default();
-                                                    }
-                                                }
-                                            },
-                                            oninput: move |e| {
-                                                let value = e.value();
-                                                let new_width = format!("{}px", 10 + value.len() * 12);
-                                                let mut counts = panel_counts();
-                                                let mut widths = panel_count_width();
-                                                counts[index] = value;
-                                                widths[index] = new_width;
-                                                panel_counts.set(counts);
-                                                panel_count_width.set(widths);
-                                            },
-                                        }
-                                    } else {
-                                        div { class: "font-medium text-[#222222] text-[14px]",
-                                            {format!("{}", panel.user_count)}
                                         }
                                     }
                                 }

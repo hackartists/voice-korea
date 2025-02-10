@@ -19,6 +19,7 @@ pub struct PanelV2 {
 
     #[api_model(summary, action = [create], action_by_id = update, query_action = search_by)]
     pub name: String,
+    //TODO: remove this field with removal of ui dependency
     #[api_model(summary, action = [create], action_by_id = update)]
     pub user_count: u64,
 
