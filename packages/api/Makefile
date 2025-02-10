@@ -29,7 +29,7 @@ setup.tool:
 	cargo install cargo-watch toml-cli
 
 run:
-	$(BUILD_ENV) cargo watch -x run -w src
+	$(BUILD_ENV) cargo watch -w src -x "run --target-dir $(PWD)/target"
 
 build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda

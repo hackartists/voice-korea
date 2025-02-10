@@ -9,11 +9,14 @@ use by_axum::{
 use models::*;
 use sqlx::postgres::PgRow;
 
+use crate::utils::nonce_lab::NonceLabClient;
+
 #[derive(Clone, Debug)]
 pub struct SurveyControllerV2 {
     panel_survey_repo: PanelSurveysRepository,
     repo: SurveyV2Repository,
     pool: sqlx::Pool<sqlx::Postgres>,
+    nonce_lab: NonceLabClient,
 }
 
 impl SurveyControllerV2 {
@@ -25,6 +28,7 @@ impl SurveyControllerV2 {
             repo,
             panel_survey_repo,
             pool,
+            nonce_lab: NonceLabClient::new(),
         };
 
         Ok(by_axum::axum::Router::new()
@@ -148,7 +152,6 @@ FROM data;",
     }
 
     pub async fn delete(&self, id: i64) -> Result<Json<SurveyV2>> {
-        //FIXME: receive panel params and remove panel data
         tracing::debug!("delete survey: {:?}", id);
 
         let _ = self.repo.delete(id).await?;
@@ -186,10 +189,12 @@ FROM data;",
 
     pub async fn create(&self, org_id: i64, body: SurveyV2CreateRequest) -> Result<Json<SurveyV2>> {
         tracing::debug!("create {:?} {:?}", org_id, body);
+        let mut tx = self.pool.begin().await?;
 
-        let survey = self
+        let survey = match self
             .repo
-            .insert(
+            .insert_with_tx(
+                &mut *tx,
                 body.name.clone(),
                 ProjectType::Survey,
                 body.project_area,
@@ -201,14 +206,22 @@ FROM data;",
                 org_id.clone(),
                 body.questions.clone(),
             )
-            .await?;
+            .await?
+        {
+            Some(v) => v,
+            None => return Err(ApiError::SurveyAlreadyExists),
+        };
 
         for panel in body.panels.clone() {
             let _ = self
                 .panel_survey_repo
-                .insert(panel.id.clone(), survey.id.clone())
+                .insert_with_tx(&mut *tx, panel.id, survey.id)
                 .await?;
         }
+
+        tx.commit().await?;
+
+        self.nonce_lab.create_survey(survey.clone().into()).await?;
 
         Ok(Json(survey))
     }
