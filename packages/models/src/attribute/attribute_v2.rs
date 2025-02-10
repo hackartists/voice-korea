@@ -5,10 +5,14 @@ use crate::Result;
 use by_axum::aide;
 use by_macros::ApiModel;
 use dioxus_translate::Translate;
+
+// NOTE: AgeV2 should cover specific age and range of age.
+//       If you need to change range of age, you must consider interaction with Noncelab.
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum AgeV2 {
     #[default]
+    None = 0,
     #[translate(ko = "17세 이하", en = "Under 17 years old")]
     Teenager = 1, //17세 이하
     #[translate(ko = "18~29세", en = "18-29 years old")]
@@ -29,64 +33,67 @@ pub enum AgeV2 {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum GenderV2 {
     #[default]
+    None = 0,
     #[translate(ko = "남성")]
-    Male = 1, //남성
+    Male = 1,
     #[translate(ko = "여성")]
-    Female = 2, //여성
+    Female = 2,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum RegionV2 {
     #[default]
+    None = 0,
     #[translate(ko = "서울")]
-    Seoul = 1, //서울
+    Seoul = 2,
     #[translate(ko = "부산")]
-    Busan = 2, //부산
+    Busan = 51,
     #[translate(ko = "대구")]
-    Daegu = 3, //대구
+    Daegu = 53,
     #[translate(ko = "인천")]
-    Incheon = 4, //인천
+    Incheon = 32,
     #[translate(ko = "광주")]
-    Gwangju = 5, //광주
+    Gwangju = 62,
     #[translate(ko = "대전")]
-    Daejeon = 6, //대전
+    Daejeon = 42,
     #[translate(ko = "울산")]
-    Ulsan = 7, //울산
+    Ulsan = 52,
     #[translate(ko = "세종")]
-    Sejong = 8, //세종
+    Sejong = 44,
     #[translate(ko = "경기")]
-    Gyeonggi = 9, //경기
+    Gyeonggi = 31,
     #[translate(ko = "강원")]
-    Gangwon = 10, //강원
+    Gangwon = 33,
     #[translate(ko = "충북")]
-    Chungbuk = 11, //충북
+    Chungbuk = 43,
     #[translate(ko = "충남")]
-    Chungnam = 12, //충남
+    Chungnam = 41,
     #[translate(ko = "전북")]
-    Jeonbuk = 13, //전북
+    Jeonbuk = 63,
     #[translate(ko = "전남")]
-    Jeonnam = 14, //전남
+    Jeonnam = 61,
     #[translate(ko = "경북")]
-    Gyeongbuk = 15, //경북
+    Gyeongbuk = 54,
     #[translate(ko = "경남")]
-    Gyeongnam = 16, //경남
+    Gyeongnam = 55,
     #[translate(ko = "제주")]
-    Jeju = 17, //제주
+    Jeju = 64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum SalaryV2 {
     #[default]
+    None = 0,
     #[translate(ko = "2400만원 이하", en = "Less than 24 million won")]
-    TierOne = 1, //2400만원 이하
+    TierOne = 1,
     #[translate(ko = "2400만원 ~ 5000만원", en = "24 million won ~ 50 million won")]
-    TierTwo = 2, //2400만원 ~ 5000만원
+    TierTwo = 2,
     #[translate(ko = "5000만원 ~ 8000만원", en = "50 million won ~ 80 million won")]
-    TierThree = 3, //5000만원 ~ 8000만원
+    TierThree = 3,
     #[translate(ko = "8000만원 ~ 10000만원", en = "80 million won ~ 100 million won")]
-    TierFour = 4, //8000만원 ~ 10000만원
+    TierFour = 4,
     #[translate(ko = "10000만원 이상", en = "More than 100 million won")]
-    TierFive = 5, //10000만원 이상
+    TierFive = 5,
 }

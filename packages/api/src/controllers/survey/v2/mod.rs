@@ -9,23 +9,31 @@ use by_axum::{
 use models::*;
 use sqlx::postgres::PgRow;
 
+use crate::utils::nonce_lab::NonceLabClient;
+
 #[derive(Clone, Debug)]
 pub struct SurveyControllerV2 {
     panel_survey_repo: PanelSurveysRepository,
     repo: SurveyV2Repository,
     pool: sqlx::Pool<sqlx::Postgres>,
+    nonce_lab: NonceLabClient,
 }
 
 impl SurveyControllerV2 {
-    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+    pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = SurveyV2::get_repository(pool.clone());
         let panel_survey_repo = PanelSurveys::get_repository(pool.clone());
 
-        let ctrl = SurveyControllerV2 {
+        Self {
             repo,
             panel_survey_repo,
             pool,
-        };
+            nonce_lab: NonceLabClient::new(),
+        }
+    }
+
+    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+        let ctrl = Self::new(pool);
 
         Ok(by_axum::axum::Router::new()
             .route("/:id", post(Self::act_by_id).get(Self::get_survey_v2))
@@ -148,7 +156,6 @@ FROM data;",
     }
 
     pub async fn delete(&self, id: i64) -> Result<Json<SurveyV2>> {
-        //FIXME: receive panel params and remove panel data
         tracing::debug!("delete survey: {:?}", id);
 
         let _ = self.repo.delete(id).await?;
@@ -184,32 +191,88 @@ FROM data;",
         Ok(Json(survey))
     }
 
-    pub async fn create(&self, org_id: i64, body: SurveyV2CreateRequest) -> Result<Json<SurveyV2>> {
-        tracing::debug!("create {:?} {:?}", org_id, body);
+    pub async fn create(
+        &self,
+        org_id: i64,
+        SurveyV2CreateRequest {
+            name,
+            project_area,
+            started_at,
+            ended_at,
+            description,
+            quotes,
+            questions,
+            panels,
+        }: SurveyV2CreateRequest,
+    ) -> Result<Json<SurveyV2>> {
+        tracing::debug!("create {:?}", org_id,);
+        let mut tx = self.pool.begin().await?;
 
-        let survey = self
+        let survey = match self
             .repo
-            .insert(
-                body.name.clone(),
+            .insert_with_tx(
+                &mut *tx,
+                name,
                 ProjectType::Survey,
-                body.project_area,
+                project_area,
                 ProjectStatus::Ready,
-                body.started_at,
-                body.ended_at,
-                body.description.clone(),
-                body.quotes,
+                started_at,
+                ended_at,
+                description,
+                quotes,
                 org_id.clone(),
-                body.questions.clone(),
+                questions,
             )
-            .await?;
+            .await?
+        {
+            Some(v) => v,
+            None => return Err(ApiError::SurveyAlreadyExists),
+        };
 
-        for panel in body.panels.clone() {
+        for panel in panels.clone() {
             let _ = self
                 .panel_survey_repo
-                .insert(panel.id.clone(), survey.id.clone())
+                .insert_with_tx(&mut *tx, panel.id, survey.id)
                 .await?;
         }
 
+        tx.commit().await?;
+
+        // FIXME: This is workaround. Fix to use mock when testing
+        #[cfg(not(test))]
+        self.nonce_lab.create_survey(survey.clone().into()).await?;
+
         Ok(Json(survey))
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+
+    use super::*;
+    use crate::tests::*;
+
+    #[tokio::test]
+    async fn test_survey_create() {
+        let TestContext { user, now, .. } = setup().await.unwrap();
+
+        let cli = SurveyV2::get_client("http://localhost:3000");
+        let org_id = user.orgs[0].id;
+
+        let res = cli
+            .create(
+                org_id,
+                "test".to_string(),
+                ProjectArea::City,
+                now,
+                now + 3600,
+                "test description".to_string(),
+                100,
+                vec![],
+                vec![],
+            )
+            .await;
+
+        assert!(res.is_ok(), "{:?}", res);
     }
 }

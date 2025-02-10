@@ -48,10 +48,6 @@ pub enum ApiError {
 
     JSONSerdeError(String),
 
-    SurveyNotFound(String),
-
-    NotDraftSurvey,
-
     InCompleteDraft,
 
     ForbiddenAccessError,
@@ -65,6 +61,11 @@ pub enum ApiError {
     ResourceNotFound,
 
     InvalidType,
+
+    // Survey Errors
+    SurveyAlreadyExists,
+    SurveyNotFound(String),
+    SurveyNotDraft,
 }
 
 impl std::fmt::Display for ApiError {
@@ -118,7 +119,7 @@ impl IntoResponse for ApiError {
             ApiError::ReqwestFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::JSONSerdeError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::SurveyNotFound(_) => StatusCode::NOT_FOUND,
-            ApiError::NotDraftSurvey => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::SurveyNotDraft => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::InCompleteDraft => StatusCode::UNPROCESSABLE_ENTITY,
             ApiError::ForbiddenAccessError => StatusCode::FORBIDDEN,
             ApiError::AlreadyExists => StatusCode::ALREADY_REPORTED,

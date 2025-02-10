@@ -22,13 +22,13 @@ pub struct PanelV2 {
     #[api_model(summary, action = [create], action_by_id = update)]
     pub user_count: u64,
 
-    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable, rename = "age")]
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
     pub age: AgeV2,
-    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable, rename = "gender")]
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
     pub gender: GenderV2,
-    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable, rename = "region")]
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
     pub region: RegionV2,
-    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable, rename = "salary")]
+    #[api_model(summary, action = [create], action_by_id = update, type = INTEGER, nullable)]
     pub salary: SalaryV2,
 
     #[api_model(summary, many_to_one = organizations)]
