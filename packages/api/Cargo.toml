@@ -37,3 +37,6 @@ validator = "0.20.0"
 [features]
 default = []
 lambda = ["by-axum/lambda"]
+
+[dev-dependencies]
+tower = "0.5.2"

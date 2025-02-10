@@ -20,16 +20,20 @@ pub struct SurveyControllerV2 {
 }
 
 impl SurveyControllerV2 {
-    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+    pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = SurveyV2::get_repository(pool.clone());
         let panel_survey_repo = PanelSurveys::get_repository(pool.clone());
 
-        let ctrl = SurveyControllerV2 {
+        Self {
             repo,
             panel_survey_repo,
             pool,
             nonce_lab: NonceLabClient::new(),
-        };
+        }
+    }
+
+    pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
+        let ctrl = Self::new(pool);
 
         Ok(by_axum::axum::Router::new()
             .route("/:id", post(Self::act_by_id).get(Self::get_survey_v2))
@@ -187,24 +191,37 @@ FROM data;",
         Ok(Json(survey))
     }
 
-    pub async fn create(&self, org_id: i64, body: SurveyV2CreateRequest) -> Result<Json<SurveyV2>> {
-        tracing::debug!("create {:?} {:?}", org_id, body);
+    pub async fn create(
+        &self,
+        org_id: i64,
+        SurveyV2CreateRequest {
+            name,
+            project_area,
+            started_at,
+            ended_at,
+            description,
+            quotes,
+            questions,
+            panels,
+        }: SurveyV2CreateRequest,
+    ) -> Result<Json<SurveyV2>> {
+        tracing::debug!("create {:?}", org_id,);
         let mut tx = self.pool.begin().await?;
 
         let survey = match self
             .repo
             .insert_with_tx(
                 &mut *tx,
-                body.name.clone(),
+                name,
                 ProjectType::Survey,
-                body.project_area,
+                project_area,
                 ProjectStatus::Ready,
-                body.started_at,
-                body.ended_at,
-                body.description.clone(),
-                body.quotes,
+                started_at,
+                ended_at,
+                description,
+                quotes,
                 org_id.clone(),
-                body.questions.clone(),
+                questions,
             )
             .await?
         {
@@ -212,7 +229,7 @@ FROM data;",
             None => return Err(ApiError::SurveyAlreadyExists),
         };
 
-        for panel in body.panels.clone() {
+        for panel in panels.clone() {
             let _ = self
                 .panel_survey_repo
                 .insert_with_tx(&mut *tx, panel.id, survey.id)
@@ -224,5 +241,36 @@ FROM data;",
         self.nonce_lab.create_survey(survey.clone().into()).await?;
 
         Ok(Json(survey))
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+
+    use super::*;
+    use crate::tests::*;
+
+    #[tokio::test]
+    async fn test_survey_create() {
+        let TestContext {
+            pool, user, now, ..
+        } = setup().await.unwrap();
+
+        let ctrl = SurveyControllerV2::new(pool.clone());
+        let org_id = user.orgs[0].id;
+
+        let req = SurveyV2CreateRequest {
+            name: "test".to_string(),
+            project_area: ProjectArea::City,
+            started_at: now,
+            ended_at: now,
+            description: "test".to_string(),
+            quotes: 1,
+            questions: vec![],
+            panels: vec![],
+        };
+
+        let res = ctrl.create(org_id, req).await;
+        assert!(res.is_ok(), "{:?}", res);
     }
 }
