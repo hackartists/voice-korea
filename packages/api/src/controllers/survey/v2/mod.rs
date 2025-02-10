@@ -20,7 +20,6 @@ impl SurveyControllerV2 {
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
         let repo = SurveyV2::get_repository(pool.clone());
         let panel_survey_repo = PanelSurveys::get_repository(pool.clone());
-
         let ctrl = SurveyControllerV2 {
             repo,
             panel_survey_repo,
@@ -112,22 +111,31 @@ impl SurveyControllerV2 {
         // tracing::debug!("find query: {}", query);
 
         let items: Vec<SurveyV2Summary> = sqlx::query(
-            &"WITH data AS (
-    SELECT p.*, 
+            &"SELECT 
+        COUNT(*) OVER() AS total_count, 
+        p.id, 
+        p.created_at, 
+        p.updated_at, 
+        p.name, 
+        p.project_type, 
+        p.project_area, 
+        p.status, 
+        p.started_at, 
+        p.ended_at, 
+        p.quotes, 
+        p.org_id, 
+        p.panel_counts, 
         COALESCE(
-            json_agg(to_jsonb(f)) FILTER (WHERE f.id IS NOT NULL), '[]'
+            json_agg(to_jsonb(panels)) FILTER (WHERE panels.id IS NOT NULL), '[]'
         ) AS panels
-    FROM surveys p
-    LEFT JOIN panel_surveys j ON p.id = j.survey_id
-    LEFT JOIN panels f ON j.panel_id = f.id
-    WHERE p.org_id = $1
-    GROUP BY p.id
-    LIMIT $2 OFFSET $3
-)
-SELECT 
-    (SELECT COUNT(*) FROM surveys WHERE org_id = $1) AS total_count, 
-    data.*
-FROM data;",
+    FROM surveys p 
+    LEFT JOIN panel_surveys ps ON p.id = ps.survey_id
+    LEFT JOIN panels panels ON ps.panel_id = panels.id
+    WHERE p.org_id = $1 
+    GROUP BY p.id, p.created_at, p.updated_at, p.name, p.project_type, 
+             p.project_area, p.status, p.started_at, p.ended_at, p.quotes, 
+             p.org_id, p.panel_counts
+    LIMIT $2 OFFSET $3;",
         )
         .bind(org_id)
         .bind(size as i64)
@@ -178,6 +186,7 @@ FROM data;",
                     quotes: Some(body.quotes),
                     org_id: Some(org_id),
                     questions: Some(body.questions),
+                    panel_counts: Some(body.panel_counts),
                 },
             )
             .await?;
@@ -200,6 +209,7 @@ FROM data;",
                 body.quotes,
                 org_id.clone(),
                 body.questions.clone(),
+                body.panel_counts.clone(),
             )
             .await?;
 

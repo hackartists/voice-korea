@@ -2,8 +2,8 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::{
-    PanelV2, PanelV2Action, PanelV2CreateRequest, PanelV2Query, PanelV2Summary, QueryResponse,
-    SurveyV2,
+    PanelCountsV2, PanelV2, PanelV2Action, PanelV2CreateRequest, PanelV2Query, PanelV2Summary,
+    QueryResponse, SurveyV2,
 };
 
 use crate::{
@@ -235,7 +235,7 @@ impl Controller {
         org_id: i64,
         survey_request: Option<CreateSurveyResponse>,
         total_panels: i64,
-        _selected_panels: Vec<PanelV2>,
+        selected_panels: Vec<PanelV2>,
     ) {
         let cli = SurveyV2::get_client(crate::config::get().api_url);
 
@@ -261,6 +261,16 @@ impl Controller {
                 description,
                 total_panels,
                 questions,
+                selected_panels
+                    .iter()
+                    .map(|v| PanelCountsV2 {
+                        created_at: v.created_at,
+                        updated_at: v.updated_at,
+                        panel_id: v.id,
+                        panel_survey_id: survey_id.clone(),
+                        user_count: v.user_count as i64,
+                    })
+                    .collect(),
             )
             .await
         {
@@ -291,6 +301,17 @@ impl Controller {
             questions,
         } = survey_request.unwrap();
 
+        let panel_counts = selected_panels
+            .iter()
+            .map(|v| PanelCountsV2 {
+                created_at: v.created_at,
+                updated_at: v.updated_at,
+                panel_id: v.id.clone(),
+                panel_survey_id: 0, //create 페이지에서는 survey id가 따로 없기에 0으로 넘겨줌
+                user_count: v.user_count as i64,
+            })
+            .collect();
+
         match cli
             .create(
                 org_id,
@@ -302,6 +323,7 @@ impl Controller {
                 total_panels,
                 questions,
                 selected_panels,
+                panel_counts,
             )
             .await
         {
@@ -414,23 +436,47 @@ impl PanelController {
 
             use_effect(move || match survey_resource.value()() {
                 Some(survey) => {
+                    let survey_panels = survey.clone().panels;
                     let panels = survey
                         .clone()
-                        .panels
+                        .panel_counts
                         .iter()
                         .map(|v| {
+                            let dto: Vec<PanelV2> = survey_panels
+                                .iter()
+                                .filter(|d| d.id == v.panel_id)
+                                .map(|d| d.clone())
+                                .collect();
+
+                            let d = dto
+                                .get(0)
+                                .clone()
+                                .unwrap_or(&PanelV2 {
+                                    id: 0,
+                                    created_at: 0,
+                                    updated_at: 0,
+                                    name: "".to_string(),
+                                    user_count: 0,
+                                    age: models::attribute_v2::AgeV2::Teenager,
+                                    gender: models::attribute_v2::GenderV2::Male,
+                                    region: models::attribute_v2::RegionV2::Seoul,
+                                    salary: models::attribute_v2::SalaryV2::TierOne,
+                                    org_id: 0,
+                                })
+                                .clone();
+
                             (
                                 PanelV2Summary {
-                                    id: v.id,
+                                    id: v.panel_id,
                                     created_at: v.created_at,
                                     updated_at: v.updated_at,
-                                    name: v.name.clone(),
-                                    user_count: v.user_count,
-                                    age: v.age.clone(),
-                                    gender: v.gender.clone(),
-                                    region: v.region.clone(),
-                                    salary: v.salary.clone(),
-                                    org_id: v.org_id,
+                                    name: d.name.clone(),
+                                    user_count: v.user_count as u64,
+                                    age: d.age.clone(),
+                                    gender: d.gender.clone(),
+                                    region: d.region.clone(),
+                                    salary: d.salary.clone(),
+                                    org_id: d.org_id,
                                 },
                                 v.user_count as i64,
                             )

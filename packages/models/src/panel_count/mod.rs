@@ -6,23 +6,15 @@ use by_axum::aide;
 use by_macros::api_model;
 use by_types::QueryResponse;
 
-#[api_model(base = "/panel-counts/v2", table = panel_counts, iter_type=QueryResponse)]
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PanelCountsV2 {
-    #[api_model(summary, primary_key)]
-    pub id: i64,
-    #[api_model(summary, auto = [insert])]
     pub created_at: i64,
-    #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, many_to_one = panels)]
     pub panel_id: i64,
-    #[api_model(summary, many_to_one = surveys)]
     pub panel_survey_id: i64,
-    #[api_model(summary)]
     pub user_count: i64,
-    #[api_model(summary)]
-    pub name: String,
 }
 
 #[api_model(base = "/panel-counts-surveys/v2", table = panel_counts_surveys, iter_type=QueryResponse)]
