@@ -67,39 +67,39 @@ impl Controller {
             survey_id: use_signal(|| survey_id),
         };
 
-        if survey_id.is_some() {
-            let survey_resource: Resource<SurveyV2> = use_resource({
-                let org_id = org_id();
-                let id = survey_id.unwrap();
-                move || {
-                    let survey_client = SurveyV2::get_client(&crate::config::get().api_url);
+        let survey_resource: Resource<Option<SurveyV2>> = use_resource({
+            let org_id = org_id();
+            move || {
+                let survey_client = SurveyV2::get_client(&crate::config::get().api_url);
 
-                    async move {
-                        match survey_client.get(org_id, id).await {
-                            Ok(d) => d,
+                async move {
+                    if survey_id.is_none() {
+                        None
+                    } else {
+                        match survey_client.get(org_id, survey_id.unwrap()).await {
+                            Ok(d) => Some(d),
                             Err(e) => {
                                 tracing::error!("get survey failed: {e}");
-                                SurveyV2::default()
+                                None
                             }
                         }
                     }
                 }
-            });
+            }
+        });
 
-            use_effect(move || match survey_resource.value()() {
-                Some(survey) => {
-                    ctrl.survey_request.set(Some(CreateSurveyResponse {
-                        title: survey.name.clone(),
-                        description: survey.description.clone(),
-                        start_date: survey.started_at,
-                        end_date: survey.ended_at,
-                        area: survey.project_area,
-                        questions: survey.clone().questions,
-                    }));
-                }
-                None => {}
-            });
-        }
+        use_effect(move || {
+            if let Some(Some(survey)) = survey_resource.value()() {
+                ctrl.survey_request.set(Some(CreateSurveyResponse {
+                    title: survey.name.clone(),
+                    description: survey.description.clone(),
+                    start_date: survey.started_at,
+                    end_date: survey.ended_at,
+                    area: survey.project_area,
+                    questions: survey.clone().questions,
+                }));
+            }
+        });
 
         use_context_provider(|| ctrl);
 
@@ -389,79 +389,79 @@ impl PanelController {
             survey_id: use_signal(|| survey_id),
         };
 
-        if survey_id.is_some() {
-            let survey_resource: Resource<SurveyV2> = use_resource({
-                let org_id = org_id();
-                let id = survey_id.unwrap();
-                move || {
-                    let survey_client = SurveyV2::get_client(&crate::config::get().api_url);
+        let survey_resource: Resource<Option<SurveyV2>> = use_resource({
+            let org_id = org_id();
+            move || {
+                let survey_client = SurveyV2::get_client(&crate::config::get().api_url);
 
-                    async move {
-                        match survey_client.get(org_id, id).await {
-                            Ok(d) => d,
+                async move {
+                    if survey_id.is_none() {
+                        None
+                    } else {
+                        match survey_client.get(org_id, survey_id.unwrap()).await {
+                            Ok(d) => Some(d),
                             Err(e) => {
                                 tracing::error!("get survey failed: {e}");
-                                SurveyV2::default()
+                                None
                             }
                         }
                     }
                 }
-            });
+            }
+        });
 
-            use_effect(move || match survey_resource.value()() {
-                Some(survey) => {
-                    let survey_panels = survey.clone().panels;
-                    let panels = survey
-                        .clone()
-                        .panel_counts
-                        .iter()
-                        .map(|v| {
-                            let dto: Vec<PanelV2> = survey_panels
-                                .iter()
-                                .filter(|d| d.id == v.panel_id)
-                                .map(|d| d.clone())
-                                .collect();
+        use_effect(move || {
+            if let Some(Some(survey)) = survey_resource.value()() {
+                let survey_panels = survey.clone().panels;
+                let panels = survey
+                    .clone()
+                    .panel_counts
+                    .iter()
+                    .map(|v| {
+                        let dto: Vec<PanelV2> = survey_panels
+                            .iter()
+                            .filter(|d| d.id == v.panel_id)
+                            .map(|d| d.clone())
+                            .collect();
 
-                            let d = dto
-                                .get(0)
-                                .clone()
-                                .unwrap_or(&PanelV2 {
-                                    id: 0,
-                                    created_at: 0,
-                                    updated_at: 0,
-                                    name: "".to_string(),
-                                    user_count: 0,
-                                    age: models::attribute_v2::AgeV2::Teenager,
-                                    gender: models::attribute_v2::GenderV2::Male,
-                                    region: models::attribute_v2::RegionV2::Seoul,
-                                    salary: models::attribute_v2::SalaryV2::TierOne,
-                                    org_id: 0,
-                                })
-                                .clone();
+                        let d = dto
+                            .get(0)
+                            .clone()
+                            .unwrap_or(&PanelV2 {
+                                id: 0,
+                                created_at: 0,
+                                updated_at: 0,
+                                name: "".to_string(),
+                                user_count: 0,
+                                age: models::attribute_v2::AgeV2::Teenager,
+                                gender: models::attribute_v2::GenderV2::Male,
+                                region: models::attribute_v2::RegionV2::Seoul,
+                                salary: models::attribute_v2::SalaryV2::TierOne,
+                                org_id: 0,
+                            })
+                            .clone();
 
-                            (
-                                PanelV2Summary {
-                                    id: v.panel_id,
-                                    created_at: v.created_at,
-                                    updated_at: v.updated_at,
-                                    name: d.name.clone(),
-                                    user_count: v.user_count as u64,
-                                    age: d.age.clone(),
-                                    gender: d.gender.clone(),
-                                    region: d.region.clone(),
-                                    salary: d.salary.clone(),
-                                    org_id: d.org_id,
-                                },
-                                v.user_count as i64,
-                            )
-                        })
-                        .collect();
-                    ctrl.selected_panels.set(panels);
-                    ctrl.input_total_panels.set(survey.quotes);
-                }
-                None => {}
-            });
-        }
+                        (
+                            PanelV2Summary {
+                                id: v.panel_id,
+                                created_at: v.created_at,
+                                updated_at: v.updated_at,
+                                name: d.name.clone(),
+                                user_count: v.user_count as u64,
+                                age: d.age.clone(),
+                                gender: d.gender.clone(),
+                                region: d.region.clone(),
+                                salary: d.salary.clone(),
+                                org_id: d.org_id,
+                            },
+                            v.user_count as i64,
+                        )
+                    })
+                    .collect();
+                ctrl.selected_panels.set(panels);
+                ctrl.input_total_panels.set(survey.quotes);
+            }
+        });
 
         Ok(ctrl)
     }
