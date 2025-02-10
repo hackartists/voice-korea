@@ -1,5 +1,6 @@
 use super::i18n::*;
 use dioxus::prelude::*;
+use dioxus_logger::tracing;
 use dioxus_translate::*;
 use models::PanelV2;
 use num_format::{Locale, ToFormattedString};
@@ -21,11 +22,12 @@ pub fn SettingPanel(
     visibility: bool,
 
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    survey_id: Option<i64>,
     onback: EventHandler<()>,
     onnext: EventHandler<PanelRequest>,
 ) -> Element {
     let mut is_open = use_signal(|| false);
-    let mut ctrl = PanelController::new(lang)?;
+    let mut ctrl = PanelController::new(lang, survey_id)?;
 
     let mut selected_panels = ctrl.selected_panels;
     let total_panels = ctrl.input_total_panels_memo;
@@ -68,7 +70,6 @@ pub fn SettingPanel(
                     PanelSettingInput {
                         label: "{translate.total_panel}",
                         unit: "{translate.person}",
-                        max_value: None,
                         value: total_panels(),
                         oninput: move |value: i64| {
                             ctrl.change_total_panels(value);
@@ -156,7 +157,6 @@ pub fn SettingPanel(
                             PanelSettingInput {
                                 label: "{sp.0.name}",
                                 unit: "{translate.person}",
-                                max_value: sp.0.user_count as i64,
                                 value: sp.1,
                                 oninput: move |value: i64| {
                                     ctrl.change_number_by_index(i, value);
@@ -229,11 +229,10 @@ pub fn PanelSettingBox(label: String, unit: String, value: i64) -> Element {
 pub fn PanelSettingInput(
     label: String,
     unit: String,
-    max_value: Option<i64>,
     value: i64,
     oninput: EventHandler<i64>,
 ) -> Element {
-    let mut input_value = use_signal(|| value);
+    tracing::debug!("input value: {}", value);
 
     rsx! {
         div { class: "flex flex-row w-full justify-between items-center",
@@ -243,13 +242,9 @@ pub fn PanelSettingInput(
                     class: "flex flex-row w-[215px] h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px] text-right",
                     r#type: "text",
                     placeholder: "0",
-                    value: input_value().to_formatted_string(&Locale::en),
+                    value: value.to_formatted_string(&Locale::en),
                     oninput: move |e| {
-                        let mut v = e.value().parse::<i64>().unwrap_or(input_value());
-                        if max_value.is_some() && v > max_value.unwrap() {
-                            v = max_value.unwrap();
-                        }
-                        input_value.set(v);
+                        let v = e.value().parse::<i64>().unwrap_or(value);
                         oninput.call(v);
                     },
                 }

@@ -51,6 +51,26 @@ pub fn CreateSurvey(
     let mut questions = use_signal(move || questions);
     let nav = use_navigator();
 
+    use_effect(use_reactive(&value.clone(), move |value| {
+        title.set(value.title.clone());
+        description.set(value.description.clone());
+
+        if value.start_date > 0 {
+            start_date.set(value.start_date);
+        } else {
+            start_date.set(timestamp);
+        }
+
+        if value.end_date > 0 {
+            end_date.set(value.end_date);
+        } else {
+            end_date.set(timestamp);
+        }
+
+        area.set(value.area.clone());
+        questions.set(value.questions.clone());
+    }));
+
     rsx! {
         div {
             class: "flex flex-col w-full h-full justify-start items-start",
@@ -61,10 +81,10 @@ pub fn CreateSurvey(
             div { class: "flex flex-col w-full",
                 InputIntroduction {
                     lang,
-                    title: title(),
-                    description: description(),
-                    start_date: start_date(),
-                    end_date: end_date(),
+                    ti: title(),
+                    desc: description(),
+                    sd: start_date(),
+                    ed: end_date(),
                     area: area(),
                     onchange_area: {
                         let value = value.clone();

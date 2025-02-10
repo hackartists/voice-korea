@@ -19,7 +19,7 @@ use crate::{
 pub fn SurveyCreatePage(lang: Language, survey_id: Option<i64>) -> Element {
     let translates: SurveyNewTranslate = translate(&lang);
     // FIXME: impelement handling with survey_id
-    let mut ctrl = Controller::new(lang);
+    let mut ctrl = Controller::new(lang, survey_id);
 
     rsx! {
         div { class: "flex flex-col gap-[40px] items-end justify-start mb-[40px]",
@@ -45,6 +45,7 @@ pub fn SurveyCreatePage(lang: Language, survey_id: Option<i64>) -> Element {
                 }
                 SettingPanel {
                     lang,
+                    survey_id,
                     visibility: ctrl.get_current_step() == CurrentStep::SettingPanel,
                     onnext: move |req: PanelRequest| async move {
                         ctrl.save_survey(req).await;
