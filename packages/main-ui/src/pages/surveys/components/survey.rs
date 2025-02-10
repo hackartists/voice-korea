@@ -4,21 +4,30 @@ use dioxus_translate::{translate, Language};
 use models::prelude::Question;
 
 use crate::{
-    components::icons::{Minus, RowMenuDial, Trash},
+    components::icons::{Minus, Plus, RowMenuDial, Trash},
     pages::surveys::{
         components::type_selection::QuestionTypeSelector,
         i18n::{ObjectiveTranslate, QuestionListViewTranslate, SubjectiveTranslate},
+        new::i18n::AddQuestionTranslate,
     },
 };
+// onchange: move |(index, survey): (usize, Question)| {
+//     questions.with_mut(move |q| q[index] = survey);
+// },
+// onremove: move |index: usize| {
+//     questions.remove(index);
+// },
 
 #[component]
 pub fn QuestionListView(
     lang: Language,
-    questions: Vec<Question>,
-    onchange: EventHandler<(usize, Question)>,
-    onremove: EventHandler<usize>,
+    questions: Signal<Vec<Question>>,
+    onchange: EventHandler<Vec<Question>>,
+    // onchange: EventHandler<(usize, Question)>,
+    // onremove: EventHandler<usize>,
 ) -> Element {
     let tr: QuestionListViewTranslate = translate(&lang);
+
     rsx! {
         for index in 0..questions.len() {
             div {
@@ -35,8 +44,10 @@ pub fn QuestionListView(
                             lang,
                             onchange: {
                                 move |qtype: String| {
-                                    let question = Question::new(&qtype);
-                                    onchange((index, question.clone()));
+                                    questions
+                                        .with_mut(move |q| {
+                                            q[index] = Question::new(&qtype);
+                                        });
                                 }
                             },
                         }
@@ -47,42 +58,64 @@ pub fn QuestionListView(
                             ),
                             r#type: "text",
                             placeholder: "{tr.input_title}",
-                            value: questions[index].title(),
-                            oninput: {
-                                let mut question = questions[index].clone();
-                                move |e: Event<FormData>| {
-                                    question.set_title(&e.value());
-                                    onchange((index, question.clone()));
-                                }
+                            value: questions()[index].title(),
+                            oninput: move |e: Event<FormData>| {
+                                questions
+                                    .with_mut(move |q| {
+                                        q[index].set_title(&e.value());
+                                    });
                             },
                         }
                     }
 
-                    if matches!(questions[index], Question::ShortAnswer(_) | Question::Subjective(_)) {
+                    if matches!(questions()[index], Question::ShortAnswer(_) | Question::Subjective(_)) {
                         Subjective {
                             lang,
-                            onchange: move |q: Question| {
-                                onchange.call((index, q));
+                            onchange: move |v: Question| {
+                                questions.with_mut(move |q| q[index] = v);
                             },
                             onremove: move |_| {
-                                onremove.call(index);
+                                questions.remove(index);
                             },
-                            question: questions[index].clone(),
+                            question: questions()[index].clone(),
                         }
                     } else {
                         Objective {
                             lang,
-                            onchange: move |q: Question| {
-                                onchange.call((index, q));
+                            onchange: move |v: Question| {
+                                questions.with_mut(move |q| q[index] = v);
                             },
                             onremove: move |_| {
-                                onremove.call(index);
+                                questions.remove(index);
                             },
-                            question: questions[index].clone(),
+                            question: questions()[index].clone(),
                         }
                     }
                 }
 
+            }
+        }
+
+        button {
+            class: "flex flex-row w-full",
+            onclick: move |_| {
+                questions.with_mut(|q| q.push(Question::default()));
+            },
+            AddQuestion { lang }
+        }
+    }
+}
+
+#[component]
+pub fn AddQuestion(lang: Language) -> Element {
+    let translates: AddQuestionTranslate = translate(&lang);
+    rsx! {
+        div { class: "flex flex-col w-full h-[200px] rounded-[8px] justify-center items-center border border-dashed border-[#b4b4b4] mt-[20px]",
+            div { class: "flex flex-row w-[45px] h-[45px] justify-center items-center rounded-[100px] border border-[#b4b4b4]",
+                Plus { width: "12", height: "12", color: "#b4b4b4" }
+            }
+            div { class: "mt-[10px] font-medium text-[15px] text-[#b4b4b4] leading-[22px]",
+                "{translates.add_description}"
             }
         }
     }

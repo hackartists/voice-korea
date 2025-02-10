@@ -18,13 +18,31 @@ pub fn InputIntroduction(
     onchange_start_date: EventHandler<i64>,
     onchange_end_date: EventHandler<i64>,
     onchange_description: EventHandler<String>,
+
+    #[props(default = None)] area: Option<ProjectArea>,
+    #[props(default = Local::now().timestamp())] start_date: i64,
+    #[props(default = Local::now().timestamp())] end_date: i64,
+    #[props(default = "".to_string())] title: String,
+    #[props(default = "".to_string())] description: String,
 ) -> Element {
     let translate: InputIntroductionTranslate = translate(&lang);
     let mut is_focused = use_signal(|| false);
-    let mut select_field = use_signal(|| None);
-    let mut start_date = use_signal(|| Local::now().timestamp());
-    let mut end_date = use_signal(|| Local::now().timestamp());
+    let mut select_field = use_signal(|| area);
+    let mut start_date = use_signal(|| start_date);
+    let mut end_date = use_signal(|| end_date);
+    let mut title = use_signal(|| title.clone());
+    let mut description = use_signal(|| description.clone());
 
+    // use_effect(use_reactive(
+    //     (&area, &start_date, &end_date, &title, &description),
+    //     move |(selected, started, ended, ti, desc)| {
+    //         select_field.set(selected);
+    //         start_date.set(started);
+    //         end_date.set(ended);
+    //         title.set(ti);
+    //         description.set(desc);
+    //     },
+    // ));
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "font-medium text-[16px] text-black leading-[22px] mb-[10px]",
@@ -86,6 +104,7 @@ pub fn InputIntroduction(
                         ),
                         r#type: "text",
                         placeholder: "{translate.input_title_hint}",
+                        value: title(),
                         onfocus: move |_| {
                             is_focused.set(true);
                         },
@@ -93,6 +112,7 @@ pub fn InputIntroduction(
                             is_focused.set(false);
                         },
                         oninput: move |e: Event<FormData>| {
+                            title.set(e.value());
                             onchange_title.call(e.value());
                         },
                     }
@@ -145,7 +165,9 @@ pub fn InputIntroduction(
                     class: "flex flex-row w-full h-[55px] justify-start items-center bg-white focus:outline-none border-b-[1px] border-[#bfc8d9] px-[15px] py-[15px] font-medium text-[#b4b4b4] text-[15px] leading-[22px]",
                     r#type: "text",
                     placeholder: "{translate.input_description_hint}",
+                    value: description(),
                     oninput: move |e: Event<FormData>| {
+                        description.set(e.value());
                         onchange_description.call(e.value());
                     },
                 }

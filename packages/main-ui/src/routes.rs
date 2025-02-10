@@ -19,6 +19,7 @@ use crate::pages::opinions::page::OpinionPage;
 use crate::pages::panels::page::PanelPage;
 use crate::pages::reset_password::ResetPasswordPage;
 use crate::pages::resources::page::ResourcePage;
+use crate::pages::surveys::_id::update::page::SurveyUpdatePage;
 use crate::pages::surveys::new::page::SurveyCreatePage;
 use crate::pages::surveys::page::SurveyPage;
 use crate::pages::*;
@@ -54,6 +55,8 @@ pub enum Route {
             SurveyPage { lang: Language },
             #[route("/surveys/new")]
             SurveyCreatePage { lang: Language },
+            #[route("/surveys/:survey_id/update")]
+            SurveyUpdatePage { lang: Language, survey_id: i64 },
         #[end_layout]
 
         //FIXME: remove this route after new ui is implemented
@@ -85,4 +88,134 @@ pub enum Route {
     #[redirect("/", || Route::LoginPage { lang: Language::Ko })]
     #[route("/:..route")]
     NotFoundPage { route: Vec<String> },
+}
+
+impl Route {
+    pub fn to_menu(&self) -> Option<String> {
+        match self {
+            Route::DashboardPage { lang } if lang == &Language::Ko => {
+                Some("프로젝트 검색".to_string())
+            }
+            Route::DashboardPage { lang } if lang == &Language::En => {
+                Some("Project Search".to_string())
+            }
+            Route::GroupPage { lang } if lang == &Language::Ko => Some("그룹 관리".to_string()),
+            Route::GroupPage { lang } if lang == &Language::En => {
+                Some("Group Management".to_string())
+            }
+            Route::GroupDetailPage { lang, .. } if lang == &Language::Ko => {
+                Some("그룹 관리".to_string())
+            }
+            Route::GroupDetailPage { lang, .. } if lang == &Language::En => {
+                Some("Group Management".to_string())
+            }
+            Route::OpinionPage { lang } if lang == &Language::Ko => Some("공론 조사".to_string()),
+            Route::OpinionPage { lang } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::OpinionCreatePage { lang } if lang == &Language::Ko => {
+                Some("공론 조사".to_string())
+            }
+            Route::OpinionCreatePage { lang } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::MemberPage { lang } if lang == &Language::Ko => Some("팀원 관리".to_string()),
+            Route::MemberPage { lang } if lang == &Language::En => {
+                Some("Member Management".to_string())
+            }
+            Route::MemberDetailPage { lang, .. } if lang == &Language::Ko => {
+                Some("팀원 관리".to_string())
+            }
+            Route::MemberDetailPage { lang, .. } if lang == &Language::En => {
+                Some("Member Management".to_string())
+            }
+            Route::AttributePage { lang } if lang == &Language::Ko => {
+                Some("속성 & 패널 관리".to_string())
+            }
+            Route::AttributePage { lang } if lang == &Language::En => {
+                Some("Attribute & Panel Management".to_string())
+            }
+            Route::PanelPage { lang } if lang == &Language::Ko => {
+                Some("속성 & 패널 관리".to_string())
+            }
+            Route::PanelPage { lang } if lang == &Language::En => {
+                Some("Attribute & Panel Management".to_string())
+            }
+            Route::ResourcePage { lang } if lang == &Language::Ko => Some("자료 관리".to_string()),
+            Route::ResourcePage { lang } if lang == &Language::En => {
+                Some("Resource Management".to_string())
+            }
+            Route::SurveyPage { lang } if lang == &Language::Ko => Some("여론 조사".to_string()),
+            Route::SurveyPage { lang } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::SurveyCreatePage { lang } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::SurveyCreatePage { lang } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::SurveyUpdatePage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::SurveyUpdatePage { lang, .. } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::LoginPage { lang } if lang == &Language::Ko => Some("로그인".to_string()),
+            Route::LoginPage { lang } if lang == &Language::En => Some("Login".to_string()),
+            Route::CreatePage { lang } if lang == &Language::Ko => Some("계정 생성".to_string()),
+            Route::CreatePage { lang } if lang == &Language::En => {
+                Some("Create Account".to_string())
+            }
+            Route::FindEmailPage { lang } if lang == &Language::Ko => {
+                Some("이메일 찾기".to_string())
+            }
+            Route::FindEmailPage { lang } if lang == &Language::En => {
+                Some("Find Email".to_string())
+            }
+            Route::ResetPasswordPage { lang } if lang == &Language::Ko => {
+                Some("비밀번호 재설정".to_string())
+            }
+            Route::ResetPasswordPage { lang } if lang == &Language::En => {
+                Some("Reset Password".to_string())
+            }
+            Route::WriteTitlePage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::WriteTitlePage { lang, .. } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::WriteQuestionPage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::WriteQuestionPage { lang, .. } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::SelectResponsePage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::SelectResponsePage { lang, .. } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::SelectResponseDetailPage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::SelectResponseDetailPage { lang, .. } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::SurveySummaryPage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::SurveySummaryPage { lang, .. } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::ResponseReportPage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::ResponseReportPage { lang, .. } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            _ => None,
+        }
+    }
 }

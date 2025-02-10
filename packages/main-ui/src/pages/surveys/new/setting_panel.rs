@@ -1,40 +1,41 @@
+use super::i18n::*;
 use dioxus::prelude::*;
-use dioxus_translate::{translate, Language};
+use dioxus_translate::*;
 use models::PanelV2;
+use num_format::{Locale, ToFormattedString};
 
 use crate::{
     components::icons::{Clear, Remove},
-    pages::surveys::new::{
-        controller::{Controller, CurrentStep},
-        i18n::SettingPanelTranslate,
-    },
+    pages::surveys::new::controller::*,
 };
 
-#[derive(Props, Clone, PartialEq)]
-pub struct SettingPanelProps {
-    lang: Language,
-}
-
 #[component]
-pub fn SettingPanel(props: SettingPanelProps) -> Element {
-    let mut ctrl: Controller = use_context();
-    let translate: SettingPanelTranslate = translate(&props.lang);
-    let selected_panels = ctrl.selected_panels();
-    let panels = ctrl.total_panels();
-    let total_members = ctrl.get_total_panel_members();
+pub fn SettingPanel(
+    lang: Language,
+    visibility: bool,
 
+    onback: EventHandler<()>,
+    onnext: EventHandler<PanelResponse>,
+) -> Element {
     let mut is_open = use_signal(|| false);
+    let mut ctrl = PanelController::new(lang)?;
+
+    let mut selected_panels = ctrl.selected_panels;
+    let total_panels = ctrl.total_panels;
+    let translate: SettingPanelTranslate = translate(&lang);
 
     rsx! {
-        div { class: "flex flex-col w-full justify-start items-start",
+        div {
+            class: "flex flex-col w-full justify-start items-start",
+            visibility: if !visibility { "hidden" },
             div { class: "flex flex-row w-full justify-between items-center mb-[10px]",
                 div { class: "font-medium text-black text-[16px] leading-[22.5px]",
                     "{translate.composition_panel}"
                 }
                 button {
                     class: "bg-[#2a60d3] rounded-4px px-[14px] py-[8px] font-semibold text-white text-[16px] rounded-[4px]",
-                    onclick: move |_| async move {
-                        ctrl.open_create_panel_modal().await;
+                    onclick: move |_| {
+                        ctrl.open_create_panel_modal();
                     },
                     "{translate.create_panel}"
                 }
@@ -53,16 +54,12 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                 }
 
                 div { class: "flex flex-col w-full justify-start items-start",
-                    div { class: "flex flex-row w-full justify-between items-center mb-[10px]",
-                        div { class: "flex flex-row w-[200px] font-medium text-[15px] text-black",
-                            "{translate.total_panel}"
-                        }
-                        div { class: "flex flex-row gap-[10px] items-center",
-                            div { class: "flex flex-row w-[213px] h-[55px] p-[15px] justify-end items-center font-medium text-[#222222] text-[15px] bg-[#f7f7f7] rounded-[4px]",
-                                "{total_members}"
-                            }
-                            div { class: "font-normal text-black text-[15px]", "{translate.person}" }
-                        }
+
+                    PanelSettingInput {
+                        label: "{translate.total_panel}",
+                        unit: "{translate.person}",
+                        value: total_panels(),
+                        oninput: move |_value: i64| {},
                     }
 
                     div { class: "flex flex-row w-full justify-between items-center",
@@ -79,20 +76,16 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                     div { class: "flex flex-wrap flex-1 justify-start items-center gap-[5px]",
                                         for (i , panel) in selected_panels.iter().enumerate() {
                                             PanelLabel {
-                                                label: panel.name.clone(),
-                                                onclose: move |e: Event<MouseData>| {
-                                                    e.stop_propagation();
-                                                    e.prevent_default();
-                                                    ctrl.remove_selected_panel(i);
+                                                label: panel.0.name.clone(),
+                                                onclose: move |_| {
+                                                    selected_panels.remove(i);
                                                 },
                                             }
                                         }
                                     }
                                     button {
-                                        onclick: move |e: Event<MouseData>| {
-                                            e.stop_propagation();
-                                            e.prevent_default();
-                                            ctrl.remove_all_selected_panel();
+                                        onclick: move |_| {
+                                            selected_panels.clear();
                                         },
                                         Remove {
                                             width: "15",
@@ -116,34 +109,22 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                                             }
                                         }
                                     }
-                                    for panel in panels.clone() {
-                                        if !selected_panels.iter().any(|selected| selected.name == panel.name) {
-                                            div {
-                                                class: "flex flex-col w-full h-[60px] justify-start items-start py-[9px] bg-white hover:bg-[#f7f7f7] hover:border-l hover:border-l-[#2a60d3] cursor-pointer",
-                                                onclick: {
-                                                    let panel = panel.clone();
-                                                    move |_| {
-                                                        ctrl.add_selected_panel(PanelV2 {
-                                                            id: panel.id.clone(),
-                                                            created_at: panel.created_at.clone(),
-                                                            updated_at: panel.updated_at.clone(),
-                                                            name: panel.name.clone(),
-                                                            user_count: panel.user_count.clone(),
-                                                            age: panel.age.clone(),
-                                                            gender: panel.gender.clone(),
-                                                            region: panel.region.clone(),
-                                                            salary: panel.salary.clone(),
-                                                            org_id: panel.org_id.clone(),
-                                                        });
+                                    if let Some(panels) = ctrl.panels.value()() {
+                                        for panel in panels.items {
+                                            if !selected_panels.iter().any(|selected| selected.0.name == panel.name) {
+                                                div {
+                                                    class: "flex flex-col w-full h-[60px] justify-start items-start py-[9px] bg-white hover:bg-[#f7f7f7] hover:border-l hover:border-l-[#2a60d3] cursor-pointer",
+                                                    onclick: move |_| {
+                                                        ctrl.add_selected_panel(panel.clone());
                                                         is_open.set(false);
-                                                    }
-                                                },
-                                                div { class: "flex flex-col w-full px-4",
-                                                    div { class: "font-bold text-[15px] text-[#222222] mb-[5px]",
-                                                        "{panel.name}"
-                                                    }
-                                                    div { class: "font-medium text-[10px] text-[#222222]",
-                                                        "{translate.total_people}: {panel.user_count}"
+                                                    },
+                                                    div { class: "flex flex-col w-full px-4",
+                                                        div { class: "font-bold text-[15px] text-[#222222] mb-[5px]",
+                                                            "{panel.name}"
+                                                        }
+                                                        div { class: "font-medium text-[10px] text-[#222222]",
+                                                            "{translate.total_people}: {panel.user_count}"
+                                                        }
                                                     }
                                                 }
                                             }
@@ -158,52 +139,14 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                 div { class: "flex flex-col w-full justify-start items-start",
                     div { class: "flex flex-row w-full h-[1px] bg-[#ebeff5] my-[20px]" }
                     div { class: "flex flex-col w-full justify-start items-start gap-[10px]",
-                        for (index , panel) in selected_panels.iter().enumerate() {
-                            div { class: "flex flex-row w-full justify-between items-center",
-                                div { class: "font-medium text-[#222222] text-[15px]",
-                                    "{panel.name}"
-                                }
-                                div { class: "flex flex-row h-[55px] items-center gap-[10px]",
-                                    input {
-                                        class: "flex flex-row w-[215px] h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px]",
-                                        r#type: "text",
-                                        placeholder: "0",
-                                        value: panel.user_count,
-                                        onkeydown: move |e: KeyboardEvent| {
-                                            let key = e.key();
-                                            if key != Key::Backspace && key != Key::Delete {
-                                                let s = match key {
-                                                    Key::Character(c) => c,
-                                                    _ => "".to_string(),
-                                                };
-                                                if !s.chars().all(|c| c.is_ascii_digit()) {
-                                                    e.prevent_default();
-                                                }
-                                            }
-                                        },
-                                        oninput: {
-                                            let mut ctrl = ctrl.clone();
-                                            let prev_count = ctrl.selected_panels()[index].clone().user_count;
-                                            move |e: Event<FormData>| {
-                                                let maximum_value = ctrl.get_maximum_count(index);
-                                                let value = e.value().parse::<u64>().unwrap_or(0);
-                                                if maximum_value < value {
-                                                    ctrl.change_selected_panel_count(index, maximum_value);
-                                                    ctrl.change_total_panel_members(
-                                                        total_members - prev_count + maximum_value,
-                                                    );
-                                                } else {
-                                                    ctrl.change_selected_panel_count(index, value);
-                                                    ctrl.change_total_panel_members(total_members - prev_count + value);
-                                                }
-                                            }
-                                        },
-                                    }
-
-                                    div { class: "font-normal text-black text-[15px]",
-                                        "{translate.person}"
-                                    }
-                                }
+                        for (i , sp) in selected_panels().iter().enumerate() {
+                            PanelSettingInput {
+                                label: "{sp.0.name}",
+                                unit: "{translate.person}",
+                                value: sp.1,
+                                oninput: move |value: i64| {
+                                    ctrl.change_number_by_index(i, value);
+                                },
                             }
                         }
                     }
@@ -214,25 +157,59 @@ pub fn SettingPanel(props: SettingPanelProps) -> Element {
                 button {
                     class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
                     onclick: move |_| {
-                        ctrl.change_step(CurrentStep::CreateSurvey);
+                        onback(());
                     },
                     "{translate.btn_cancel}"
                 }
-                // button {
-                //     class: "px-[20px] py-[10px] border-[#BFC8D9] bg-white border-[1px] text-[#555462] font-semibold text-[14px] rounded-[4px]",
-                //     onclick: move |_| async move {
-                //         ctrl.save_survey().await;
-                //     },
-                //     "{translate.btn_temp_save}"
-                // }
 
                 button {
                     class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
                     onclick: move |_| async move {
-                        ctrl.save_survey().await;
+                        onnext(PanelResponse {
+                            selected_panels: selected_panels()
+                                .iter()
+                                .map(|(p, c)| {
+                                    let mut p: PanelV2 = p.clone().into();
+                                    p.user_count = *c as u64;
+                                    p
+                                })
+                                .collect(),
+                            total_panels: total_panels(),
+                        });
                     },
                     "{translate.btn_complete}"
                 }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn PanelSettingInput(
+    label: String,
+    unit: String,
+    value: i64,
+    oninput: EventHandler<i64>,
+) -> Element {
+    let mut value = use_signal(|| value);
+
+    rsx! {
+        div { class: "flex flex-row w-full justify-between items-center",
+            div { class: "font-medium text-[#222222] text-[15px]", "{label}" }
+            div { class: "flex flex-row h-[55px] items-center gap-[10px]",
+                input {
+                    class: "flex flex-row w-[215px] h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px] text-right",
+                    r#type: "text",
+                    placeholder: "0",
+                    value: value().to_formatted_string(&Locale::en),
+                    oninput: move |e| {
+                        let v = e.value().parse::<i64>().unwrap_or(value());
+                        value.set(v);
+                        oninput.call(v);
+                    },
+                }
+
+                div { class: "font-normal text-black text-[15px]", "{unit}" }
             }
         }
     }

@@ -86,12 +86,8 @@ pub struct MemberSummary {
     pub project: Vec<MemberProject>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq, ApiModel)]
+#[derive(Debug, Clone, PartialEq, Eq, ApiModel)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[serde(rename_all = "snake_case")]
-// #[derive(sqlx::Type)]
-// #[sqlx(type_name = "TEXT", rename_all = "snake_case")]
-// TODO: change to text type after sdk supports it
 pub enum Role {
     Admin = 1,
     PublicAdmin = 2,
