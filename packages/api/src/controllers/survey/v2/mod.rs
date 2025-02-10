@@ -273,20 +273,6 @@ pub mod tests {
             )
             .await;
 
-        // let ctrl = SurveyControllerV2::new(pool.clone());
-
-        // let req = SurveyV2CreateRequest {
-        //     name: "test".to_string(),
-        //     project_area: ProjectArea::City,
-        //     started_at: now,
-        //     ended_at: now,
-        //     description: "test".to_string(),
-        //     quotes: 1,
-        //     questions: vec![],
-        //     panels: vec![],
-        // };
-
-        // let res = ctrl.create(org_id, req).await;
         assert!(res.is_ok(), "{:?}", res);
     }
 }
