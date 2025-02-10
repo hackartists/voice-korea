@@ -2,7 +2,6 @@ use dioxus::prelude::*;
 
 use crate::pages::attributes::AttributePage;
 use crate::pages::create::CreatePage;
-use crate::pages::dashboard::DashboardPage;
 use crate::pages::find_email::FindEmailPage;
 use crate::pages::groups::_id::page::GroupDetailPage;
 use crate::pages::groups::page::GroupPage;
@@ -31,8 +30,6 @@ use dioxus_translate::Language;
 pub enum Route {
     #[nest("/:lang")]
         #[layout(RootLayout)]
-            #[route("/dashboard")]
-            DashboardPage { lang: Language },
             #[route("/groups")]
             GroupPage { lang: Language },
             #[route("/groups/:group_id")]
@@ -93,12 +90,6 @@ pub enum Route {
 impl Route {
     pub fn to_menu(&self) -> Option<String> {
         match self {
-            Route::DashboardPage { lang } if lang == &Language::Ko => {
-                Some("프로젝트 검색".to_string())
-            }
-            Route::DashboardPage { lang } if lang == &Language::En => {
-                Some("Project Search".to_string())
-            }
             Route::GroupPage { lang } if lang == &Language::Ko => Some("그룹 관리".to_string()),
             Route::GroupPage { lang } if lang == &Language::En => {
                 Some("Group Management".to_string())

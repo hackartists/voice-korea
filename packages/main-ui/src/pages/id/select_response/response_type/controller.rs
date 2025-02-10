@@ -2,7 +2,6 @@
 use std::collections::HashMap;
 
 use dioxus::prelude::*;
-use models::prelude::SurveyDraftStatus;
 
 use crate::service::prev_survey_api::PrevSurveyApi;
 
@@ -271,11 +270,11 @@ impl Controller {
         let draft_status = ctrl.get_survey().draft_status;
         let title = ctrl.get_survey().title;
 
-        if (!draft_status.is_none() && draft_status != Some(SurveyDraftStatus::Quotas))
-            || (draft_status.is_none() && title != "")
-        {
-            navigator.push(Route::DashboardPage { lang });
-        };
+        // if (!draft_status.is_none() && draft_status != Some(SurveyDraftStatus::Quotas))
+        //     || (draft_status.is_none() && title != "")
+        // {
+        //     navigator.push(Route::DashboardPage { lang });
+        // };
 
         use_context_provider(|| ctrl);
 

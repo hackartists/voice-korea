@@ -4,8 +4,7 @@ use dioxus_logger::tracing;
 use models::prelude::{SurveyDraftStatus, UpsertSurveyDraftRequest};
 
 use crate::{
-    routes::Route, service::prev_survey_api::PrevSurveyApi,
-    utils::time::convert_timestamp_to_separate_string,
+    service::prev_survey_api::PrevSurveyApi, utils::time::convert_timestamp_to_separate_string,
 };
 
 use chrono::{Local, NaiveDate, TimeZone, Utc};
@@ -41,10 +40,12 @@ pub struct Controller {
 
 impl Controller {
     pub fn init(lang: Language, id: String) -> Self {
-        let navigator = use_navigator();
+        let _lang = lang;
         #[cfg(feature = "web")]
         {
+            use crate::routes::Route;
             use crate::service::login_service::use_login_service;
+            let navigator = use_navigator();
 
             let token = use_login_service().get_cookie_value();
             if token.is_none() {
@@ -116,11 +117,11 @@ impl Controller {
         ctrl.subject_count.set(subject_count);
         ctrl.total_count.set(total_count);
 
-        let draft_status = ctrl.get_survey().draft_status;
+        // let draft_status = ctrl.get_survey().draft_status;
 
-        if !draft_status.is_none() && draft_status != Some(SurveyDraftStatus::Complete) {
-            navigator.push(Route::DashboardPage { lang });
-        };
+        // if !draft_status.is_none() && draft_status != Some(SurveyDraftStatus::Complete) {
+        //     navigator.push(Route::DashboardPage { lang });
+        // };
 
         use_context_provider(|| ctrl);
 
@@ -131,9 +132,7 @@ impl Controller {
         (self.survey_id)()
     }
 
-    pub async fn clicked_start_survey(&mut self, lang: Language) {
-        let navigator = use_navigator();
-
+    pub async fn clicked_start_survey(&mut self, _lang: Language) {
         let start_year: i32 = match (self.start_year)().parse() {
             Ok(year) => year,
             Err(_) => return,
@@ -212,7 +211,7 @@ impl Controller {
             .create_survey(self.get_survey_id())
             .await;
 
-        navigator.push(Route::DashboardPage { lang });
+        // navigator.push(Route::DashboardPage { lang });
     }
 
     pub fn set_date(&mut self, start_date: Option<String>, end_date: Option<String>) {
