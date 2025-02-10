@@ -6,8 +6,10 @@ use crate::{
     pages::surveys::{
         models::current_step::CurrentStep,
         new::{
-            controller::Controller, create_survey::CreateSurvey, i18n::SurveyNewTranslate,
-            setting_panel::SettingPanel,
+            controller::Controller,
+            create_survey::CreateSurvey,
+            i18n::SurveyNewTranslate,
+            setting_panel::{PanelRequest, SettingPanel},
         },
     },
     routes::Route,
@@ -37,12 +39,16 @@ pub fn SurveyCreatePage(lang: Language, survey_id: Option<i64>) -> Element {
                 CreateSurvey {
                     lang,
                     visibility: ctrl.get_current_step() == CurrentStep::CreateSurvey,
+                    value: ctrl.get_survey_request(),
                     onnext: move |req| ctrl.handle_survey_request(req),
+                    onchange: move |req| ctrl.change_survey_request(req),
                 }
                 SettingPanel {
                     lang,
                     visibility: ctrl.get_current_step() == CurrentStep::SettingPanel,
-                    onnext: move |_req| {},
+                    onnext: move |req: PanelRequest| async move {
+                        ctrl.save_survey(req).await;
+                    },
                     onback: move || ctrl.change_step(CurrentStep::CreateSurvey),
                 }
             }

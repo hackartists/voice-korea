@@ -2,8 +2,8 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::{
-    PanelV2, PanelV2Action, PanelV2CreateRequest, PanelV2Query, PanelV2Summary, ProjectArea,
-    QueryResponse, SurveyV2,
+    PanelV2, PanelV2Action, PanelV2CreateRequest, PanelV2Query, PanelV2Summary, QueryResponse,
+    SurveyV2,
 };
 
 use crate::{
@@ -13,11 +13,12 @@ use crate::{
     service::{login_service::LoginService, popup_service::PopupService},
 };
 
-use super::{create_survey::CreateSurveyResponse, i18n::SurveyNewTranslate};
+use super::{
+    create_survey::CreateSurveyResponse, i18n::SurveyNewTranslate, setting_panel::PanelRequest,
+};
 
 #[derive(Clone, Copy)]
 pub struct Controller {
-    selected_field: Signal<Option<ProjectArea>>,
     nav: Navigator,
     user: LoginService,
 
@@ -42,8 +43,6 @@ impl Controller {
 
             survey_request: use_signal(|| None),
 
-            selected_field: use_signal(|| None),
-
             total_survey_types: use_signal(|| {
                 vec![
                     translates.dropdown.to_string(),
@@ -64,6 +63,20 @@ impl Controller {
         use_context_provider(|| ctrl);
 
         ctrl
+    }
+
+    pub fn change_survey_request(&mut self, req: CreateSurveyResponse) {
+        self.survey_request.set(Some(req));
+    }
+
+    pub fn get_survey_request(&self) -> CreateSurveyResponse {
+        let req = (self.survey_request)();
+
+        if req.is_none() {
+            CreateSurveyResponse::default()
+        } else {
+            req.unwrap()
+        }
     }
 
     pub fn handle_survey_request(&mut self, survey: CreateSurveyResponse) {
@@ -193,13 +206,9 @@ impl Controller {
         self.total_panel_members.set(0);
     }
 
-    pub async fn save_survey(&self) {
+    pub async fn save_survey(&self, req: PanelRequest) {
         let cli = SurveyV2::get_client(crate::config::get().api_url);
-        let area = (self.selected_field)();
-        if area.is_none() {
-            tracing::error!("Area is not selected");
-            return;
-        }
+
         let org = self.user.get_selected_org();
         if org.is_none() {
             tracing::error!("Organization is not selected");
@@ -229,9 +238,9 @@ impl Controller {
                 start_date,
                 end_date,
                 description,
-                self.get_total_panel_members() as i64,
+                req.total_panels as i64,
                 questions,
-                self.selected_panels(),
+                req.selected_panels,
             )
             .await
         {
@@ -257,6 +266,9 @@ pub struct PanelController {
     popup_service: PopupService,
     org_id: Memo<i64>,
     pub total_panels: Memo<i64>,
+
+    pub input_total_panels: Signal<i64>,
+    pub input_total_panels_memo: Memo<i64>,
 }
 
 impl PanelController {
@@ -292,6 +304,18 @@ impl PanelController {
             total
         });
 
+        let input_total_panels = use_signal(|| 0);
+        let input_total_panels_memo = use_memo(move || {
+            let panels = input_total_panels();
+
+            if panels == 0 || panels >= total_panels() {
+                // when initial value
+                total_panels()
+            } else {
+                panels
+            }
+        });
+
         let ctrl = Self {
             lang,
             panels,
@@ -299,6 +323,9 @@ impl PanelController {
             selected_panels,
             total_panels,
             popup_service: use_context(),
+
+            input_total_panels,
+            input_total_panels_memo,
         };
 
         Ok(ctrl)
@@ -342,6 +369,10 @@ impl PanelController {
     pub fn add_selected_panel(&mut self, panel: PanelV2Summary) {
         self.selected_panels
             .push((panel.clone(), panel.user_count as i64));
+    }
+
+    pub fn change_total_panels(&mut self, value: i64) {
+        self.input_total_panels.set(value);
     }
 
     pub fn change_number_by_index(&mut self, index: usize, number: i64) {

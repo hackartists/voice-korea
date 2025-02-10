@@ -24,6 +24,7 @@ pub fn CreateSurvey(
     #[props(default = false)] visibility: bool,
     #[props(default = CreateSurveyResponse::default())] value: CreateSurveyResponse,
     onnext: EventHandler<CreateSurveyResponse>,
+    onchange: EventHandler<CreateSurveyResponse>,
 ) -> Element {
     let CreateSurveyResponse {
         title,
@@ -32,7 +33,7 @@ pub fn CreateSurvey(
         end_date,
         area,
         questions,
-    } = value;
+    } = value.clone();
 
     let timestamp = chrono::Local::now().timestamp();
     let translates: CreateSurveyTranslate = translate(&lang);
@@ -65,24 +66,64 @@ pub fn CreateSurvey(
                     start_date: start_date(),
                     end_date: end_date(),
                     area: area(),
-                    onchange_area: move |field: ProjectArea| {
-                        area.set(field);
+                    onchange_area: {
+                        let value = value.clone();
+                        move |field: ProjectArea| {
+                            area.set(field);
+                            onchange
+                                .call(CreateSurveyResponse {
+                                    area: field,
+                                    ..value.clone()
+                                })
+                        }
                     },
 
-                    onchange_title: move |v: String| {
-                        title.set(v);
+                    onchange_title: {
+                        let value = value.clone();
+                        move |v: String| {
+                            title.set(v.clone());
+                            onchange
+                                .call(CreateSurveyResponse {
+                                    title: v.clone(),
+                                    ..value.clone()
+                                })
+                        }
                     },
 
-                    onchange_start_date: move |v: i64| {
-                        start_date.set(v);
+                    onchange_start_date: {
+                        let value = value.clone();
+                        move |v: i64| {
+                            start_date.set(v);
+                            onchange
+                                .call(CreateSurveyResponse {
+                                    start_date: v,
+                                    ..value.clone()
+                                })
+                        }
                     },
 
-                    onchange_end_date: move |v: i64| {
-                        end_date.set(v);
+                    onchange_end_date: {
+                        let value = value.clone();
+                        move |v: i64| {
+                            end_date.set(v);
+                            onchange
+                                .call(CreateSurveyResponse {
+                                    end_date: v,
+                                    ..value.clone()
+                                })
+                        }
                     },
 
-                    onchange_description: move |v: String| {
-                        description.set(v);
+                    onchange_description: {
+                        let value = value.clone();
+                        move |v: String| {
+                            description.set(v.clone());
+                            onchange
+                                .call(CreateSurveyResponse {
+                                    description: v.clone(),
+                                    ..value.clone()
+                                })
+                        }
                     },
                 }
 
@@ -96,7 +137,6 @@ pub fn CreateSurvey(
                         questions.set(v);
                     },
                 }
-
             }
 
             div { class: "flex flex-row w-full justify-end items-center gap-[20px] text-white mt-[40px]",

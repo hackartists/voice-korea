@@ -1,6 +1,7 @@
 use super::i18n::*;
 use dioxus::prelude::*;
 use dioxus_translate::*;
+use models::PanelV2;
 use num_format::{Locale, ToFormattedString};
 
 use crate::{
@@ -9,7 +10,10 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct PanelResponse {}
+pub struct PanelRequest {
+    pub total_panels: i64,
+    pub selected_panels: Vec<PanelV2>,
+}
 
 #[component]
 pub fn SettingPanel(
@@ -18,18 +22,21 @@ pub fn SettingPanel(
 
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     onback: EventHandler<()>,
-    onnext: EventHandler<PanelResponse>,
+    onnext: EventHandler<PanelRequest>,
 ) -> Element {
     let mut is_open = use_signal(|| false);
     let mut ctrl = PanelController::new(lang)?;
 
     let mut selected_panels = ctrl.selected_panels;
-    let total_panels = ctrl.total_panels;
+    let total_panels = ctrl.input_total_panels_memo;
     let translate: SettingPanelTranslate = translate(&lang);
 
     rsx! {
         div {
             class: "flex flex-col w-full justify-start items-start",
+            visibility: if !visibility { "hidden" },
+            width: if !visibility { "0px" },
+            height: if !visibility { "0px" },
             ..attributes,
             div { class: "flex flex-row w-full justify-between items-center mb-[10px]",
                 div { class: "font-medium text-black text-[16px] leading-[22.5px]",
@@ -61,11 +68,14 @@ pub fn SettingPanel(
                     PanelSettingInput {
                         label: "{translate.total_panel}",
                         unit: "{translate.person}",
+                        max_value: None,
                         value: total_panels(),
-                        oninput: move |_value: i64| {},
+                        oninput: move |value: i64| {
+                            ctrl.change_total_panels(value);
+                        },
                     }
 
-                    div { class: "flex flex-row w-full justify-between items-center",
+                    div { class: "flex flex-row w-full justify-between items-center mt-[10px]",
                         div { class: "flex flex-row w-[200px] font-medium text-[15px] text-black",
                             "{translate.select_panel}"
                         }
@@ -146,6 +156,7 @@ pub fn SettingPanel(
                             PanelSettingInput {
                                 label: "{sp.0.name}",
                                 unit: "{translate.person}",
+                                max_value: sp.0.user_count as i64,
                                 value: sp.1,
                                 oninput: move |value: i64| {
                                     ctrl.change_number_by_index(i, value);
@@ -168,7 +179,28 @@ pub fn SettingPanel(
                 button {
                     class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
                     onclick: move |_| async move {
-                        onnext(PanelResponse {});
+                        onnext(PanelRequest {
+                            total_panels: total_panels(),
+                            selected_panels: selected_panels
+                                .iter()
+                                .map(|v| {
+                                    let user_count = v.1;
+                                    let v = v.0.clone();
+                                    PanelV2 {
+                                        id: v.id.clone(),
+                                        created_at: v.created_at,
+                                        updated_at: v.updated_at,
+                                        name: v.name.clone(),
+                                        user_count: user_count as u64,
+                                        age: v.age,
+                                        gender: v.gender,
+                                        region: v.region,
+                                        salary: v.salary,
+                                        org_id: v.org_id,
+                                    }
+                                })
+                                .collect(),
+                        });
                     },
                     "{translate.btn_complete}"
                 }
@@ -178,13 +210,30 @@ pub fn SettingPanel(
 }
 
 #[component]
+pub fn PanelSettingBox(label: String, unit: String, value: i64) -> Element {
+    rsx! {
+        div { class: "flex flex-row w-full justify-between items-center",
+            div { class: "font-medium text-[#222222] text-[15px]", "{label}" }
+            div { class: "flex flex-row h-[55px] items-center gap-[10px]",
+                div { class: "flex flex-row w-[215px] h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px] text-right",
+                    "{value}"
+                }
+
+                div { class: "font-normal text-black text-[15px]", "{unit}" }
+            }
+        }
+    }
+}
+
+#[component]
 pub fn PanelSettingInput(
     label: String,
     unit: String,
+    max_value: Option<i64>,
     value: i64,
     oninput: EventHandler<i64>,
 ) -> Element {
-    let mut value = use_signal(|| value);
+    let mut input_value = use_signal(|| value);
 
     rsx! {
         div { class: "flex flex-row w-full justify-between items-center",
@@ -194,10 +243,13 @@ pub fn PanelSettingInput(
                     class: "flex flex-row w-[215px] h-[55px] justify-end items-center rounded-[4px] px-[15px] py-[10px] bg-[#f7f7f7] font-medium text-[#222222] text-[15px] text-right",
                     r#type: "text",
                     placeholder: "0",
-                    value: value().to_formatted_string(&Locale::en),
+                    value: input_value().to_formatted_string(&Locale::en),
                     oninput: move |e| {
-                        let v = e.value().parse::<i64>().unwrap_or(value());
-                        value.set(v);
+                        let mut v = e.value().parse::<i64>().unwrap_or(input_value());
+                        if max_value.is_some() && v > max_value.unwrap() {
+                            v = max_value.unwrap();
+                        }
+                        input_value.set(v);
                         oninput.call(v);
                     },
                 }
