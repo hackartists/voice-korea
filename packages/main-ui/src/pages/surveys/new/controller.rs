@@ -13,7 +13,7 @@ use crate::{
     service::{login_service::LoginService, popup_service::PopupService},
 };
 
-use super::{create_survey::CreateSurveyResponse, setting_panel::PanelResponse};
+use super::create_survey::CreateSurveyResponse;
 
 #[derive(Clone, Copy)]
 pub struct Controller {
@@ -24,9 +24,6 @@ pub struct Controller {
     current_step: Signal<CurrentStep>,
 
     survey_request: Signal<Option<CreateSurveyResponse>>,
-
-    selected_panels: Signal<Vec<PanelV2>>,
-    total_panel_members: Signal<u64>,
 }
 
 impl Controller {
@@ -40,9 +37,6 @@ impl Controller {
             selected_field: use_signal(|| None),
 
             current_step: use_signal(|| CurrentStep::CreateSurvey),
-
-            selected_panels: use_signal(|| vec![]),
-            total_panel_members: use_signal(|| 0),
         };
 
         use_context_provider(|| ctrl);
@@ -56,7 +50,13 @@ impl Controller {
         self.current_step.set(CurrentStep::SettingPanel);
     }
 
-    pub async fn handle_complete_panel_setting(&mut self, _req: PanelResponse) {
+    pub async fn handle_complete_panel_setting(
+        &mut self,
+        PanelResponse {
+            selected_panels,
+            total_panels,
+        }: PanelResponse,
+    ) {
         let cli = SurveyV2::get_client(crate::config::get().api_url);
         let area = (self.selected_field)();
         if area.is_none() {
@@ -92,9 +92,9 @@ impl Controller {
                 start_date,
                 end_date,
                 description,
-                self.get_total_panel_members() as i64,
+                total_panels,
                 questions,
-                self.selected_panels(),
+                selected_panels,
             )
             .await
         {
@@ -115,19 +115,15 @@ impl Controller {
         (self.current_step)()
     }
 
-    pub fn selected_panels(&self) -> Vec<PanelV2> {
-        (self.selected_panels)()
-    }
-
-    pub fn get_total_panel_members(&self) -> u64 {
-        (self.total_panel_members)()
-    }
-
-    pub async fn save_survey(&self) {}
-
     pub fn back(&self) {
         self.nav.go_back();
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct PanelResponse {
+    pub selected_panels: Vec<PanelV2>,
+    pub total_panels: i64,
 }
 
 #[derive(Debug, Clone, Copy)]
