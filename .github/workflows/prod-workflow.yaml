@@ -51,7 +51,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
-          cd packages/main-api && make test
+          cd packages/api && make test
 
   web-deployment:
     runs-on: ubuntu-22.04
