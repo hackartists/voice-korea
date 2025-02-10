@@ -7,7 +7,7 @@ use models::prelude::{SurveyDraftStatus, UpsertSurveyDraftRequest};
 
 use crate::service::prev_survey_api::PrevSurveyApi;
 
-use super::{Language, Route};
+use super::Language;
 
 #[derive(Clone, Copy)]
 pub struct Controller {
@@ -32,6 +32,7 @@ impl Controller {
         let navigator = use_navigator();
         #[cfg(feature = "web")]
         {
+            use crate::routes::Route;
             use crate::service::login_service::use_login_service;
 
             let token = use_login_service().get_cookie_value();
@@ -62,11 +63,11 @@ impl Controller {
         let draft_status = ctrl.get_survey().draft_status;
         let title = ctrl.get_survey().title;
 
-        if (!draft_status.is_none() && draft_status != Some(SurveyDraftStatus::Quotas))
-            || (draft_status.is_none() && title != "")
-        {
-            navigator.push(Route::DashboardPage { lang });
-        };
+        // if (!draft_status.is_none() && draft_status != Some(SurveyDraftStatus::Quotas))
+        //     || (draft_status.is_none() && title != "")
+        // {
+        //     navigator.push(Route::DashboardPage { lang });
+        // };
 
         use_context_provider(|| ctrl);
 

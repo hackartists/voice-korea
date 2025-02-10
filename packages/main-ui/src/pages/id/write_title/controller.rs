@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use models::prelude::{Survey, SurveyDraftStatus, UpsertSurveyDraftRequest};
 
-use crate::{models::survey::StatusType, routes::Route, service::prev_survey_api::PrevSurveyApi};
+use crate::{models::survey::StatusType, service::prev_survey_api::PrevSurveyApi};
 
 use super::Language;
 
@@ -22,7 +22,10 @@ impl Controller {
         let navigator = use_navigator();
         #[cfg(feature = "web")]
         {
+            use crate::routes::Route;
             use crate::service::login_service::use_login_service;
+
+            let navigator = use_navigator();
 
             let token = use_login_service().get_cookie_value();
             if token.is_none() {
@@ -65,11 +68,11 @@ impl Controller {
         let draft_status = ctrl.get_survey().draft_status;
         let title = ctrl.get_survey().title;
 
-        if (!draft_status.is_none() && draft_status != Some(SurveyDraftStatus::Title))
-            || (draft_status.is_none() && title != "")
-        {
-            navigator.push(Route::DashboardPage { lang });
-        };
+        // if (!draft_status.is_none() && draft_status != Some(SurveyDraftStatus::Title))
+        //     || (draft_status.is_none() && title != "")
+        // {
+        //     navigator.push(Route::DashboardPage { lang });
+        // };
 
         use_context_provider(|| ctrl);
 

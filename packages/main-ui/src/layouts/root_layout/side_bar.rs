@@ -54,28 +54,28 @@ pub fn SideBar(props: SidebarProps) -> Element {
                             title: selected_organization.name.clone(),
                             menus: organization_menus,
                         }
-                        SectionMenus {
-                            onselected: props.onselected,
-                            title: "Overview".to_string(),
-                            menus: vec![
-                                MenuItem {
-                                    id: "".to_string(),
-                                    title: "프로젝트 검색".to_string(),
-                                    is_selected: props.selected_menu == "프로젝트 검색",
-                                    link: Some(Route::DashboardPage {
-                                        lang: props.lang,
-                                    }),
-                                },
-                                MenuItem {
-                                    id: "".to_string(),
-                                    title: "기본 프로젝트 가져오기".to_string(),
-                                    is_selected: props.selected_menu == "기본 프로젝트 가져오기",
-                                    link: Some(Route::DashboardPage {
-                                        lang: props.lang,
-                                    }),
-                                },
-                            ],
-                        }
+                        // SectionMenus {
+                        //     onselected: props.onselected,
+                        //     title: "Overview".to_string(),
+                        //     menus: vec![
+                        //         MenuItem {
+                        //             id: "".to_string(),
+                        //             title: "프로젝트 검색".to_string(),
+                        //             is_selected: props.selected_menu == "프로젝트 검색",
+                        //             link: Some(Route::DashboardPage {
+                        //                 lang: props.lang,
+                        //             }),
+                        //         },
+                        //         MenuItem {
+                        //             id: "".to_string(),
+                        //             title: "기본 프로젝트 가져오기".to_string(),
+                        //             is_selected: props.selected_menu == "기본 프로젝트 가져오기",
+                        //             link: Some(Route::DashboardPage {
+                        //                 lang: props.lang,
+                        //             }),
+                        //         },
+                        //     ],
+                        // }
                         SectionMenus {
                             onselected: props.onselected,
                             title: "조직 관리".to_string(),
