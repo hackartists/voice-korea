@@ -21,7 +21,7 @@ pub fn Header(props: HeaderProps) -> Element {
                 class: "flex min-h-[70px] justify-center items-center w-[250px]",
                 onclick: move |_| {
                     navigator
-                        .push(Route::DashboardPage {
+                        .push(Route::SurveyPage {
                             lang: props.lang,
                         });
                 },

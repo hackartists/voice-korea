@@ -50,13 +50,8 @@ pub fn WriteTitlePage(props: WriteTitleProps) -> Element {
                         }
                     }
                     div { class: "flex flex-row w-full justify-end items-start mb-[20px]",
-                        Link {
-                            to: Route::DashboardPage {
-                                lang: props.lang.clone(),
-                            },
-                            div { class: "flex flex-row w-[85px] h-[45px] justify-center items-center rounded-[5px] bg-[#424242] text-[20px] font-normal text-white mr-[7px]",
-                                {translates.cancel}
-                            }
+                        div { class: "flex flex-row w-[85px] h-[45px] justify-center items-center rounded-[5px] bg-[#424242] text-[20px] font-normal text-white mr-[7px]",
+                            {translates.cancel}
                         }
                         div {
                             class: "flex flex-row w-[85px] h-[45px] justify-center items-center rounded-[5px] bg-[#2168c3] text-[20px] font-normal text-white mr-[7px]",

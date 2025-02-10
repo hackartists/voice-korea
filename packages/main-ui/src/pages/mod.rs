@@ -4,7 +4,6 @@ mod page;
 
 pub mod attributes;
 pub mod create;
-pub mod dashboard;
 pub mod find_email;
 pub mod id {
     pub mod response_report;
