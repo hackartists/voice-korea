@@ -40,3 +40,4 @@ lambda = ["by-axum/lambda"]
 
 [dev-dependencies]
 tower = "0.5.2"
+rest-api.workspace = true

@@ -178,15 +178,15 @@ async fn main() -> Result<()> {
 pub mod tests {
     use std::{collections::HashMap, time::SystemTime};
 
-    use by_axum::axum::AxumRouter;
     use by_types::Claims;
+    use rest_api::ApiService;
     use utils::hash::get_hash_string;
 
     use super::*;
 
     pub struct TestContext {
         pub pool: sqlx::Pool<sqlx::Postgres>,
-        pub app: AxumRouter,
+        pub app: Box<dyn ApiService>,
         pub user: User,
         pub admin_token: String,
         pub now: i64,
@@ -199,17 +199,15 @@ pub mod tests {
         let email = format!("user-{now}@test.com");
         let password = format!("password-{now}");
         let password = get_hash_string(password.as_bytes());
-        let mut tx = pool.begin().await?;
 
-        let mut user = user
-            .insert_with_tx(&mut *tx, email.clone(), password)
-            .await?
-            .unwrap();
-        let org = org.insert_with_tx(&mut *tx, email).await?.unwrap();
+        let u = user.insert(email.clone(), password.clone()).await?;
+        tracing::debug!("{:?}", u);
 
-        tx.commit().await?;
+        org.insert_with_dependency(u.id, email.clone()).await?;
 
-        user.orgs.push(org);
+        let user = user
+            .find_one(&UserReadAction::new().get_user(email, password))
+            .await?;
 
         Ok(user)
     }
@@ -296,7 +294,10 @@ $$ LANGUAGE plpgsql;
         let user = setup_test_user(now, &pool).await.unwrap();
         let (claims, admin_token) = setup_jwt_token(user.clone());
 
-        let app = by_axum::finishing(app);
+        let app = by_axum::into_api_adapter(app);
+        let app = Box::new(app);
+        rest_api::set_api_service(app.clone());
+        rest_api::add_authorization(&format!("Bearer {}", admin_token));
 
         Ok(TestContext {
             pool,

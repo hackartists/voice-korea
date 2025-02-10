@@ -238,6 +238,8 @@ FROM data;",
 
         tx.commit().await?;
 
+        // FIXME: This is workaround. Fix to use mock when testing
+        #[cfg(not(test))]
         self.nonce_lab.create_survey(survey.clone().into()).await?;
 
         Ok(Json(survey))
@@ -252,25 +254,39 @@ pub mod tests {
 
     #[tokio::test]
     async fn test_survey_create() {
-        let TestContext {
-            pool, user, now, ..
-        } = setup().await.unwrap();
+        let TestContext { user, now, .. } = setup().await.unwrap();
 
-        let ctrl = SurveyControllerV2::new(pool.clone());
+        let cli = SurveyV2::get_client("http://localhost:3000");
         let org_id = user.orgs[0].id;
 
-        let req = SurveyV2CreateRequest {
-            name: "test".to_string(),
-            project_area: ProjectArea::City,
-            started_at: now,
-            ended_at: now,
-            description: "test".to_string(),
-            quotes: 1,
-            questions: vec![],
-            panels: vec![],
-        };
+        let res = cli
+            .create(
+                org_id,
+                "test".to_string(),
+                ProjectArea::City,
+                now,
+                now + 3600,
+                "test description".to_string(),
+                100,
+                vec![],
+                vec![],
+            )
+            .await;
 
-        let res = ctrl.create(org_id, req).await;
+        // let ctrl = SurveyControllerV2::new(pool.clone());
+
+        // let req = SurveyV2CreateRequest {
+        //     name: "test".to_string(),
+        //     project_area: ProjectArea::City,
+        //     started_at: now,
+        //     ended_at: now,
+        //     description: "test".to_string(),
+        //     quotes: 1,
+        //     questions: vec![],
+        //     panels: vec![],
+        // };
+
+        // let res = ctrl.create(org_id, req).await;
         assert!(res.is_ok(), "{:?}", res);
     }
 }
