@@ -1,6 +1,7 @@
 use super::i18n::*;
 use dioxus::prelude::*;
 use dioxus_translate::*;
+use models::PanelV2;
 use num_format::{Locale, ToFormattedString};
 
 use crate::{
@@ -8,15 +9,11 @@ use crate::{
     pages::surveys::new::controller::*,
 };
 
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct PanelResponse {}
-
 #[component]
 pub fn SettingPanel(
     lang: Language,
     visibility: bool,
 
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     onback: EventHandler<()>,
     onnext: EventHandler<PanelResponse>,
 ) -> Element {
@@ -30,7 +27,7 @@ pub fn SettingPanel(
     rsx! {
         div {
             class: "flex flex-col w-full justify-start items-start",
-            ..attributes,
+            visibility: if !visibility { "hidden" },
             div { class: "flex flex-row w-full justify-between items-center mb-[10px]",
                 div { class: "font-medium text-black text-[16px] leading-[22.5px]",
                     "{translate.composition_panel}"
@@ -168,7 +165,17 @@ pub fn SettingPanel(
                 button {
                     class: "px-[20px] py-[10px] bg-[#2A60D3] font-semibold text-[14px] rounded-[4px]",
                     onclick: move |_| async move {
-                        onnext(PanelResponse {});
+                        onnext(PanelResponse {
+                            selected_panels: selected_panels()
+                                .iter()
+                                .map(|(p, c)| {
+                                    let mut p: PanelV2 = p.clone().into();
+                                    p.user_count = *c as u64;
+                                    p
+                                })
+                                .collect(),
+                            total_panels: total_panels(),
+                        });
                     },
                     "{translate.btn_complete}"
                 }
