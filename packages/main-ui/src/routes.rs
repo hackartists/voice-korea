@@ -40,8 +40,6 @@ pub enum Route {
             AttributePage { lang: Language },
             #[route("/panels")]
             PanelPage { lang: Language },
-
-
             #[route("/resources")]
             ResourcePage { lang: Language },
             #[route("/surveys")]
