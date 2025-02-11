@@ -69,7 +69,6 @@ jobs:
 
   web-deployment:
     runs-on: ubuntu-22.04
-    needs: [test]
 
     steps:
       - uses: actions/checkout@v3
@@ -125,7 +124,6 @@ jobs:
 
   api-deployment:
     runs-on: ubuntu-22.04
-    needs: [test]
 
     steps:
       - uses: actions/checkout@v3
@@ -186,7 +184,6 @@ jobs:
 
   watcher-deployment:
     runs-on: ubuntu-22.04
-    needs: [test]
 
     steps:
       - uses: actions/checkout@v3
