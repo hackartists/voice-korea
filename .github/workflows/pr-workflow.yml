@@ -50,6 +50,7 @@ jobs:
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
           BUCKET_NAME: mock
+          RUST_TEST_THREADS: 1
         run: |
           cd packages/api && make test
 
