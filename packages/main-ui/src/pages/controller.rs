@@ -75,7 +75,7 @@ impl Controller {
                 let token = rest_api::get_authz_token().unwrap_or_default();
                 login_service.setup(self.get_email(), token).await;
                 login_service.set_orgs(user.orgs);
-                navigator.push(Route::DashboardPage { lang });
+                navigator.push(Route::SurveyPage { lang });
             }
             Err(e) => match e {
                 ApiError::AuthKeyNotMatch(_) => {
