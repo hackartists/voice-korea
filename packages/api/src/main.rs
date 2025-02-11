@@ -197,15 +197,16 @@ pub mod tests {
         pub user: User,
         pub admin_token: String,
         pub now: i64,
+        pub id: String,
         pub claims: Claims,
         pub endpoint: String,
     }
 
-    pub async fn setup_test_user(now: u64, pool: &sqlx::Pool<sqlx::Postgres>) -> Result<User> {
+    pub async fn setup_test_user(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Result<User> {
         let user = User::get_repository(pool.clone());
         let org = Organization::get_repository(pool.clone());
-        let email = format!("user-{now}@test.com");
-        let password = format!("password-{now}");
+        let email = format!("user-{id}@test.com");
+        let password = format!("password-{id}");
         let password = get_hash_string(password.as_bytes());
 
         let u = user.insert(email.clone(), password.clone()).await?;
@@ -237,6 +238,7 @@ pub mod tests {
 
     pub async fn setup() -> Result<TestContext> {
         let app = by_axum::new();
+        let id = uuid::Uuid::new_v4().to_string();
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -298,7 +300,7 @@ $$ LANGUAGE plpgsql;
             .nest("/v2", Version2Controller::route(pool.clone())?)
             .layer(middleware::from_fn(authorization_middleware));
 
-        let user = setup_test_user(now, &pool).await.unwrap();
+        let user = setup_test_user(&id, &pool).await.unwrap();
         let (claims, admin_token) = setup_jwt_token(user.clone());
 
         let app = by_axum::into_api_adapter(app);
@@ -309,6 +311,7 @@ $$ LANGUAGE plpgsql;
         Ok(TestContext {
             pool,
             app,
+            id,
             user,
             admin_token,
             claims,

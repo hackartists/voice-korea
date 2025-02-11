@@ -73,6 +73,9 @@ pub enum ApiError {
     SurveyResponseNoMatchedAttributeGroup,
     SurveyResponseNoMatchedPanelId,
     SurveyResponsePanelQuotaExceeded,
+    SurveyResponseExcelWritingError,
+    SurveyResponseExcelUploadError,
+    SurveyResponseExcelPresigningError,
 }
 
 impl std::fmt::Display for ApiError {

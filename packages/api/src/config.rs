@@ -10,6 +10,8 @@ pub struct Config {
     pub from_email: &'static str,
     pub nonce_lab: NonceLabConfig,
     pub server_key: &'static str,
+    pub bucket_name: &'static str,
+    pub presigned_url_expiration: u64,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -36,6 +38,11 @@ impl Default for Config {
                 token: option_env!("NONCE_LAB_API_TOKEN").expect("NONCE_LAB_API_TOKEN required"),
             },
             server_key: option_env!("SERVER_KEY").expect("SERVER_KEY required"),
+            bucket_name: option_env!("BUCKET_NAME").expect("BUCKET_NAME required"),
+            presigned_url_expiration: option_env!("PRESIGNED_URL_EXPIRATION")
+                .unwrap_or((60 * 5).to_string().as_str())
+                .parse()
+                .expect("PRESIGNED_URL_EXPIRATION must be a number"),
         }
     }
 }

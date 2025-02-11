@@ -9,6 +9,7 @@ AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_F
 AWS_REGION ?= $(shell aws configure get region)
 WORKSPACE_ROOT ?= $(PWD)/../..
 RUSTFLAGS ?= -D warnings
+TESTFLAGS ?=
 
 ifeq ("$(ENV)","prod")
 	RUST_LOG ?= error
@@ -32,7 +33,7 @@ run:
 	$(BUILD_ENV) cargo watch -w src -x "run --target-dir $(PWD)/target"
 
 test:
-	$(BUILD_ENV) RUSTFLAGS="-A warnings" cargo test --tests
+	$(BUILD_ENV) RUSTFLAGS="-A warnings" cargo test --tests $(TESTFLAGS)
 
 build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda

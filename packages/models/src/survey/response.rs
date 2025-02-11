@@ -44,6 +44,21 @@ pub enum Answer {
     Subjective { answer: String },
 }
 
+impl Answer {
+    pub fn to_answer_string(&self) -> String {
+        match self {
+            Answer::SingleChoice { answer } => answer.to_string(),
+            Answer::MultipleChoice { answer } => answer
+                .iter()
+                .map(|e| e.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+            Answer::ShortAnswer { answer } => answer.to_string(),
+            Answer::Subjective { answer } => answer.to_string(),
+        }
+    }
+}
+
 impl PartialEq<Question> for Answer {
     fn eq(&self, other: &Question) -> bool {
         match (self, other) {

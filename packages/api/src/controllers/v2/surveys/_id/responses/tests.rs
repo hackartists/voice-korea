@@ -1,3 +1,5 @@
+use excel::SurveyResponseExcel;
+
 use crate::tests::{setup, TestContext};
 
 use super::*;
@@ -72,20 +74,20 @@ async fn test_survey_reponse() {
             options: vec!["a".to_string(), "b".to_string(), "c".to_string()],
         }),
         Question::SingleChoice(ChoiceQuestion {
-            title: "single 1".to_string(),
+            title: "single 2".to_string(),
             description: Some("test".to_string()),
             options: vec!["a".to_string(), "b".to_string(), "c".to_string()],
         }),
         Question::ShortAnswer(SubjectiveQuestion {
-            title: "single 1".to_string(),
+            title: "short 3".to_string(),
             description: "test".to_string(),
         }),
         Question::Subjective(SubjectiveQuestion {
-            title: "single 1".to_string(),
+            title: "subjective 4".to_string(),
             description: "test".to_string(),
         }),
         Question::SingleChoice(ChoiceQuestion {
-            title: "single 1".to_string(),
+            title: "single 5".to_string(),
             description: Some("test".to_string()),
             options: vec!["a".to_string(), "b".to_string(), "c".to_string()],
         }),
@@ -368,4 +370,13 @@ async fn test_survey_reponse() {
         .unwrap();
     assert_eq!(q.total_count, 4);
     assert_eq!(q.items.len(), 4);
+
+    #[cfg(feature = "full-test")]
+    {
+        let cli = SurveyResponseExcel::get_client(&endpoint);
+
+        let res = cli.download_excel(org_id, survey_id).await.unwrap();
+
+        assert!(!res.url.is_empty(), "excel download failed {:?}", res);
+    }
 }
