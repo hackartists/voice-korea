@@ -7,6 +7,7 @@ mod metadata;
 mod organization;
 mod pagination;
 mod panel;
+mod panel_count;
 mod panel_survey;
 mod public_opinion;
 mod resource;
@@ -30,6 +31,7 @@ pub mod prelude {
     pub use crate::organization::*;
     pub use crate::pagination::*;
     pub use crate::panel::*;
+    pub use crate::panel_count::*;
     pub use crate::panel_survey::*;
     pub use crate::public_opinion::*;
     pub use crate::resource::*;
