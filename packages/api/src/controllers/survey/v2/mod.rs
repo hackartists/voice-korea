@@ -115,7 +115,7 @@ impl SurveyControllerV2 {
             ApiError::SurveyResponseExcelWritingError
         })?;
 
-        use aws_config::{defaults, BehaviorVersion, Region};
+        use aws_config::{defaults, Region};
         use aws_sdk_s3::config::Credentials;
         let c = crate::config::get();
         let config = defaults(BehaviorVersion::latest())
