@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use aws_config::BehaviorVersion;
 use aws_sdk_s3::{presigning::PresigningConfig, primitives::ByteStream};
 use by_axum::{
     auth::Authorization,
@@ -21,7 +22,6 @@ use crate::utils::nonce_lab::NonceLabClient;
 pub struct SurveyControllerV2 {
     panel_survey_repo: PanelSurveysRepository,
     repo: SurveyV2Repository,
-    response: SurveyResponseRepository,
     pool: sqlx::Pool<sqlx::Postgres>,
     nonce_lab: NonceLabClient,
 }
@@ -30,13 +30,11 @@ impl SurveyControllerV2 {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = SurveyV2::get_repository(pool.clone());
         let panel_survey_repo = PanelSurveys::get_repository(pool.clone());
-        let response = SurveyResponse::get_repository(pool.clone());
 
         Self {
             repo,
             panel_survey_repo,
             pool,
-            response,
             nonce_lab: NonceLabClient::new(),
         }
     }
@@ -92,17 +90,23 @@ impl SurveyControllerV2 {
                 .find(|p| p.id == responses[i].panel_id)
                 .ok_or(ApiError::SurveyResponseNoMatchedPanelId)?;
 
-            worksheet.write_string(0, i as u16 + 1, &panel.name);
+            worksheet
+                .write_string(0, i as u16 + 1, &panel.name)
+                .unwrap();
         }
 
         for i in 0..len {
-            worksheet.write_string(i as u32 + 1, 0, &survey.questions[i].title());
+            worksheet
+                .write_string(i as u32 + 1, 0, &survey.questions[i].title())
+                .unwrap();
             for (j, response) in responses.iter().enumerate() {
-                worksheet.write_string(
-                    i as u32 + 1,
-                    j as u16 + 1,
-                    response.answers[i].to_answer_string(),
-                );
+                worksheet
+                    .write_string(
+                        i as u32 + 1,
+                        j as u16 + 1,
+                        response.answers[i].to_answer_string(),
+                    )
+                    .unwrap();
             }
         }
 
@@ -111,7 +115,7 @@ impl SurveyControllerV2 {
             ApiError::SurveyResponseExcelWritingError
         })?;
 
-        let conf = aws_config::load_from_env().await;
+        let conf = aws_config::load_defaults(BehaviorVersion::latest()).await;
         let cli = aws_sdk_s3::Client::new(&conf);
         let c = crate::config::get();
         let bucket_name = c.bucket_name;
