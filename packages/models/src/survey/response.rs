@@ -1,5 +1,7 @@
 #![allow(unused)]
-use crate::Result;
+use std::time::SystemTime;
+
+use crate::{attribute_v2::*, PanelV2, Result};
 #[cfg(feature = "server")]
 use by_axum::aide;
 use by_macros::api_model;
@@ -7,7 +9,7 @@ use by_types::QueryResponse;
 
 use crate::attribute_v2::{GenderV2, RegionV2, SalaryV2};
 
-use super::Question;
+use super::{ChoiceQuestion, Question};
 
 #[api_model(base = "/v2/surveys/:survey-id/responses", table = survey_responses)]
 pub struct SurveyResponse {
@@ -45,6 +47,56 @@ pub enum Answer {
 }
 
 impl Answer {
+    pub fn simulate(q: &Question) -> Self {
+        let bytes = format!("{:?}", q);
+        use sha3::Digest;
+
+        let mut hasher = sha3::Sha3_256::new();
+        hasher.update(bytes.as_bytes());
+        let result = hasher.finalize();
+        let random = result.to_vec();
+
+        let answer_pool = [
+            "Lorem ipsum",
+            "Dolor sit amet",
+            "Consectetur adipiscing elit",
+            "Sed do eiusmod tempor",
+            "Incididunt ut labore",
+            "Et dolore magna aliqua",
+            "Ut enim ad minim veniam",
+            "Quis nostrud exercitation",
+            "Ullamco laboris nisi",
+            "Ut aliquip ex ea commodo",
+            "Consequ",
+        ];
+
+        match q {
+            Question::SingleChoice(ChoiceQuestion { options, .. }) => Answer::SingleChoice {
+                answer: random[0] as i32 % options.len() as i32,
+            },
+            Question::MultipleChoice(ChoiceQuestion { options, .. }) => {
+                let mut half = options.len() / 2;
+
+                if half == 0 && options.len() > 0 {
+                    half = 1;
+                }
+
+                let mut answer = vec![];
+
+                for i in 0..half {
+                    answer.push(random[i] as i32 % options.len() as i32);
+                }
+
+                Answer::MultipleChoice { answer }
+            }
+            Question::ShortAnswer(_) => Answer::ShortAnswer {
+                answer: answer_pool[random[0] as usize % answer_pool.len()].to_string(),
+            },
+            Question::Subjective(_) => Answer::Subjective {
+                answer: answer_pool[random[0] as usize % answer_pool.len()].to_string(),
+            },
+        }
+    }
     pub fn to_answer_string(&self) -> String {
         match self {
             Answer::SingleChoice { answer } => answer.to_string(),
@@ -82,6 +134,24 @@ pub enum Attribute {
 
     #[default]
     None,
+}
+
+impl Attribute {
+    pub fn from_panel(panel: &PanelV2) -> Vec<Self> {
+        let mut attrs = vec![];
+        let (min, max) = panel.age.to_range();
+
+        attrs.push(Attribute::Age(AgeV3::Range {
+            inclusive_min: min,
+            inclusive_max: max,
+        }));
+
+        attrs.push(Attribute::Gender(panel.gender));
+        attrs.push(Attribute::Region(panel.region));
+        attrs.push(Attribute::Salary(panel.salary));
+
+        attrs
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]

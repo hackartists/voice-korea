@@ -44,7 +44,7 @@ impl AgeV2 {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum GenderV2 {
     #[default]
@@ -55,7 +55,7 @@ pub enum GenderV2 {
     Female = 2,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum RegionV2 {
     #[default]
@@ -96,7 +96,7 @@ pub enum RegionV2 {
     Jeju = 64,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum SalaryV2 {
     #[default]

@@ -35,4 +35,14 @@ translate! {
         ko: "조사 기간",
         en: "Survey Period"
     }
+
+    download_excel: {
+        ko: "엑셀 다운로드",
+        en: "Download Excel"
+    }
+
+    simulate_response: {
+        ko: "응답 시뮬레이션",
+        en: "Simulate Response"
+    }
 }
