@@ -192,13 +192,6 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                                         }
 
                                         match survey.status {
-                                            ProjectStatus::Finish => {
-                                                rsx! {
-                                                    div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                                        button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.view_results}" }
-                                                    }
-                                                }
-                                            }
                                             ProjectStatus::Ready => {
                                                 rsx! {
                                                     div {
@@ -209,14 +202,19 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                                                                 ctrl.start_survey(id).await;
                                                             }
                                                         },
-                                                        button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.start_survey_create}" }
+                                                        div { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.start_survey_create}" }
                                                     }
                                                 }
                                             }
                                             _ => {
                                                 rsx! {
-                                                    div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                                        button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.in_progress}" }
+                                                    Link {
+                                                        class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center cursor-pointer",
+                                                        to: Route::SurveyResultPage {
+                                                            lang: props.lang,
+                                                            survey_id: survey.id,
+                                                        },
+                                                        div { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.view_results}" }
                                                     }
                                                 }
                                             }
