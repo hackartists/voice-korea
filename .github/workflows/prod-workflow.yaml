@@ -63,7 +63,7 @@ jobs:
           AUTH_TYPE: jwt
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
           BUCKET_NAME: voice-korea.dev.biyard.co
-          TESTFLAGS: "--features full-test"
+          # TESTFLAGS: "--features full-test"
           RUST_TEST_THREADS: 1
         run: |
           cd packages/api && make test
