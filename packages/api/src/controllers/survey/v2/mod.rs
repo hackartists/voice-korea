@@ -115,9 +115,20 @@ impl SurveyControllerV2 {
             ApiError::SurveyResponseExcelWritingError
         })?;
 
-        let conf = aws_config::load_defaults(BehaviorVersion::latest()).await;
-        let cli = aws_sdk_s3::Client::new(&conf);
+        use aws_config::{defaults, BehaviorVersion, Region};
+        use aws_sdk_s3::config::Credentials;
         let c = crate::config::get();
+        let config = defaults(BehaviorVersion::latest())
+            .region(Region::new(c.aws.region))
+            .credentials_provider(Credentials::new(
+                c.aws.access_key_id,
+                c.aws.secret_access_key,
+                None,
+                None,
+                "credential",
+            ));
+        let conf = config.load().await;
+        let cli = aws_sdk_s3::Client::new(&conf);
         let bucket_name = c.bucket_name;
         let path = format!("surveys/{}.xlsx", survey_id,);
 
