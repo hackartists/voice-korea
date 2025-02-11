@@ -69,6 +69,7 @@ jobs:
       - name: Install dioxus-cli
         run: |
           cargo binstall dioxus-cli --force
+          cargo binstall toml-cli --force
 
       - name: Dioxus Lint
         env:
@@ -106,6 +107,7 @@ jobs:
       - name: Install dioxus-cli
         run: |
           cargo binstall dioxus-cli --force
+          cargo binstall toml-cli --force
 
       - name: Testing
         env:
