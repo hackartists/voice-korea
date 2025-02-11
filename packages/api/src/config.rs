@@ -9,6 +9,7 @@ pub struct Config {
     pub aws: AwsConfig,
     pub from_email: &'static str,
     pub nonce_lab: NonceLabConfig,
+    pub server_key: &'static str,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -34,6 +35,7 @@ impl Default for Config {
                     .expect("NONCE_LAB_API_ENDPOINT required"),
                 token: option_env!("NONCE_LAB_API_TOKEN").expect("NONCE_LAB_API_TOKEN required"),
             },
+            server_key: option_env!("SERVER_KEY").expect("SERVER_KEY required"),
         }
     }
 }

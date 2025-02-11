@@ -7,7 +7,7 @@ use by_types::QueryResponse;
 
 use crate::attribute_v2::{GenderV2, RegionV2, SalaryV2};
 
-#[api_model(base = "/v2/surveys/:survey-id/responses", table = survey_response)]
+#[api_model(base = "/v2/surveys/:survey-id/responses", table = survey_responses)]
 pub struct SurveyResponse {
     #[api_model(summary, primary_key)]
     pub id: i64,
@@ -16,12 +16,13 @@ pub struct SurveyResponse {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
+    #[api_model(action = respond_answer)]
     pub proof_id: String,
 
-    #[api_model(summary, type = JSONB)]
+    #[api_model(summary, action = respond_answer, type = JSONB)]
     pub attributes: Vec<Attribute>,
 
-    #[api_model(summary, type = JSONB)]
+    #[api_model(summary, action = respond_answer, type = JSONB)]
     pub answers: Vec<Answer>,
 
     #[api_model(many_to_one = surveys)]

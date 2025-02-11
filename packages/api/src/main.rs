@@ -3,6 +3,8 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
+use controllers::v2::Version2Controller;
+use models::*;
 use models::{response::SurveyResponse, *};
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
@@ -11,6 +13,8 @@ use tokio::net::TcpListener;
 
 mod common;
 mod controllers {
+    pub mod v2;
+
     pub mod panels {
         pub mod v2;
     }
@@ -76,7 +80,6 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     o.create_this_table().await?;
     u.create_this_table().await?;
     om.create_this_table().await?;
-
     resource.create_this_table().await?;
     // files.create_table().await?;
     s.create_this_table().await?;
@@ -128,6 +131,7 @@ async fn main() -> Result<()> {
             "/organizations/v2",
             controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
         )
+        .nest("/v2", Version2Controller::route(pool.clone())?)
         .layer(middleware::from_fn(authorization_middleware));
     // .nest(
     //     "/members/v1",
@@ -194,6 +198,7 @@ pub mod tests {
         pub admin_token: String,
         pub now: i64,
         pub claims: Claims,
+        pub endpoint: String,
     }
 
     pub async fn setup_test_user(now: u64, pool: &sqlx::Pool<sqlx::Postgres>) -> Result<User> {
@@ -292,6 +297,7 @@ $$ LANGUAGE plpgsql;
                 "/organizations/v2",
                 controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
             )
+            .nest("/v2", Version2Controller::route(pool.clone())?)
             .layer(middleware::from_fn(authorization_middleware));
 
         let user = setup_test_user(now, &pool).await.unwrap();
@@ -309,6 +315,7 @@ $$ LANGUAGE plpgsql;
             admin_token,
             claims,
             now: now as i64,
+            endpoint: format!("http://localhost:3000"),
         })
     }
 }
