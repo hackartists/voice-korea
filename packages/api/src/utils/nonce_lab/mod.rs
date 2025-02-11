@@ -32,7 +32,6 @@ impl NonceLabClient {
             HeaderValue::from_str(&format!("Bearer {}", nc.token)).unwrap(),
         );
 
-        tracing::info!("headers: {:?}", headers);
         let client = Client::builder()
             .default_headers(headers)
             .build()
