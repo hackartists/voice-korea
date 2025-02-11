@@ -18,6 +18,13 @@ pub struct SurveyResponse {
 
     pub proof_id: String,
 
+    pub title: String,
+    pub start_date: i64,
+    pub end_date: i64,
+    pub total_response_count: i64,
+    pub response_count: i64,
+    pub average_time: String, //TODO: 00:02:00 형태로 반환
+
     #[api_model(summary, type = JSONB)]
     pub attributes: Vec<Attribute>,
 

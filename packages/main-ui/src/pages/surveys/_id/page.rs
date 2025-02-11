@@ -1,10 +1,12 @@
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
+use num_format::{Locale, ToFormattedString};
 
 use crate::{
     components::icons::ArrowLeft,
     pages::surveys::_id::{controller::Controller, i18n::SurveyResultTranslate},
     routes::Route,
+    utils::time::{convert_timestamp_to_date, format_remaining_time},
 };
 
 #[derive(Props, Clone, PartialEq)]
@@ -16,7 +18,9 @@ pub struct SurveyResultProps {
 #[component]
 pub fn SurveyResultPage(props: SurveyResultProps) -> Element {
     let tr: SurveyResultTranslate = translate(&props.lang);
-    let _ctrl = Controller::new(props.lang, props.survey_id);
+    let ctrl = Controller::new(props.lang, props.survey_id);
+
+    let survey = ctrl.get_survey();
 
     rsx! {
         div { class: "flex flex-col gap-[40px] items-end justify-start mb-[40px]",
@@ -32,18 +36,33 @@ pub fn SurveyResultPage(props: SurveyResultProps) -> Element {
                         },
                         ArrowLeft { width: "24", height: "24", color: "#555462" }
                     }
-                    div { class: "text-[#222222] font-semibold text-[28px]", "조사 제목명" }
+                    div { class: "text-[#222222] font-semibold text-[28px]", "{survey.title}" }
                 }
 
                 div { class: "flex flex-row w-full justify-start items-start gap-[10px]",
-                    SurveyResponseBox { title: "{tr.total_survey_target}", value: "1,720" }
-                    SurveyResponseBox { title: "{tr.number_of_responses}", value: "1,454" }
-                    SurveyResponseBox { title: "{tr.rate_of_responses}", value: "98%" }
-                    SurveyResponseBox { title: "{tr.average_time_taken}", value: "00:02:00" }
-                    SurveyResponseBox { title: "{tr.remaining_period}", value: "20일" }
+                    SurveyResponseBox {
+                        title: "{tr.total_survey_target}",
+                        value: survey.total_response_count.to_formatted_string(&Locale::en),
+                    }
+                    SurveyResponseBox {
+                        title: "{tr.number_of_responses}",
+                        value: survey.response_count.to_formatted_string(&Locale::en),
+                    }
+                    SurveyResponseBox {
+                        title: "{tr.rate_of_responses}",
+                        value: "{survey.response_count * 100 / survey.total_response_count}%",
+                    }
+                    SurveyResponseBox {
+                        title: "{tr.average_time_taken}",
+                        value: "{survey.average_time}",
+                    }
+                    SurveyResponseBox {
+                        title: "{tr.remaining_period}",
+                        value: "{format_remaining_time(survey.end_date)}",
+                    }
                     SurveyResponseBox {
                         title: "{tr.survey_period}",
-                        value: "02.12 - 03.12 / 2025",
+                        value: "{convert_timestamp_to_date(survey.start_date)} - {convert_timestamp_to_date(survey.end_date)}",
                     }
                 }
             }
