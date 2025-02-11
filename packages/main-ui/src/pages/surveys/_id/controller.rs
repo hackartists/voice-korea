@@ -3,8 +3,8 @@ use dioxus_logger::tracing;
 use dioxus_translate::Language;
 use models::{
     excel::SurveyResponseExcel,
-    response::{Answer, SurveyResponse},
-    SurveyV2,
+    response::{Answer, SurveyResponse, SurveyResponseQuery, SurveyResponseSummary},
+    QueryResponse, SurveyV2,
 };
 
 use crate::service::login_service::LoginService;
@@ -14,6 +14,7 @@ pub struct Controller {
     survey_id: i64,
     org_id: Memo<i64>,
     surveys: Resource<SurveyV2>,
+    responses: Resource<QueryResponse<SurveyResponseSummary>>,
     endpoint: &'static str,
 }
 
@@ -38,6 +39,22 @@ impl Controller {
             }
         });
 
+        let responses: Resource<QueryResponse<SurveyResponseSummary>> = use_resource(move || {
+            async move {
+                let cli = SurveyResponse::get_client(&crate::config::get().api_url);
+
+                // FIXME: this is workaround only for testing
+                //        fix to apply page
+                match cli.query(survey_id, SurveyResponseQuery::new(10000)).await {
+                    Ok(d) => d,
+                    Err(e) => {
+                        tracing::error!("Error: {:?}", e);
+                        QueryResponse::default()
+                    }
+                }
+            }
+        });
+
         let endpoint = crate::config::get().api_url;
 
         let ctrl = Self {
@@ -45,9 +62,14 @@ impl Controller {
             org_id,
             surveys,
             endpoint,
+            responses,
         };
 
         ctrl
+    }
+
+    pub fn responses(&self) -> Option<QueryResponse<SurveyResponseSummary>> {
+        self.responses.value()()
     }
 
     pub fn get_survey(&self) -> Option<SurveyV2> {

@@ -8,6 +8,8 @@ use chrono::{TimeZone, Utc};
 use dioxus_translate::{Language, Translate};
 use validator::ValidationError;
 
+use super::response::{Answer, SurveyResponse};
+
 // If you want to know how to use Y macro, refer to https://github.com/biyard/rust-sdk/tree/main/packages/by-macros
 #[api_model(base = "/organizations/v2/:org-id/surveys", table = surveys, action_by_id = start_survey, iter_type=QueryResponse)]
 pub struct SurveyV2 {

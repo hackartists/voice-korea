@@ -20,7 +20,7 @@ pub struct SurveyResponse {
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(version = v0.1)]
+    #[api_model(summary, version = v0.1)]
     pub panel_id: i64,
 
     #[api_model(action = respond_answer)]
