@@ -7,6 +7,8 @@ use by_types::QueryResponse;
 
 use crate::attribute_v2::{GenderV2, RegionV2, SalaryV2};
 
+use super::Question;
+
 #[api_model(base = "/v2/surveys/:survey-id/responses", table = survey_responses)]
 pub struct SurveyResponse {
     #[api_model(summary, primary_key)]
@@ -15,6 +17,9 @@ pub struct SurveyResponse {
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
+
+    #[api_model(version = v0.1)]
+    pub panel_id: i64,
 
     #[api_model(action = respond_answer)]
     pub proof_id: String,
@@ -39,9 +44,21 @@ pub enum Answer {
     Subjective { answer: String },
 }
 
+impl PartialEq<Question> for Answer {
+    fn eq(&self, other: &Question) -> bool {
+        match (self, other) {
+            (Answer::SingleChoice { .. }, Question::SingleChoice(_)) => true,
+            (Answer::MultipleChoice { .. }, Question::MultipleChoice(_)) => true,
+            (Answer::ShortAnswer { .. }, Question::ShortAnswer(_)) => true,
+            (Answer::Subjective { .. }, Question::Subjective(_)) => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-#[serde(rename = "snake_case", tag = "type")]
+#[serde(rename = "snake_case")]
 pub enum Attribute {
     Age(AgeV3),
     Gender(GenderV2),

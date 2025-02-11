@@ -10,17 +10,22 @@ use by_types::QueryResponse;
 use models::response::*;
 use models::*;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Clone, Debug)]
 pub struct SurveyResponseController {
     repo: SurveyResponseRepository,
+    survey: SurveyV2Repository,
     pool: sqlx::Pool<sqlx::Postgres>,
 }
 
 impl SurveyResponseController {
     pub fn new(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let repo = SurveyResponse::get_repository(pool.clone());
+        let survey = SurveyV2::get_repository(pool.clone());
 
-        Self { repo, pool }
+        Self { repo, pool, survey }
     }
 
     pub fn route(pool: sqlx::Pool<sqlx::Postgres>) -> Result<by_axum::axum::Router> {
@@ -122,324 +127,90 @@ impl SurveyResponseController {
             answers,
         }: SurveyResponseRespondAnswerRequest,
     ) -> Result<Json<SurveyResponse>> {
+        let survey = self
+            .survey
+            .find_one(&SurveyV2ReadAction::new().find_by_id(survey_id))
+            .await?;
+        tracing::debug!("survey {:?}", survey);
+
+        let no_of_q = survey.questions.len();
+        if no_of_q != answers.len() {
+            return Err(ApiError::SurveyResponseMissingAnswer);
+        }
+
+        for i in 0..no_of_q {
+            if answers[i] != survey.questions[i] {
+                return Err(ApiError::SurveyResponseInconsistentAnswerType);
+            }
+        }
+
+        let mut panel_id = 0;
+        for panel in survey.panels.into_iter() {
+            if panel == attributes {
+                panel_id = panel.id;
+            }
+        }
+
+        let panel_quota = survey
+            .panel_counts
+            .iter()
+            .filter(|e| e.panel_id == panel_id)
+            .collect::<Vec<_>>()
+            .first()
+            .ok_or(ApiError::SurveyResponseNoMatchedPanelId)?
+            .user_count;
+
+        if panel_id == 0 {
+            tracing::error!("no matched attribute group {:?}", attributes);
+            return Err(ApiError::SurveyResponseNoMatchedAttributeGroup);
+        }
+
+        let mut total_count = 0;
+
+        tracing::debug!(
+            "fetch_all for survey_id {} panel_id {}",
+            survey_id,
+            panel_id
+        );
+
+        let responses: Vec<SurveyResponse> = SurveyResponse::query_builder()
+            .with_count()
+            .panel_id_equals(panel_id)
+            .survey_id_equals(survey_id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| {
+                use sqlx::Row;
+                total_count = r.get("total_count");
+                r.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
+
+        tracing::debug!(
+            "responses {} panel_quota {} total_count {}",
+            responses.len(),
+            panel_quota,
+            total_count
+        );
+
+        if panel_quota <= total_count {
+            return Err(ApiError::SurveyResponsePanelQuotaExceeded);
+        }
+
+        tracing::debug!(
+            "respond_answer {} {} {} {:?} {:?}",
+            survey_id,
+            panel_id,
+            proof_id,
+            attributes,
+            answers
+        );
+
         let res = self
             .repo
-            .insert(proof_id, attributes, answers, survey_id)
+            .insert(panel_id, proof_id, attributes, answers, survey_id)
             .await?;
 
         Ok(Json(res))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::tests::{setup, TestContext};
-
-    use super::*;
-
-    #[tokio::test]
-    async fn test_survey_reponse() {
-        let TestContext {
-            pool,
-            app,
-            user,
-            admin_token,
-            now,
-            claims,
-            endpoint,
-        } = setup().await.unwrap();
-        let org_id = user.orgs[0].id;
-
-        let cli_panel = PanelV2::get_client(&endpoint);
-        let mut panels = vec![];
-        let mut panel_counts = vec![];
-
-        let p = cli_panel
-            .create(
-                org_id,
-                "group 1".to_string(),
-                30,
-                attribute_v2::AgeV2::Fifty,
-                attribute_v2::GenderV2::Male,
-                attribute_v2::RegionV2::Busan,
-                attribute_v2::SalaryV2::TierFive,
-            )
-            .await
-            .unwrap();
-
-        panel_counts.push(PanelCountsV2 {
-            created_at: now,
-            updated_at: now,
-
-            panel_id: p.id,
-            panel_survey_id: 0,
-            user_count: 2,
-        });
-        panels.push(p);
-
-        let p = cli_panel
-            .create(
-                org_id,
-                "group 2".to_string(),
-                50,
-                attribute_v2::AgeV2::Sixty,
-                attribute_v2::GenderV2::Female,
-                attribute_v2::RegionV2::Seoul,
-                attribute_v2::SalaryV2::TierOne,
-            )
-            .await
-            .unwrap();
-        panel_counts.push(PanelCountsV2 {
-            created_at: now,
-            updated_at: now,
-
-            panel_id: p.id,
-            panel_survey_id: 0,
-            user_count: 2,
-        });
-
-        panels.push(p);
-
-        let cli_survey = SurveyV2::get_client(&endpoint);
-        let questions = vec![
-            Question::SingleChoice(ChoiceQuestion {
-                title: "single 1".to_string(),
-                description: Some("test".to_string()),
-                options: vec!["a".to_string(), "b".to_string(), "c".to_string()],
-            }),
-            Question::SingleChoice(ChoiceQuestion {
-                title: "single 1".to_string(),
-                description: Some("test".to_string()),
-                options: vec!["a".to_string(), "b".to_string(), "c".to_string()],
-            }),
-            Question::ShortAnswer(SubjectiveQuestion {
-                title: "single 1".to_string(),
-                description: "test".to_string(),
-            }),
-            Question::Subjective(SubjectiveQuestion {
-                title: "single 1".to_string(),
-                description: "test".to_string(),
-            }),
-            Question::SingleChoice(ChoiceQuestion {
-                title: "single 1".to_string(),
-                description: Some("test".to_string()),
-                options: vec!["a".to_string(), "b".to_string(), "c".to_string()],
-            }),
-        ];
-        let survey = cli_survey
-            .create(
-                user.orgs[0].id,
-                "name".to_string(),
-                ProjectArea::City,
-                now,
-                now + 3600,
-                "description".to_string(),
-                100,
-                questions,
-                panels,
-                vec![],
-            )
-            .await
-            .unwrap();
-
-        let cli_res = SurveyResponse::get_client(&endpoint);
-        let survey_id = survey.id;
-
-        let attributes1 = vec![
-            Attribute::Age(AgeV3::Range {
-                inclusive_min: 50,
-                inclusive_max: 59,
-            }),
-            Attribute::Gender(attribute_v2::GenderV2::Male),
-            Attribute::Region(attribute_v2::RegionV2::Busan),
-            Attribute::Salary(attribute_v2::SalaryV2::TierFive),
-        ];
-
-        let attributes2 = vec![
-            Attribute::Age(AgeV3::Range {
-                inclusive_min: 60,
-                inclusive_max: 69,
-            }),
-            Attribute::Gender(attribute_v2::GenderV2::Female),
-            Attribute::Region(attribute_v2::RegionV2::Seoul),
-            Attribute::Salary(attribute_v2::SalaryV2::TierOne),
-        ];
-
-        let proof = "user_proof".to_string();
-
-        let _ = cli_res
-            .respond_answer(
-                survey_id,
-                proof.clone(),
-                attributes1.clone(),
-                vec![
-                    Answer::SingleChoice { answer: 1 },
-                    Answer::SingleChoice { answer: 2 },
-                    Answer::ShortAnswer {
-                        answer: "short answer".to_string(),
-                    },
-                    Answer::Subjective {
-                        answer: "subjective".to_string(),
-                    },
-                    Answer::SingleChoice { answer: 3 },
-                ],
-            )
-            .await
-            .unwrap();
-
-        let _ = cli_res
-            .respond_answer(
-                survey_id,
-                proof.clone(),
-                attributes1.clone(),
-                vec![
-                    Answer::SingleChoice { answer: 2 },
-                    Answer::SingleChoice { answer: 2 },
-                    Answer::ShortAnswer {
-                        answer: "short answer".to_string(),
-                    },
-                    Answer::Subjective {
-                        answer: "subjective".to_string(),
-                    },
-                    Answer::SingleChoice { answer: 1 },
-                ],
-            )
-            .await
-            .unwrap();
-        let res = cli_res
-            .respond_answer(
-                survey_id,
-                proof.clone(),
-                attributes2.clone(),
-                vec![
-                    Answer::SingleChoice { answer: 2 },
-                    Answer::SingleChoice { answer: 2 },
-                    Answer::ShortAnswer {
-                        answer: "short answer".to_string(),
-                    },
-                    Answer::Subjective {
-                        answer: "subjective".to_string(),
-                    },
-                    Answer::SingleChoice { answer: 1 },
-                ],
-            )
-            .await;
-        assert!(
-            res.is_err(),
-            "over quota response must be rejected {:?}",
-            res
-        );
-
-        let _ = cli_res
-            .respond_answer(
-                survey_id,
-                proof.clone(),
-                attributes2.clone(),
-                vec![
-                    Answer::SingleChoice { answer: 1 },
-                    Answer::SingleChoice { answer: 1 },
-                    Answer::ShortAnswer {
-                        answer: "short answer 1".to_string(),
-                    },
-                    Answer::Subjective {
-                        answer: "subjective 1".to_string(),
-                    },
-                    Answer::SingleChoice { answer: 2 },
-                ],
-            )
-            .await
-            .unwrap();
-
-        let incorrect_age_attribute = vec![
-            Attribute::Age(AgeV3::Range {
-                inclusive_min: 70,
-                inclusive_max: 79,
-            }),
-            Attribute::Gender(attribute_v2::GenderV2::Female),
-            Attribute::Region(attribute_v2::RegionV2::Seoul),
-            Attribute::Salary(attribute_v2::SalaryV2::TierOne),
-        ];
-
-        let incorrect_gender_attribute = vec![
-            Attribute::Age(AgeV3::Range {
-                inclusive_min: 60,
-                inclusive_max: 69,
-            }),
-            Attribute::Gender(attribute_v2::GenderV2::Male),
-            Attribute::Region(attribute_v2::RegionV2::Seoul),
-            Attribute::Salary(attribute_v2::SalaryV2::TierOne),
-        ];
-
-        let incorrect_region_attribute = vec![
-            Attribute::Age(AgeV3::Range {
-                inclusive_min: 60,
-                inclusive_max: 69,
-            }),
-            Attribute::Gender(attribute_v2::GenderV2::Female),
-            Attribute::Region(attribute_v2::RegionV2::Busan),
-            Attribute::Salary(attribute_v2::SalaryV2::TierOne),
-        ];
-
-        let incorrect_salary_attribute = vec![
-            Attribute::Age(AgeV3::Range {
-                inclusive_min: 60,
-                inclusive_max: 69,
-            }),
-            Attribute::Gender(attribute_v2::GenderV2::Male),
-            Attribute::Region(attribute_v2::RegionV2::Seoul),
-            Attribute::Salary(attribute_v2::SalaryV2::TierTwo),
-        ];
-
-        for attributes in vec![
-            incorrect_age_attribute,
-            incorrect_gender_attribute,
-            incorrect_region_attribute,
-            incorrect_salary_attribute,
-        ] {
-            let res = cli_res
-                .respond_answer(
-                    survey_id,
-                    proof.clone(),
-                    attributes.clone(),
-                    vec![
-                        Answer::SingleChoice { answer: 3 },
-                        Answer::SingleChoice { answer: 2 },
-                        Answer::ShortAnswer {
-                            answer: "short answer 3".to_string(),
-                        },
-                        Answer::Subjective {
-                            answer: "subjective 3".to_string(),
-                        },
-                        Answer::SingleChoice { answer: 2 },
-                    ],
-                )
-                .await;
-            assert!(
-                res.is_err(),
-                "incorrect attribute response must be rejected {:?} {:?}",
-                attributes,
-                res
-            );
-        }
-
-        let _ = cli_res
-            .respond_answer(
-                survey_id,
-                proof.clone(),
-                attributes2.clone(),
-                vec![
-                    Answer::SingleChoice { answer: 3 },
-                    Answer::SingleChoice { answer: 2 },
-                    Answer::ShortAnswer {
-                        answer: "short answer 3".to_string(),
-                    },
-                    Answer::Subjective {
-                        answer: "subjective 3".to_string(),
-                    },
-                    Answer::SingleChoice { answer: 2 },
-                ],
-            )
-            .await
-            .unwrap();
     }
 }

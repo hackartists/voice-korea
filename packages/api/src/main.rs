@@ -240,7 +240,7 @@ pub mod tests {
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_nanos() as u64;
 
         let conf = config::get();
         tracing::debug!("config: {:?}", conf);
@@ -268,8 +268,7 @@ $$ LANGUAGE plpgsql;
 "#,
         )
         .execute(&pool)
-        .await
-        .expect("Failed to delete users");
+        .await;
 
         sqlx::query(
             r#"
@@ -283,8 +282,7 @@ $$ LANGUAGE plpgsql;
 "#,
         )
         .execute(&pool)
-        .await
-        .expect("Failed to delete users");
+        .await;
 
         migration(&pool).await?;
 

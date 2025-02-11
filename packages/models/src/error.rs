@@ -66,6 +66,13 @@ pub enum ApiError {
     SurveyAlreadyExists,
     SurveyNotFound(String),
     SurveyNotDraft,
+
+    // Survey Response Errors
+    SurveyResponseMissingAnswer,
+    SurveyResponseInconsistentAnswerType,
+    SurveyResponseNoMatchedAttributeGroup,
+    SurveyResponseNoMatchedPanelId,
+    SurveyResponsePanelQuotaExceeded,
 }
 
 impl std::fmt::Display for ApiError {
