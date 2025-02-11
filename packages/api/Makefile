@@ -8,7 +8,7 @@ AWS_ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
 AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
 AWS_REGION ?= $(shell aws configure get region)
 WORKSPACE_ROOT ?= $(PWD)/../..
-RUSTFLAGS ?= -D warnings
+RUSTFLAGS ?= -A warnings
 
 ifeq ("$(ENV)","prod")
 	RUST_LOG ?= error

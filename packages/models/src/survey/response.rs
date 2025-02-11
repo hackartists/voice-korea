@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crate::{Attribute, Result};
+use crate::{GenderV2, RegionV2, Result, SalaryV2};
 #[cfg(feature = "server")]
 use by_axum::aide;
 use by_macros::api_model;
@@ -34,4 +34,30 @@ pub enum Answer {
     MultipleChoice { answer: Vec<i32> },
     ShortAnswer { answer: String },
     Subjective { answer: String },
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[serde(rename = "snake_case", tag = "type")]
+pub enum Attribute {
+    Age(AgeV3),
+    Gender(GenderV2),
+    Region(RegionV2),
+    Salary(SalaryV2),
+
+    #[default]
+    None,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[serde(rename = "snake_case")]
+pub enum AgeV3 {
+    Specific(u8),
+    Range {
+        inclusive_min: u8,
+        inclusive_max: u8,
+    },
+    #[default]
+    None,
 }

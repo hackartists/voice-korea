@@ -24,29 +24,3 @@ pub struct AttributeItemInfo {
     pub id: String, //id가 ""일 경우 내부에서 즉각적인 id 추가
     pub name: String,
 }
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[serde(rename = "snake_case")]
-pub enum Attribute {
-    Age(Age),
-    Gender(GenderV2),
-    Region(RegionV2),
-    Salary(SalaryV2),
-
-    #[default]
-    None,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[serde(rename = "snake_case")]
-pub enum Age {
-    Specific(u8),
-    Range {
-        inclusive_min: u8,
-        inclusive_max: u8,
-    },
-    #[default]
-    None,
-}
