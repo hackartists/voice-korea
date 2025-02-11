@@ -12,6 +12,7 @@ use crate::pages::opinions::page::OpinionPage;
 use crate::pages::panels::page::PanelPage;
 use crate::pages::reset_password::ResetPasswordPage;
 use crate::pages::resources::page::ResourcePage;
+use crate::pages::surveys::_id::page::SurveyResultPage;
 use crate::pages::surveys::_id::update::page::SurveyUpdatePage;
 use crate::pages::surveys::new::page::SurveyCreatePage;
 use crate::pages::surveys::page::SurveyPage;
@@ -46,6 +47,8 @@ pub enum Route {
             SurveyPage { lang: Language },
             #[route("/surveys/new")]
             SurveyCreatePage { lang: Language },
+            #[route("/surveys/:survey_id")]
+            SurveyResultPage { lang: Language, survey_id: i64 },
             #[route("/surveys/:survey_id/update")]
             SurveyUpdatePage { lang: Language, survey_id: i64 },
         #[end_layout]
@@ -116,6 +119,12 @@ impl Route {
             }
             Route::SurveyPage { lang } if lang == &Language::Ko => Some("여론 조사".to_string()),
             Route::SurveyPage { lang } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
+            Route::SurveyResultPage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::SurveyResultPage { lang, .. } if lang == &Language::En => {
                 Some("Public Opinion Survey".to_string())
             }
             Route::SurveyCreatePage { lang } if lang == &Language::Ko => {
