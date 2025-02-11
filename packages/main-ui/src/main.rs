@@ -4,18 +4,14 @@ use by_components::effects::HoverEffects;
 use dioxus_logger::tracing;
 
 use dioxus::prelude::*;
-use main_ui::service::attribute_api::AttributeApi;
 use main_ui::service::auth_api::AuthApi;
 use main_ui::service::group_api::GroupApi;
 use main_ui::service::member_api::MemberApi;
 use main_ui::service::opinion_api::OpinionApi;
 use main_ui::service::organization_api::OrganizationApi;
-use main_ui::service::panel_api::PanelApi;
 use main_ui::service::popup_service::PopupService;
 
 use main_ui::config;
-use main_ui::service::metadata_api::ResourceApi;
-use main_ui::service::prev_survey_api::PrevSurveyApi;
 use main_ui::service::theme::Theme;
 use main_ui::service::user_api::UserApi;
 
@@ -42,10 +38,6 @@ fn App() -> Element {
     UserApi::init();
     GroupApi::init();
     OpinionApi::init();
-    AttributeApi::init();
-    PanelApi::init();
-    ResourceApi::init();
-    PrevSurveyApi::init();
 
     rsx! {
         document::Link {

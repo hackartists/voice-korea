@@ -6,25 +6,11 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub mod attribute_v2;
+pub use attribute_v2::*;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-
-pub struct CreateAttributeRequest {
-    pub name: String,
-    pub attribute_items: Vec<AttributeItemInfo>,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-
-pub struct UpdateAttributeRequest {
-    pub name: String,
-    pub attribute_items: Vec<AttributeItemInfo>,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+#[deprecated]
 pub struct AttributeResponse {
     pub id: String,
     pub name: Option<String>,
@@ -33,30 +19,34 @@ pub struct AttributeResponse {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+#[deprecated]
 pub struct AttributeItemInfo {
     pub id: String, //id가 ""일 경우 내부에서 즉각적인 id 추가
     pub name: String,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum AttributeActionRequest {
-    Create(CreateAttributeRequest),
-}
+#[serde(rename = "snake_case")]
+pub enum Attribute {
+    Age(Age),
+    Gender(GenderV2),
+    Region(RegionV2),
+    Salary(SalaryV2),
 
-#[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub enum AttributeByIdActionRequest {
-    Delete,
-    Update(UpdateAttributeRequest),
+    #[default]
+    None,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-pub struct AttributesResponse {
-    pub id: String,
-    pub name: String,
-    pub attribute: Vec<String>,
+#[serde(rename = "snake_case")]
+pub enum Age {
+    Specific(u8),
+    Range {
+        inclusive_min: u8,
+        inclusive_max: u8,
+    },
+    #[default]
+    None,
 }
