@@ -10,7 +10,6 @@ pub use attribute_v2::*;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[deprecated(since = "1.1.0", note = "Use attribute_v2 instead")]
 pub struct AttributeResponse {
     pub id: String,
     pub name: Option<String>,
@@ -19,7 +18,6 @@ pub struct AttributeResponse {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[deprecated(since = "1.1.0", note = "Use attribute_v2 instead")]
 pub struct AttributeItemInfo {
     pub id: String, //id가 ""일 경우 내부에서 즉각적인 id 추가
     pub name: String,
