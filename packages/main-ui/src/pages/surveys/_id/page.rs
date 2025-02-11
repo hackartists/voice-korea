@@ -36,13 +36,13 @@ pub fn SurveyResultPage(props: SurveyResultProps) -> Element {
                         },
                         ArrowLeft { width: "24", height: "24", color: "#555462" }
                     }
-                    div { class: "text-[#222222] font-semibold text-[28px]", "{survey.title}" }
+                    div { class: "text-[#222222] font-semibold text-[28px]", "{survey.name}" }
                 }
 
                 div { class: "flex flex-row w-full justify-start items-start gap-[10px]",
                     SurveyResponseBox {
                         title: "{tr.total_survey_target}",
-                        value: survey.total_response_count.to_formatted_string(&Locale::en),
+                        value: survey.quotes.to_formatted_string(&Locale::en),
                     }
                     SurveyResponseBox {
                         title: "{tr.number_of_responses}",
@@ -50,19 +50,15 @@ pub fn SurveyResultPage(props: SurveyResultProps) -> Element {
                     }
                     SurveyResponseBox {
                         title: "{tr.rate_of_responses}",
-                        value: "{survey.response_count * 100 / survey.total_response_count}%",
-                    }
-                    SurveyResponseBox {
-                        title: "{tr.average_time_taken}",
-                        value: "{survey.average_time}",
+                        value: if survey.quotes == 0 { "0%" } else { "{survey.response_count * 100 / survey.quotes}%" },
                     }
                     SurveyResponseBox {
                         title: "{tr.remaining_period}",
-                        value: "{format_remaining_time(survey.end_date)}",
+                        value: "{format_remaining_time(survey.ended_at)}",
                     }
                     SurveyResponseBox {
                         title: "{tr.survey_period}",
-                        value: "{convert_timestamp_to_date(survey.start_date)} - {convert_timestamp_to_date(survey.end_date)}",
+                        value: "{convert_timestamp_to_date(survey.started_at)} - {convert_timestamp_to_date(survey.ended_at)}",
                     }
                 }
             }

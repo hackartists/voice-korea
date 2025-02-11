@@ -3,7 +3,7 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
-use models::*;
+use models::{response::SurveyResponse, *};
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
 // use sqlx::postgres::PgPoolOptions;
@@ -70,6 +70,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     let s = SurveyV2::get_repository(pool.clone());
     let om = OrganizationMember::get_repository(pool.clone());
     let ps = PanelSurveys::get_repository(pool.clone());
+    let sr = SurveyResponse::get_repository(pool.clone());
 
     v.create_this_table().await?;
     o.create_this_table().await?;
@@ -81,6 +82,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     s.create_this_table().await?;
     p.create_this_table().await?;
     ps.create_this_table().await?;
+    sr.create_this_table().await?;
 
     v.create_related_tables().await?;
     o.create_related_tables().await?;
@@ -92,6 +94,7 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     s.create_related_tables().await?;
     p.create_related_tables().await?;
     ps.create_related_tables().await?;
+    sr.create_related_tables().await?;
 
     tracing::info!("Migration done");
     Ok(())
