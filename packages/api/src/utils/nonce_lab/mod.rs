@@ -31,6 +31,8 @@ impl NonceLabClient {
             AUTHORIZATION,
             HeaderValue::from_str(&format!("Bearer {}", nc.token)).unwrap(),
         );
+
+        tracing::info!("headers: {:?}", headers);
         let client = Client::builder()
             .default_headers(headers)
             .build()
@@ -54,6 +56,7 @@ impl NonceLabClient {
         &self,
         survey_dto: NonceLabCreateSurveyRequest,
     ) -> Result<u32, ApiError> {
+        tracing::info!("survey dto: {:?}", survey_dto);
         let res = self
             .post("/v1/vendor/survey")
             .json(&survey_dto)

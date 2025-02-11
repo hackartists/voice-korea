@@ -52,6 +52,7 @@ impl SurveyControllerV2 {
 
         match body {
             SurveyV2ByIdAction::Update(params) => ctrl.update(org_id, id, params).await,
+            SurveyV2ByIdAction::StartSurvey(_) => ctrl.start_survey(id).await,
         }
     }
 
@@ -134,8 +135,10 @@ impl SurveyControllerV2 {
         p.quotes, 
         p.org_id, 
         p.panel_counts, 
+        p.noncelab_id,
         COALESCE(
-            json_agg(to_jsonb(panels)) FILTER (WHERE panels.id IS NOT NULL), '[]'
+            jsonb_agg(to_jsonb(panels)) FILTER (WHERE panels.id IS NOT NULL), 
+            '[]'::jsonb
         ) AS panels
     FROM surveys p 
     LEFT JOIN panel_surveys ps ON p.id = ps.survey_id
@@ -143,7 +146,7 @@ impl SurveyControllerV2 {
     WHERE p.org_id = $1 
     GROUP BY p.id, p.created_at, p.updated_at, p.name, p.project_type, 
              p.project_area, p.status, p.started_at, p.ended_at, p.quotes, 
-             p.org_id, p.panel_counts
+             p.org_id, p.panel_counts, p.noncelab_id
     LIMIT $2 OFFSET $3;",
         )
         .bind(org_id)
@@ -172,6 +175,44 @@ impl SurveyControllerV2 {
         Ok(Json(SurveyV2::default()))
     }
 
+    pub async fn start_survey(&self, id: i64) -> Result<Json<SurveyV2>> {
+        let mut survey = self
+            .repo
+            .find_one(&SurveyV2ReadAction::new().find_by_id(id))
+            .await?;
+
+        survey.status = ProjectStatus::InProgress;
+
+        let survey_dto = survey.clone().into();
+
+        tracing::info!("id: {} survey dto: {:?}", id, survey_dto);
+
+        let noncelab_id = self.nonce_lab.create_survey(survey_dto).await?;
+
+        let survey = self
+            .repo
+            .update(
+                survey.clone().id,
+                SurveyV2RepositoryUpdateRequest {
+                    name: None,
+                    project_type: None,
+                    project_area: None,
+                    status: Some(ProjectStatus::InProgress),
+                    started_at: None,
+                    ended_at: None,
+                    description: None,
+                    quotes: None,
+                    org_id: None,
+                    questions: None,
+                    panel_counts: None,
+                    noncelab_id: Some(noncelab_id as i64),
+                },
+            )
+            .await?;
+
+        Ok(Json(survey))
+    }
+
     pub async fn update(
         &self,
         org_id: i64,
@@ -195,6 +236,7 @@ impl SurveyControllerV2 {
                     org_id: Some(org_id),
                     questions: Some(body.questions),
                     panel_counts: Some(body.panel_counts),
+                    noncelab_id: None,
                 },
             )
             .await?;
@@ -234,6 +276,7 @@ impl SurveyControllerV2 {
                 org_id.clone(),
                 questions,
                 panel_counts,
+                None,
             )
             .await?
         {
@@ -249,12 +292,6 @@ impl SurveyControllerV2 {
         }
 
         tx.commit().await?;
-
-        let _ = self.nonce_lab;
-
-        // FIXME: This is workaround. Fix to use mock when testing
-        // #[cfg(not(test))]
-        // self.nonce_lab.create_survey(survey.clone().into()).await?;
 
         Ok(Json(survey))
     }
