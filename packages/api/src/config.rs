@@ -8,6 +8,13 @@ pub struct Config {
     pub auth: AuthConfig,
     pub aws: AwsConfig,
     pub from_email: &'static str,
+    pub nonce_lab: NonceLabConfig,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct NonceLabConfig {
+    pub endpoint: &'static str,
+    pub token: &'static str,
 }
 
 impl Default for Config {
@@ -22,6 +29,11 @@ impl Default for Config {
                 .expect("VERIFYCATION_EXPIRATION must be a number"),
             aws: AwsConfig::default(),
             from_email: option_env!("FROM_EMAIL").unwrap_or("hi@biyard.co"),
+            nonce_lab: NonceLabConfig {
+                endpoint: option_env!("NONCE_LAB_API_ENDPOINT")
+                    .expect("NONCE_LAB_API_ENDPOINT required"),
+                token: option_env!("NONCE_LAB_API_TOKEN").expect("NONCE_LAB_API_TOKEN required"),
+            },
         }
     }
 }

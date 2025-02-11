@@ -173,3 +173,139 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+pub mod tests {
+    use std::{collections::HashMap, time::SystemTime};
+
+    use by_types::Claims;
+    use rest_api::ApiService;
+    use utils::hash::get_hash_string;
+
+    use super::*;
+
+    pub struct TestContext {
+        pub pool: sqlx::Pool<sqlx::Postgres>,
+        pub app: Box<dyn ApiService>,
+        pub user: User,
+        pub admin_token: String,
+        pub now: i64,
+        pub claims: Claims,
+    }
+
+    pub async fn setup_test_user(now: u64, pool: &sqlx::Pool<sqlx::Postgres>) -> Result<User> {
+        let user = User::get_repository(pool.clone());
+        let org = Organization::get_repository(pool.clone());
+        let email = format!("user-{now}@test.com");
+        let password = format!("password-{now}");
+        let password = get_hash_string(password.as_bytes());
+
+        let u = user.insert(email.clone(), password.clone()).await?;
+        tracing::debug!("{:?}", u);
+
+        org.insert_with_dependency(u.id, email.clone()).await?;
+
+        let user = user
+            .find_one(&UserReadAction::new().get_user(email, password))
+            .await?;
+
+        Ok(user)
+    }
+
+    pub fn setup_jwt_token(user: User) -> (Claims, String) {
+        let now = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let mut claims = Claims {
+            sub: user.id.to_string(),
+            exp: now + 3600,
+            role: by_types::Role::Admin,
+            custom: HashMap::new(),
+        };
+        let token = by_axum::auth::generate_jwt(&mut claims).unwrap();
+        (claims, token)
+    }
+
+    pub async fn setup() -> Result<TestContext> {
+        let app = by_axum::new();
+        let now = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        let conf = config::get();
+        tracing::debug!("config: {:?}", conf);
+        set_auth_config(conf.auth.clone());
+
+        let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
+            PgPoolOptions::new()
+                .max_connections(pool_size)
+                .connect(url)
+                .await
+                .expect("Failed to connect to Postgres")
+        } else {
+            panic!("Database is not initialized. Call init() first.");
+        };
+
+        sqlx::query(
+            r#"
+CREATE OR REPLACE FUNCTION set_updated_at()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated_at := EXTRACT(EPOCH FROM now()); -- seconds
+        RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+"#,
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to delete users");
+
+        sqlx::query(
+            r#"
+CREATE OR REPLACE FUNCTION set_created_at()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.created_at := EXTRACT(EPOCH FROM now()); -- seconds
+        RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+"#,
+        )
+        .execute(&pool)
+        .await
+        .expect("Failed to delete users");
+
+        migration(&pool).await?;
+
+        let app = app
+            .nest(
+                "/auth/v1",
+                controllers::auth::v1::UserControllerV1::route(pool.clone())?,
+            )
+            .nest(
+                "/organizations/v2",
+                controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
+            )
+            .layer(middleware::from_fn(authorization_middleware));
+
+        let user = setup_test_user(now, &pool).await.unwrap();
+        let (claims, admin_token) = setup_jwt_token(user.clone());
+
+        let app = by_axum::into_api_adapter(app);
+        let app = Box::new(app);
+        rest_api::set_api_service(app.clone());
+        rest_api::add_authorization(&format!("Bearer {}", admin_token));
+
+        Ok(TestContext {
+            pool,
+            app,
+            user,
+            admin_token,
+            claims,
+            now: now as i64,
+        })
+    }
+}
