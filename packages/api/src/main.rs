@@ -260,33 +260,33 @@ pub mod tests {
 
         sqlx::query(
             r#"
-CREATE OR REPLACE FUNCTION set_updated_at()
-    RETURNS TRIGGER AS $$
-    BEGIN
-        NEW.updated_at := EXTRACT(EPOCH FROM now()); -- seconds
-        RETURN NEW;
-    END;
-$$ LANGUAGE plpgsql;
-"#,
+        CREATE OR REPLACE FUNCTION set_updated_at()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at := EXTRACT(EPOCH FROM now()); -- seconds
+                RETURN NEW;
+            END;
+        $$ LANGUAGE plpgsql;
+        "#,
         )
         .execute(&pool)
         .await;
 
         sqlx::query(
             r#"
-CREATE OR REPLACE FUNCTION set_created_at()
-    RETURNS TRIGGER AS $$
-    BEGIN
-        NEW.created_at := EXTRACT(EPOCH FROM now()); -- seconds
-        RETURN NEW;
-    END;
-$$ LANGUAGE plpgsql;
-"#,
+        CREATE OR REPLACE FUNCTION set_created_at()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.created_at := EXTRACT(EPOCH FROM now()); -- seconds
+                RETURN NEW;
+            END;
+        $$ LANGUAGE plpgsql;
+        "#,
         )
         .execute(&pool)
         .await;
 
-        migration(&pool).await?;
+        migration(&pool).await;
 
         let app = app
             .nest(
