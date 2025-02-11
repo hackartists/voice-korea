@@ -141,7 +141,7 @@ pub fn Objective(
                     input {
                         class: "flex flex-row w-[888px] h-[55px] justify-start items-center bg-white focus:outline-none border-b-[1px] border-[#9f9f9f] px-[15px] py-[15px] font-medium text-[#9f9f9f] text-[15px] leading-[22px] mr-[10px]",
                         r#type: "text",
-                        placeholder: format!("{} {}", tr.option, index),
+                        placeholder: format!("{} {}", tr.option, index + 1),
                         value: option.clone(),
                         oninput: {
                             let mut question = question.clone();

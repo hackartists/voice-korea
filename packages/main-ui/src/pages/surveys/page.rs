@@ -190,22 +190,38 @@ pub fn SurveyPage(props: SurveyProps) -> Element {
                                                 {survey.status.translate(&props.lang)}
                                             }
                                         }
-                                        div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
-                                            {
-                                                match survey.status {
-                                                    ProjectStatus::Finish => {
-                                                        rsx! {
-                                                            button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.view_results}" }
-                                                        }
+
+                                        match survey.status {
+                                            ProjectStatus::Finish => {
+                                                rsx! {
+                                                    div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
+                                                        button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.view_results}" }
                                                     }
-                                                    _ => {
-                                                        rsx! {
-                                                            button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.detail_more}" }
-                                                        }
+                                                }
+                                            }
+                                            ProjectStatus::Ready => {
+                                                rsx! {
+                                                    div {
+                                                        class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center cursor-pointer",
+                                                        onclick: {
+                                                            let id = survey.id.clone();
+                                                            move |_| async move {
+                                                                ctrl.start_survey(id).await;
+                                                            }
+                                                        },
+                                                        button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.start_survey_create}" }
+                                                    }
+                                                }
+                                            }
+                                            _ => {
+                                                rsx! {
+                                                    div { class: "flex flex-row w-[120px] min-w-[120px] h-full justify-center items-center",
+                                                        button { class: "text-[#2a60d3] font-semibold text-[14px]", "{translate.in_progress}" }
                                                     }
                                                 }
                                             }
                                         }
+
                                         div { class: "group relative",
                                             div { class: "flex flex-row w-[90px] min-w-[90px] h-full justify-center items-center",
                                                 if survey.status == ProjectStatus::Ready {
