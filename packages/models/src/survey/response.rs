@@ -1,9 +1,10 @@
 #![allow(unused)]
-use crate::{GenderV2, RegionV2, Result, SalaryV2};
 #[cfg(feature = "server")]
 use by_axum::aide;
 use by_macros::api_model;
 use by_types::QueryResponse;
+
+use crate::attribute_v2::{GenderV2, RegionV2, SalaryV2};
 
 #[api_model(base = "/v2/surveys/:survey-id/responses", table = survey_response)]
 pub struct SurveyResponse {
