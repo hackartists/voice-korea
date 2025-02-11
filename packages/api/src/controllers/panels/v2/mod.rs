@@ -209,6 +209,7 @@ impl PanelControllerV2 {
                 org_id,
             )
             .await?;
+        tracing::debug!("created panel: {:?}", panel);
 
         Ok(Json(panel))
     }

@@ -1,12 +1,19 @@
+use std::time::Duration;
+
+use aws_config::BehaviorVersion;
+use aws_sdk_s3::{presigning::PresigningConfig, primitives::ByteStream};
 use by_axum::{
     auth::Authorization,
     axum::{
         extract::{Path, Query, State},
-        routing::post,
+        routing::{get, post},
         Extension, Json,
     },
 };
+use excel::SurveyResponseExcel;
+use models::response::*;
 use models::*;
+use rust_xlsxwriter::Workbook;
 use sqlx::postgres::PgRow;
 
 use crate::utils::nonce_lab::NonceLabClient;
@@ -36,10 +43,118 @@ impl SurveyControllerV2 {
         let ctrl = Self::new(pool);
 
         Ok(by_axum::axum::Router::new()
+            .route("/:id/responses", get(Self::download_excel))
+            .with_state(ctrl.clone())
             .route("/:id", post(Self::act_by_id).get(Self::get_survey_v2))
             .with_state(ctrl.clone())
             .route("/", post(Self::act_survey_v2).get(Self::list_survey_v2))
             .with_state(ctrl.clone()))
+    }
+
+    pub async fn download_excel(
+        State(ctrl): State<SurveyControllerV2>,
+        Extension(auth): Extension<Option<Authorization>>,
+        Path((org_id, survey_id)): Path<(i64, i64)>,
+    ) -> Result<Json<SurveyResponseExcel>> {
+        tracing::debug!("act_by_id: {:?} {:?}", org_id, survey_id);
+        auth.ok_or(ApiError::Unauthorized)?;
+
+        let survey: SurveyV2 = SurveyV2::query_builder()
+            .id_equals(survey_id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_one(&ctrl.pool)
+            .await?;
+
+        if survey.org_id != org_id {
+            return Err(ApiError::Unauthorized);
+        }
+
+        let len = survey.questions.len();
+
+        // NOTE: fetch all data
+        let responses: Vec<SurveyResponse> = SurveyResponse::query_builder()
+            .survey_id_equals(survey_id)
+            .query()
+            .map(|r: sqlx::postgres::PgRow| r.into())
+            .fetch_all(&ctrl.pool)
+            .await?;
+
+        let mut workbook = Workbook::new();
+        let worksheet = workbook.add_worksheet();
+
+        for i in 0..responses.len() {
+            let panel = survey
+                .panels
+                .iter()
+                .find(|p| p.id == responses[i].panel_id)
+                .ok_or(ApiError::SurveyResponseNoMatchedPanelId)?;
+
+            worksheet
+                .write_string(0, i as u16 + 1, &panel.name)
+                .unwrap();
+        }
+
+        for i in 0..len {
+            worksheet
+                .write_string(i as u32 + 1, 0, &survey.questions[i].title())
+                .unwrap();
+            for (j, response) in responses.iter().enumerate() {
+                worksheet
+                    .write_string(
+                        i as u32 + 1,
+                        j as u16 + 1,
+                        response.answers[i].to_answer_string(),
+                    )
+                    .unwrap();
+            }
+        }
+
+        let bytes = workbook.save_to_buffer().map_err(|e| {
+            tracing::error!("error: {:?}", e);
+            ApiError::SurveyResponseExcelWritingError
+        })?;
+
+        let conf = aws_config::load_defaults(BehaviorVersion::latest()).await;
+        let cli = aws_sdk_s3::Client::new(&conf);
+        let c = crate::config::get();
+        let bucket_name = c.bucket_name;
+        let path = format!("surveys/{}.xlsx", survey_id,);
+
+        cli.put_object()
+            .bucket(bucket_name)
+            .key(&path)
+            .body(ByteStream::from(bytes))
+            .content_type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("error: {:?}", e);
+                ApiError::SurveyResponseExcelUploadError
+            })?;
+
+        let presigning_config = PresigningConfig::expires_in(Duration::from_secs(
+            c.presigned_url_expiration,
+        ))
+        .map_err(|e| {
+            tracing::error!("error: {:?}", e);
+            ApiError::SurveyResponseExcelPresigningError
+        })?;
+        let url = cli
+            .get_object()
+            .bucket(bucket_name)
+            .key(&path)
+            .presigned(presigning_config)
+            .await
+            .map_err(|e| {
+                tracing::error!("error: {:?}", e);
+                ApiError::SurveyResponseExcelPresigningError
+            })?
+            .uri()
+            .to_string();
+        tracing::debug!("excel url: {:?}", url);
+
+        Ok(Json(SurveyResponseExcel { url }))
     }
 
     pub async fn act_by_id(
@@ -305,7 +420,12 @@ pub mod tests {
 
     #[tokio::test]
     async fn test_survey_create() {
-        let TestContext { user, now, .. } = setup().await.unwrap();
+        let TestContext {
+            user,
+            now,
+            endpoint,
+            ..
+        } = setup().await.unwrap();
 
         let cli = SurveyV2::get_client("http://localhost:3000");
         let org_id = user.orgs[0].id;

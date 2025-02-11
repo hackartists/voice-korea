@@ -3,7 +3,9 @@ use by_axum::{
     axum::middleware,
 };
 use by_types::DatabaseConfig;
-use models::{response::SurveyResponse, *};
+use controllers::v2::Version2Controller;
+use models::response::SurveyResponse;
+use models::*;
 use sqlx::postgres::PgPoolOptions;
 // use by_types::DatabaseConfig;
 // use sqlx::postgres::PgPoolOptions;
@@ -11,6 +13,8 @@ use tokio::net::TcpListener;
 
 mod common;
 mod controllers {
+    pub mod v2;
+
     pub mod panels {
         pub mod v2;
     }
@@ -76,7 +80,6 @@ async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
     o.create_this_table().await?;
     u.create_this_table().await?;
     om.create_this_table().await?;
-
     resource.create_this_table().await?;
     // files.create_table().await?;
     s.create_this_table().await?;
@@ -128,6 +131,7 @@ async fn main() -> Result<()> {
             "/organizations/v2",
             controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
         )
+        .nest("/v2", Version2Controller::route(pool.clone())?)
         .layer(middleware::from_fn(authorization_middleware));
     // .nest(
     //     "/members/v1",
@@ -193,14 +197,16 @@ pub mod tests {
         pub user: User,
         pub admin_token: String,
         pub now: i64,
+        pub id: String,
         pub claims: Claims,
+        pub endpoint: String,
     }
 
-    pub async fn setup_test_user(now: u64, pool: &sqlx::Pool<sqlx::Postgres>) -> Result<User> {
+    pub async fn setup_test_user(id: &str, pool: &sqlx::Pool<sqlx::Postgres>) -> Result<User> {
         let user = User::get_repository(pool.clone());
         let org = Organization::get_repository(pool.clone());
-        let email = format!("user-{now}@test.com");
-        let password = format!("password-{now}");
+        let email = format!("user-{id}@test.com");
+        let password = format!("password-{id}");
         let password = get_hash_string(password.as_bytes());
 
         let u = user.insert(email.clone(), password.clone()).await?;
@@ -232,10 +238,11 @@ pub mod tests {
 
     pub async fn setup() -> Result<TestContext> {
         let app = by_axum::new();
+        let id = uuid::Uuid::new_v4().to_string();
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_nanos() as u64;
 
         let conf = config::get();
         tracing::debug!("config: {:?}", conf);
@@ -253,35 +260,33 @@ pub mod tests {
 
         sqlx::query(
             r#"
-CREATE OR REPLACE FUNCTION set_updated_at()
-    RETURNS TRIGGER AS $$
-    BEGIN
-        NEW.updated_at := EXTRACT(EPOCH FROM now()); -- seconds
-        RETURN NEW;
-    END;
-$$ LANGUAGE plpgsql;
-"#,
+        CREATE OR REPLACE FUNCTION set_updated_at()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at := EXTRACT(EPOCH FROM now()); -- seconds
+                RETURN NEW;
+            END;
+        $$ LANGUAGE plpgsql;
+        "#,
         )
         .execute(&pool)
-        .await
-        .expect("Failed to delete users");
+        .await;
 
         sqlx::query(
             r#"
-CREATE OR REPLACE FUNCTION set_created_at()
-    RETURNS TRIGGER AS $$
-    BEGIN
-        NEW.created_at := EXTRACT(EPOCH FROM now()); -- seconds
-        RETURN NEW;
-    END;
-$$ LANGUAGE plpgsql;
-"#,
+        CREATE OR REPLACE FUNCTION set_created_at()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.created_at := EXTRACT(EPOCH FROM now()); -- seconds
+                RETURN NEW;
+            END;
+        $$ LANGUAGE plpgsql;
+        "#,
         )
         .execute(&pool)
-        .await
-        .expect("Failed to delete users");
+        .await;
 
-        migration(&pool).await?;
+        migration(&pool).await;
 
         let app = app
             .nest(
@@ -292,9 +297,10 @@ $$ LANGUAGE plpgsql;
                 "/organizations/v2",
                 controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
             )
+            .nest("/v2", Version2Controller::route(pool.clone())?)
             .layer(middleware::from_fn(authorization_middleware));
 
-        let user = setup_test_user(now, &pool).await.unwrap();
+        let user = setup_test_user(&id, &pool).await.unwrap();
         let (claims, admin_token) = setup_jwt_token(user.clone());
 
         let app = by_axum::into_api_adapter(app);
@@ -305,10 +311,12 @@ $$ LANGUAGE plpgsql;
         Ok(TestContext {
             pool,
             app,
+            id,
             user,
             admin_token,
             claims,
             now: now as i64,
+            endpoint: format!("http://localhost:3000"),
         })
     }
 }

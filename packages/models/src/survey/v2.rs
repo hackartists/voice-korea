@@ -50,11 +50,13 @@ pub struct SurveyV2 {
     #[api_model(summary, action = create, many_to_many = panel_surveys, foreign_table_name = panels, foreign_primary_key = panel_id, foreign_reference_key = survey_id,)]
     #[serde(default)]
     pub panels: Vec<PanelV2>,
+
+    // FIXME: This data may be one_to_many of panel_surveys table
     #[api_model(summary, action = create, type = JSONB, version = v0.1, action_by_id = update)]
     pub panel_counts: Vec<PanelCountsV2>,
     #[api_model(summary)]
     pub noncelab_id: Option<i64>,
-    #[api_model(summary, one_to_many = survey_response, aggregator = count)]
+    #[api_model(summary, one_to_many = survey_responses, aggregator = count)]
     pub response_count: i64,
     // #[api_model(summary, many_to_many = attrs, foreign_table_name = attributes, foreign_primary_key = attr_id, foreign_reference_key = survey_id)]
     // pub attributes: Vec<Attribute>,

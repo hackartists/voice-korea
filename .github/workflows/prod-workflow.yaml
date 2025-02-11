@@ -50,12 +50,25 @@ jobs:
           RUSTFLAGS: "-A warnings"
           DATABASE_TYPE: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          NONCE_LAB_API_TOKEN: ${{ secrets.NONCE_LAB_API_TOKEN }}
+          INTERNAL_SERVER_KEY: ${{ secrets.VOICE_KOREA_INTERNAL_SERVER_KEY }}
+          ENV: dev
+          STACK: voice-korea-api-dev-stack
+          SERVICE: api
+          BASE_DOMAIN: biyard.co
+          DOMAIN: voice-korea-api.dev.biyard.co
+          AUTH_TYPE: jwt
+          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
+          BUCKET_NAME: voice-korea.dev.biyard.co
+          TESTFLAGS: "--features full-test"
         run: |
           cd packages/api && make test
 
   web-deployment:
     runs-on: ubuntu-22.04
-    needs: [test]
 
     steps:
       - uses: actions/checkout@v3
@@ -111,7 +124,6 @@ jobs:
 
   api-deployment:
     runs-on: ubuntu-22.04
-    needs: [test]
 
     steps:
       - uses: actions/checkout@v3
@@ -160,6 +172,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
           AUTH_TYPE: jwt
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
+          BUCKET_NAME: voice-korea.dev.biyard.co
           ENABLE_S3: false
           ENABLE_FARGATE: false
           ENABLE_DYNAMO: false
@@ -171,7 +184,6 @@ jobs:
 
   watcher-deployment:
     runs-on: ubuntu-22.04
-    needs: [test]
 
     steps:
       - uses: actions/checkout@v3
