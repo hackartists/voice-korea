@@ -14,7 +14,6 @@ use excel::SurveyResponseExcel;
 use models::response::*;
 use models::*;
 use rust_xlsxwriter::Workbook;
-use sqlx::postgres::PgRow;
 
 use crate::utils::nonce_lab::NonceLabClient;
 
@@ -233,59 +232,22 @@ impl SurveyControllerV2 {
 }
 
 impl SurveyControllerV2 {
-    pub async fn find(
-        &self,
-        org_id: i64,
-        SurveyV2Query { size, bookmark, .. }: SurveyV2Query,
-    ) -> Result<Json<SurveyV2GetResponse>> {
+    pub async fn find(&self, org_id: i64, q: SurveyV2Query) -> Result<Json<SurveyV2GetResponse>> {
         let mut total_count: i64 = 0;
+        let items: Vec<SurveyV2Summary> = SurveyV2Summary::query_builder()
+            .org_id_equals(org_id)
+            .with_count()
+            .limit(q.size())
+            .page(q.page())
+            .query()
+            .map(|r: sqlx::postgres::PgRow| {
+                use sqlx::Row;
 
-        // let query = SurveyV2Summary::base_sql_with("where org_id = $1 limit $2 offset $3");
-
-        // FIXME: fix to this line bug
-        // query.push_str(" order by id desc");
-        // tracing::debug!("find query: {}", query);
-
-        let items: Vec<SurveyV2Summary> = sqlx::query(
-            &"SELECT 
-        COUNT(*) OVER() AS total_count, 
-        p.id, 
-        p.created_at, 
-        p.updated_at, 
-        p.name, 
-        p.project_type, 
-        p.project_area, 
-        p.status, 
-        p.started_at, 
-        p.ended_at, 
-        p.quotes, 
-        p.org_id, 
-        p.panel_counts, 
-        p.noncelab_id,
-        COALESCE(
-            jsonb_agg(to_jsonb(panels)) FILTER (WHERE panels.id IS NOT NULL), 
-            '[]'::jsonb
-        ) AS panels
-    FROM surveys p 
-    LEFT JOIN panel_surveys ps ON p.id = ps.survey_id
-    LEFT JOIN panels panels ON ps.panel_id = panels.id
-    WHERE p.org_id = $1 
-    GROUP BY p.id, p.created_at, p.updated_at, p.name, p.project_type, 
-             p.project_area, p.status, p.started_at, p.ended_at, p.quotes, 
-             p.org_id, p.panel_counts, p.noncelab_id
-    LIMIT $2 OFFSET $3;",
-        )
-        .bind(org_id)
-        .bind(size as i64)
-        .bind(size as i64 * (bookmark.unwrap_or("1".to_string()).parse::<i64>().unwrap() - 1))
-        .map(|r: PgRow| {
-            use sqlx::Row;
-
-            total_count = r.get("total_count");
-            r.into()
-        })
-        .fetch_all(&self.pool)
-        .await?;
+                total_count = r.get("total_count");
+                r.into()
+            })
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(Json(SurveyV2GetResponse::Query(QueryResponse {
             items,

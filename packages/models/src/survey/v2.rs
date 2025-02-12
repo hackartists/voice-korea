@@ -58,7 +58,7 @@ pub struct SurveyV2 {
     pub panel_counts: Vec<PanelCountsV2>,
     #[api_model(summary)]
     pub noncelab_id: Option<i64>,
-    #[api_model(summary, one_to_many = survey_responses, aggregator = count)]
+    #[api_model(summary, one_to_many = survey_responses, foreign_key = survey_id, aggregator = count)]
     pub response_count: i64,
     // #[api_model(summary, many_to_many = attrs, foreign_table_name = attributes, foreign_primary_key = attr_id, foreign_reference_key = survey_id)]
     // pub attributes: Vec<Attribute>,
@@ -343,8 +343,7 @@ impl SurveyV2Summary {
     }
 
     pub fn response_rate(&self) -> String {
-        // TODO: implement real logic for calculation of response rate.
-        let responses = 0;
+        let responses = self.response_count;
 
         format!(
             "{}% ({}/{})",
