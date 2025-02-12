@@ -55,7 +55,11 @@ impl NonceLabClient {
         &self,
         survey_dto: NonceLabCreateSurveyRequest,
     ) -> Result<u32, ApiError> {
-        tracing::info!("survey dto: {:?}", survey_dto);
+        tracing::debug!(
+            "noncelab request json: {:?}",
+            serde_json::to_string(&survey_dto)
+                .map_err(|v| ApiError::JSONSerdeError(v.to_string()))?
+        );
         let res = self
             .post("/v1/vendor/survey")
             .json(&survey_dto)
