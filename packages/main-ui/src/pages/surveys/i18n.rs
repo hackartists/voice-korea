@@ -352,6 +352,14 @@ translate! {
         ko: "결과 보기",
         en: "View Results"
     }
+    start_survey_create: {
+        ko: "설문 시작하기",
+        en: "Start Survey"
+    }
+    in_progress: {
+        ko: "설문 진행 중",
+        en: "In Progress"
+    }
 
     update_survey: {
         ko: "조사 수정하기",

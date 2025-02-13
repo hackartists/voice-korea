@@ -20,29 +20,29 @@ pub fn InputIntroduction(
     onchange_description: EventHandler<String>,
 
     #[props(default = None)] area: Option<ProjectArea>,
-    #[props(default = Local::now().timestamp())] start_date: i64,
-    #[props(default = Local::now().timestamp())] end_date: i64,
-    #[props(default = "".to_string())] title: String,
-    #[props(default = "".to_string())] description: String,
+    #[props(default = Local::now().timestamp())] sd: i64,
+    #[props(default = Local::now().timestamp())] ed: i64,
+    #[props(default = "".to_string())] ti: String,
+    #[props(default = "".to_string())] desc: String,
 ) -> Element {
     let translate: InputIntroductionTranslate = translate(&lang);
     let mut is_focused = use_signal(|| false);
     let mut select_field = use_signal(|| area);
-    let mut start_date = use_signal(|| start_date);
-    let mut end_date = use_signal(|| end_date);
-    let mut title = use_signal(|| title.clone());
-    let mut description = use_signal(|| description.clone());
+    let mut start_date = use_signal(|| sd);
+    let mut end_date = use_signal(|| ed);
+    let mut title = use_signal(|| ti.clone());
+    let mut description = use_signal(|| desc.clone());
 
-    // use_effect(use_reactive(
-    //     (&area, &start_date, &end_date, &title, &description),
-    //     move |(selected, started, ended, ti, desc)| {
-    //         select_field.set(selected);
-    //         start_date.set(started);
-    //         end_date.set(ended);
-    //         title.set(ti);
-    //         description.set(desc);
-    //     },
-    // ));
+    use_effect(use_reactive(
+        (&area, &sd, &ed, &ti, &desc),
+        move |(area, sd, ed, ti, desc)| {
+            select_field.set(area);
+            start_date.set(sd);
+            end_date.set(ed);
+            title.set(ti.clone());
+            description.set(desc.clone());
+        },
+    ));
     rsx! {
         div { class: "flex flex-col w-full justify-start items-start",
             div { class: "font-medium text-[16px] text-black leading-[22px] mb-[10px]",

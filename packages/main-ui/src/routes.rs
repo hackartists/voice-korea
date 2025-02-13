@@ -5,12 +5,6 @@ use crate::pages::create::CreatePage;
 use crate::pages::find_email::FindEmailPage;
 use crate::pages::groups::_id::page::GroupDetailPage;
 use crate::pages::groups::page::GroupPage;
-use crate::pages::id::response_report::ResponseReportPage;
-use crate::pages::id::select_response::response_type::SelectResponseDetailPage;
-use crate::pages::id::select_response::SelectResponsePage;
-use crate::pages::id::survey_summary::SurveySummaryPage;
-use crate::pages::id::write_question::WriteQuestionPage;
-use crate::pages::id::write_title::WriteTitlePage;
 use crate::pages::members::_id::page::MemberDetailPage;
 use crate::pages::members::page::MemberPage;
 use crate::pages::opinions::new::page::OpinionCreatePage;
@@ -18,6 +12,7 @@ use crate::pages::opinions::page::OpinionPage;
 use crate::pages::panels::page::PanelPage;
 use crate::pages::reset_password::ResetPasswordPage;
 use crate::pages::resources::page::ResourcePage;
+use crate::pages::surveys::_id::page::SurveyResultPage;
 use crate::pages::surveys::_id::update::page::SurveyUpdatePage;
 use crate::pages::surveys::new::page::SurveyCreatePage;
 use crate::pages::surveys::page::SurveyPage;
@@ -52,24 +47,10 @@ pub enum Route {
             SurveyPage { lang: Language },
             #[route("/surveys/new")]
             SurveyCreatePage { lang: Language },
+            #[route("/surveys/:survey_id")]
+            SurveyResultPage { lang: Language, survey_id: i64 },
             #[route("/surveys/:survey_id/update")]
             SurveyUpdatePage { lang: Language, survey_id: i64 },
-        #[end_layout]
-
-        //FIXME: remove this route after new ui is implemented
-        #[layout(RootLayout)]
-            #[route("/id/:survey_id/write-title")]
-            WriteTitlePage { lang: Language, survey_id: String },
-            #[route("/id/:survey_id/write-question")]
-            WriteQuestionPage { lang: Language, survey_id: String },
-            #[route("/id/:survey_id/select-response")]
-            SelectResponsePage { lang: Language, survey_id: String },
-            #[route("/id/:survey_id/select-response/type/:select_type")]
-            SelectResponseDetailPage { lang: Language, survey_id: String, select_type: String },
-            #[route("/id/:survey_id/survey-summary")]
-            SurveySummaryPage { lang: Language, survey_id: String },
-            #[route("/id/:survey_id/response-report")]
-            ResponseReportPage { lang: Language, survey_id: String },
         #[end_layout]
 
         #[route("/")]
@@ -140,6 +121,12 @@ impl Route {
             Route::SurveyPage { lang } if lang == &Language::En => {
                 Some("Public Opinion Survey".to_string())
             }
+            Route::SurveyResultPage { lang, .. } if lang == &Language::Ko => {
+                Some("여론 조사".to_string())
+            }
+            Route::SurveyResultPage { lang, .. } if lang == &Language::En => {
+                Some("Public Opinion Survey".to_string())
+            }
             Route::SurveyCreatePage { lang } if lang == &Language::Ko => {
                 Some("여론 조사".to_string())
             }
@@ -169,42 +156,6 @@ impl Route {
             }
             Route::ResetPasswordPage { lang } if lang == &Language::En => {
                 Some("Reset Password".to_string())
-            }
-            Route::WriteTitlePage { lang, .. } if lang == &Language::Ko => {
-                Some("여론 조사".to_string())
-            }
-            Route::WriteTitlePage { lang, .. } if lang == &Language::En => {
-                Some("Public Opinion Survey".to_string())
-            }
-            Route::WriteQuestionPage { lang, .. } if lang == &Language::Ko => {
-                Some("여론 조사".to_string())
-            }
-            Route::WriteQuestionPage { lang, .. } if lang == &Language::En => {
-                Some("Public Opinion Survey".to_string())
-            }
-            Route::SelectResponsePage { lang, .. } if lang == &Language::Ko => {
-                Some("여론 조사".to_string())
-            }
-            Route::SelectResponsePage { lang, .. } if lang == &Language::En => {
-                Some("Public Opinion Survey".to_string())
-            }
-            Route::SelectResponseDetailPage { lang, .. } if lang == &Language::Ko => {
-                Some("여론 조사".to_string())
-            }
-            Route::SelectResponseDetailPage { lang, .. } if lang == &Language::En => {
-                Some("Public Opinion Survey".to_string())
-            }
-            Route::SurveySummaryPage { lang, .. } if lang == &Language::Ko => {
-                Some("여론 조사".to_string())
-            }
-            Route::SurveySummaryPage { lang, .. } if lang == &Language::En => {
-                Some("Public Opinion Survey".to_string())
-            }
-            Route::ResponseReportPage { lang, .. } if lang == &Language::Ko => {
-                Some("여론 조사".to_string())
-            }
-            Route::ResponseReportPage { lang, .. } if lang == &Language::En => {
-                Some("Public Opinion Survey".to_string())
             }
             _ => None,
         }

@@ -2,7 +2,7 @@ use attribute_v2::{AgeV2, GenderV2, RegionV2, SalaryV2};
 use models::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct NonceLabCreateSurveyRequest {
     pub custom_id: String,
     pub status: SurveyStatus,
@@ -17,7 +17,28 @@ pub struct NonceLabCreateSurveyRequest {
 
 impl From<SurveyV2> for NonceLabCreateSurveyRequest {
     fn from(survey: SurveyV2) -> Self {
-        let quotas = survey.panels.into_iter().map(|q| q.into()).collect();
+        let panel_counts = survey.panel_counts;
+        let quotas = survey
+            .panels
+            .into_iter()
+            .map(|q| {
+                let mut nq: NonceLabQuota = q.clone().into();
+
+                let d: Vec<PanelCountsV2> = panel_counts
+                    .iter()
+                    .filter(|v| v.panel_id == q.id.clone() as i64)
+                    .map(|v| v.clone())
+                    .collect();
+
+                let v = match d.get(0) {
+                    Some(v) => v.user_count,
+                    None => 0,
+                };
+
+                nq.quota = v as u64;
+                nq
+            })
+            .collect();
         let questions = survey.questions.into_iter().map(|q| q.into()).collect();
         NonceLabCreateSurveyRequest {
             custom_id: survey.id.to_string(),
@@ -65,7 +86,26 @@ impl From<PanelV2> for NonceLabQuota {
                 },
                 region_code: match region {
                     RegionV2::None => None,
-                    c => Some(c as RegionCode),
+                    c => match c {
+                        RegionV2::Seoul => Some(11 as RegionCode),
+                        RegionV2::Busan => Some(21 as RegionCode),
+                        RegionV2::Daegu => Some(22 as RegionCode),
+                        RegionV2::Incheon => Some(23 as RegionCode),
+                        RegionV2::Gwangju => Some(24 as RegionCode),
+                        RegionV2::Daejeon => Some(25 as RegionCode),
+                        RegionV2::Ulsan => Some(26 as RegionCode),
+                        RegionV2::Sejong => Some(29 as RegionCode),
+                        RegionV2::Gyeonggi => Some(31 as RegionCode),
+                        RegionV2::Gangwon => Some(32 as RegionCode),
+                        RegionV2::Chungbuk => Some(33 as RegionCode),
+                        RegionV2::Chungnam => Some(34 as RegionCode),
+                        RegionV2::Jeonbuk => Some(35 as RegionCode),
+                        RegionV2::Jeonnam => Some(36 as RegionCode),
+                        RegionV2::Gyeongbuk => Some(37 as RegionCode),
+                        RegionV2::Gyeongnam => Some(38 as RegionCode),
+                        RegionV2::Jeju => Some(39 as RegionCode),
+                        _ => Some(0 as RegionCode),
+                    },
                 },
                 gender_code: match gender {
                     GenderV2::None => None,
@@ -113,7 +153,7 @@ impl From<ProjectStatus> for SurveyStatus {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct NonceLabSurveyQuestion {
     title: String,
     question: NonceLabSurveyQuestionType,
@@ -153,7 +193,7 @@ impl From<Question> for NonceLabSurveyQuestion {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum NonceLabSurveyQuestionType {
     SingleChoice {
@@ -169,6 +209,7 @@ pub enum NonceLabSurveyQuestionType {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub enum NonceLabAge {
     Specific(u8),
     Range {

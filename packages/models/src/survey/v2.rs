@@ -1,5 +1,5 @@
 #![allow(unused_variables, unused)]
-use crate::{PanelV2, Result};
+use crate::{PanelCountSurveys, PanelCountsV2, PanelV2, Result};
 #[cfg(feature = "server")]
 use by_axum::aide;
 use by_macros::{api_model, ApiModel};
@@ -8,8 +8,10 @@ use chrono::{TimeZone, Utc};
 use dioxus_translate::{Language, Translate};
 use validator::ValidationError;
 
+use super::response::{Answer, SurveyResponse};
+
 // If you want to know how to use Y macro, refer to https://github.com/biyard/rust-sdk/tree/main/packages/by-macros
-#[api_model(base = "/organizations/v2/:org-id/surveys", table = surveys, iter_type=QueryResponse)]
+#[api_model(base = "/organizations/v2/:org-id/surveys", table = surveys, action_by_id = start_survey, iter_type=QueryResponse)]
 pub struct SurveyV2 {
     #[api_model(summary, primary_key, action = delete, read_action = find_by_id)]
     pub id: i64,
@@ -50,9 +52,14 @@ pub struct SurveyV2 {
     #[api_model(summary, action = create, many_to_many = panel_surveys, foreign_table_name = panels, foreign_primary_key = panel_id, foreign_reference_key = survey_id,)]
     #[serde(default)]
     pub panels: Vec<PanelV2>,
-    // #[api_model(summary, one_to_many= responses, aggregator = count)]
-    // pub response_count: i64,
 
+    // FIXME: This data may be one_to_many of panel_surveys table
+    #[api_model(summary, action = create, type = JSONB, version = v0.1, action_by_id = update)]
+    pub panel_counts: Vec<PanelCountsV2>,
+    #[api_model(summary)]
+    pub noncelab_id: Option<i64>,
+    #[api_model(summary, one_to_many = survey_responses, foreign_key = survey_id, aggregator = count)]
+    pub response_count: i64,
     // #[api_model(summary, many_to_many = attrs, foreign_table_name = attributes, foreign_primary_key = attr_id, foreign_reference_key = survey_id)]
     // pub attributes: Vec<Attribute>,
 }
@@ -336,8 +343,7 @@ impl SurveyV2Summary {
     }
 
     pub fn response_rate(&self) -> String {
-        // TODO: implement real logic for calculation of response rate.
-        let responses = 0;
+        let responses = self.response_count;
 
         format!(
             "{}% ({}/{})",

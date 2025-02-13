@@ -2,7 +2,8 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::{
-    QueryResponse, SurveyV2, SurveyV2Client, SurveyV2DeleteRequest, SurveyV2Query, SurveyV2Summary,
+    QueryResponse, SurveyV2, SurveyV2Client, SurveyV2DeleteRequest, SurveyV2Query,
+    SurveyV2StartSurveyRequest, SurveyV2Summary,
 };
 
 use crate::pages::surveys::page::RemoveSurveyModal;
@@ -109,6 +110,28 @@ impl Controller {
 
     pub fn get_surveys(&self) -> Option<QueryResponse<SurveyV2Summary>> {
         self.surveys.with(|v| v.clone())
+    }
+
+    pub async fn start_survey(&mut self, survey_id: i64) {
+        let client = (self.client)().clone();
+        let org_id = (self.org_id)().parse::<i64>().unwrap_or_default();
+        let mut survey_resource = self.surveys;
+
+        match client
+            .act_by_id(
+                org_id,
+                survey_id,
+                models::SurveyV2ByIdAction::StartSurvey(SurveyV2StartSurveyRequest {}),
+            )
+            .await
+        {
+            Ok(_) => {
+                survey_resource.restart();
+            }
+            Err(e) => {
+                tracing::error!("Failed to start survey: {:?}", e);
+            }
+        }
     }
 
     pub async fn open_remove_survey_modal(&mut self, survey_id: String) {

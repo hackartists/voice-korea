@@ -29,7 +29,22 @@ pub enum AgeV2 {
     Over = 7, //70대 이상
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
+impl AgeV2 {
+    pub fn to_range(&self) -> (u8, u8) {
+        match self {
+            AgeV2::None => (0, 100),
+            AgeV2::Teenager => (0, 17),
+            AgeV2::Twenty => (18, 29),
+            AgeV2::Thirty => (30, 39),
+            AgeV2::Fourty => (40, 49),
+            AgeV2::Fifty => (50, 59),
+            AgeV2::Sixty => (60, 69),
+            AgeV2::Over => (70, 100),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum GenderV2 {
     #[default]
@@ -40,7 +55,7 @@ pub enum GenderV2 {
     Female = 2,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum RegionV2 {
     #[default]
@@ -81,7 +96,7 @@ pub enum RegionV2 {
     Jeju = 64,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default, ApiModel, Translate)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum SalaryV2 {
     #[default]
