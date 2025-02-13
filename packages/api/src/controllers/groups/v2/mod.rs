@@ -65,7 +65,7 @@ impl GroupControllerV2 {
     ) -> Result<Json<GroupV2>> {
         tracing::debug!("get_group {:?}", id);
 
-        ctrl.get_group_by_id(id).await
+        ctrl.find_group_by_id(id).await
     }
 
     pub async fn list_group(
@@ -101,7 +101,7 @@ impl GroupControllerV2 {
             .repo
             .find_one(&GroupV2ReadAction::new().find_by_id(req.id))
             .await?;
-        self.repo.delete(id).await?;
+        self.repo.delete(req.id).await?;
         Ok(Json(group))
     }
 
@@ -141,7 +141,7 @@ impl GroupControllerV2 {
             .fetch_all(&self.pool)
             .await?;
 
-        Ok(Json(OrganizationMemberGetResponse::Query(QueryResponse {
+        Ok(Json(GroupV2GetResponse::Query(QueryResponse {
             items,
             total_count,
         })))

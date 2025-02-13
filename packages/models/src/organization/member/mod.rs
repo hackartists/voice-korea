@@ -37,7 +37,7 @@ pub struct ListMemberResponseV2 {
 pub struct OrganizationMember {
     #[api_model(summary, primary_key)]
     pub id: i64,
-    #[api_model(summary, many_to_one = users, read_action = get_member, action = delete, unique)]
+    #[api_model(summary, many_to_one = users, read_action = get_member, action = delete)]
     pub user_id: i64,
     #[api_model(summary, many_to_one = organizations)]
     pub org_id: i64,
@@ -97,13 +97,24 @@ pub struct MemberSummary {
 
 #[derive(Debug, Clone, PartialEq, Eq, ApiModel)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
-#[serde(rename_all = "snake_case")]
 pub enum Role {
     Admin = 0,
     PublicAdmin = 1,
     Analyst = 2,
     Mediator = 3,
     Speaker = 4,
+}
+
+impl std::fmt::Display for Role {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Role::Admin => write!(f, "admin"),
+            Role::PublicAdmin => write!(f, "public_admin"),
+            Role::Analyst => write!(f, "analyst"),
+            Role::Mediator => write!(f, "mediator"),
+            Role::Speaker => write!(f, "speaker"),
+        }
+    }
 }
 
 // FIXME: deprecated

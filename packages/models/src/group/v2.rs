@@ -14,7 +14,7 @@ pub struct GroupV2 {
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
-    #[api_model(summary, many_to_one = users)]
+    #[api_model(summary, many_to_one = organizations)]
     pub org_id: i64,
     #[api_model(summary, action_by_id = update, action = create)]
     pub name: String,
