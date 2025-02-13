@@ -25,6 +25,14 @@ pub struct ListMemberResponse {
     pub bookmark: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+pub struct ListMemberResponseV2 {
+    pub members: Vec<OrganizationMember>,
+    pub role_count: Vec<i64>,
+    pub bookmark: Option<String>,
+}
+
 #[api_model(base = "/organizations/v2/:org-id/members", table = organization_members, iter_type=QueryResponse)]
 pub struct OrganizationMember {
     #[api_model(summary, primary_key)]

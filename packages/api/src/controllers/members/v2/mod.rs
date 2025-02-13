@@ -75,7 +75,7 @@ impl MemberControllerV2 {
         Extension(_auth): Extension<Option<Authorization>>,
         Path(org_id): Path<i64>,
         Query(param): Query<OrganizationMemberParam>,
-    ) -> Result<Json<OrganizationMemberGetResponse>> {
+    ) -> Result<Json<ListMemberResponseV2>> {
         tracing::debug!("list_member {:?}", param);
 
         match param {
@@ -115,18 +115,19 @@ impl MemberControllerV2 {
         &self,
         org_id: i64,
         q: OrganizationMemberQuery,
-    ) -> Result<Json<OrganizationMemberGetResponse>> {
+    ) -> Result<Json<ListMemberResponseV2>> {
         let query =
             OrganizationMemberSummary::base_sql_with("where org_id = $1 limit $2 offset $3");
         tracing::debug!("list_member query: {:?}", query);
 
         let mut total_count: i64 = 0;
-        let items = sqlx::query(&query)
+        let members: Vec<OrganizationMember> = sqlx::query(&query)
             .bind(org_id)
             .bind(q.size as i64)
             .bind(
                 q.size as i64
                     * (q.bookmark
+                        .clone()
                         .unwrap_or("1".to_string())
                         .parse::<i64>()
                         .unwrap()
@@ -140,10 +141,24 @@ impl MemberControllerV2 {
             .fetch_all(&self.pool)
             .await?;
 
-        Ok(Json(OrganizationMemberGetResponse::Query(QueryResponse {
-            items,
-            total_count,
-        })))
+        let mut role_count = vec![total_count, 0, 0, 0, 0, 0]; //[전체, 관리자, 공론 관리자, 분석가, 중계자, 강연자]
+
+        for member in members.clone() {
+            match member.role {
+                Some(Role::Admin) => role_count[1] += 1,
+                Some(Role::PublicAdmin) => role_count[2] += 1,
+                Some(Role::Analyst) => role_count[3] += 1,
+                Some(Role::Mediator) => role_count[4] += 1,
+                Some(Role::Speaker) => role_count[5] += 1,
+                _ => {}
+            }
+        }
+
+        Ok(Json(ListMemberResponseV2 {
+            members,
+            role_count,
+            bookmark: q.bookmark,
+        }))
     }
 
     async fn update_member(
