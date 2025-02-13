@@ -7,10 +7,12 @@ use by_types::QueryResponse;
 
 #[api_model(base = "/groups/v2", table = group_members, iter_type=QueryResponse)]
 pub struct GroupMemberV2 {
+    #[api_model(summary, primary_key)]
+    pub id: i64,
     #[api_model(summary, many_to_one = groups, unique)]
-    pub group_id: String,
+    pub group_id: i64,
     #[api_model(summary, many_to_one = users, unique)]
-    pub user_id: String,
+    pub user_id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
 }

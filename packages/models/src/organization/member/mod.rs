@@ -25,22 +25,22 @@ pub struct ListMemberResponse {
     pub bookmark: Option<String>,
 }
 
-#[api_model(base = "/members/v2", table = organization_members, iter_type=QueryResponse)]
+#[api_model(base = "/members/v2", table = organization_members, action = [create(email = String)], iter_type=QueryResponse)]
 pub struct OrganizationMember {
     #[api_model(summary, primary_key)]
     pub id: i64,
     #[api_model(summary, many_to_one = users)]
-    pub user_id: String,
-    #[api_model(summary, many_to_one = organizations)]
-    pub org_id: String,
+    pub user_id: i64,
+    #[api_model(summary, many_to_one = organizations, query_action = find_by_organization_id)]
+    pub org_id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, action = [invite, update], nullable)]
+    #[api_model(summary, action = [create, update], nullable)]
     pub name: String,
-    #[api_model(summary, type = INTEGER, nullable, action = [invite, update])]
+    #[api_model(summary, type = INTEGER, nullable, action = [create, update])]
     pub role: Option<Role>,
     #[api_model(summary, action = [update])]
     pub contact: Option<String>,
@@ -49,7 +49,7 @@ pub struct OrganizationMember {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
 pub struct OrganizationMemberResponse {
-    pub id: String,
+    pub id: i64,
     pub created_at: i64,
     pub updated_at: i64,
     pub deleted_at: Option<i64>,
@@ -66,6 +66,7 @@ impl Into<OrganizationMember> for (CreateMemberRequest, i64, i64, i64) {
         let now = chrono::Utc::now().timestamp_millis();
 
         OrganizationMember {
+            id,
             user_id,
             org_id,
             created_at: now,
@@ -88,24 +89,13 @@ pub struct MemberSummary {
 
 #[derive(Debug, Clone, PartialEq, Eq, ApiModel)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]
+#[serde(rename_all = "snake_case")]
 pub enum Role {
-    Admin = 1,
-    PublicAdmin = 2,
-    Analyst = 3,
-    Mediator = 4,
-    Speaker = 5,
-}
-
-impl std::fmt::Display for Role {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Role::Admin => write!(f, "admin"),
-            Role::PublicAdmin => write!(f, "public_admin"),
-            Role::Analyst => write!(f, "analyst"),
-            Role::Mediator => write!(f, "mediator"),
-            Role::Speaker => write!(f, "speaker"),
-        }
-    }
+    Admin = 0,
+    PublicAdmin = 1,
+    Analyst = 2,
+    Mediator = 3,
+    Speaker = 4,
 }
 
 // FIXME: deprecated

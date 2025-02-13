@@ -9,7 +9,7 @@ use by_types::QueryResponse;
 #[api_model(base = "/organizations/:org-id/group/v2", table = groups, iter_type=QueryResponse)]
 pub struct GroupV2 {
     #[api_model(summary, primary_key)]
-    pub id: String,
+    pub id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]

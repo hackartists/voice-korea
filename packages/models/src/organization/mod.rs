@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 
 mod member;
 pub use member::*;
+mod invitation;
+pub use invitation::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(feature = "server", derive(JsonSchema, aide::OperationIo))]

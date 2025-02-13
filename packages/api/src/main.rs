@@ -30,9 +30,13 @@ mod controllers {
     pub mod organizations {
         pub mod v2;
     }
-    // pub mod members {
-    //     pub mod v1;
-    // }
+    pub mod members {
+        pub mod v2;
+    }
+
+    pub mod invitations {
+        pub mod v2;
+    }
     // pub mod groups {
     //     pub mod v1;
     // }
@@ -141,6 +145,10 @@ async fn main() -> Result<()> {
         .nest(
             "/organizations/v2",
             controllers::organizations::v2::OrganizationControllerV2::route(pool.clone())?,
+        )
+        .nest(
+            "/invitations/v2/:org-id",
+            crate::controllers::invitations::v2::InvitationControllerV2::route(pool.clone())?,
         )
         .nest("/v2", Version2Controller::route(pool.clone())?)
         .layer(middleware::from_fn(authorization_middleware));
