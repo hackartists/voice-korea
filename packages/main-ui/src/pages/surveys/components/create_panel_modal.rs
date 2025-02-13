@@ -2,7 +2,8 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::{
-    attribute_v2::{AgeV2, GenderV2, RegionV2, SalaryV2},
+    attribute_v2::{GenderV2, RegionV2, SalaryV2},
+    response::AgeV3,
     PanelV2CreateRequest,
 };
 
@@ -219,7 +220,7 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                     onclick: {
                         let values = selected_value();
                         let translate = translate.clone();
-                        let mut age: Option<AgeV2> = None;
+                        let mut age: Option<AgeV3> = None;
                         let mut gender: Option<GenderV2> = None;
                         let mut region: Option<RegionV2> = None;
                         let mut salary: Option<SalaryV2> = None;
@@ -248,10 +249,20 @@ pub fn CreatePanelModal(props: CreatePanelModalProps) -> Element {
                                     .call(PanelV2CreateRequest {
                                         name: panel_name(),
                                         user_count: 0,
-                                        age: age.clone().unwrap(),
-                                        gender: gender.clone().unwrap(),
-                                        region: region.clone().unwrap(),
-                                        salary: salary.clone().unwrap(),
+                                        attributes: vec![
+                                            models::response::Attribute::Age(
+                                                age.clone().unwrap_or_default(),
+                                            ),
+                                            models::response::Attribute::Gender(
+                                                gender.clone().unwrap_or_default(),
+                                            ),
+                                            models::response::Attribute::Region(
+                                                region.clone().unwrap_or_default(),
+                                            ),
+                                            models::response::Attribute::Salary(
+                                                salary.clone().unwrap_or_default(),
+                                            ),
+                                        ],
                                     });
                             }
                         }

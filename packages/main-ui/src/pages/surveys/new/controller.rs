@@ -433,10 +433,23 @@ impl PanelController {
                                 updated_at: 0,
                                 name: "".to_string(),
                                 user_count: 0,
-                                age: models::attribute_v2::AgeV2::Teenager,
-                                gender: models::attribute_v2::GenderV2::Male,
-                                region: models::attribute_v2::RegionV2::Seoul,
-                                salary: models::attribute_v2::SalaryV2::TierOne,
+                                attributes: vec![
+                                    models::response::Attribute::Age(
+                                        models::response::AgeV3::Range {
+                                            inclusive_min: 0,
+                                            inclusive_max: 17,
+                                        },
+                                    ),
+                                    models::response::Attribute::Gender(
+                                        models::attribute_v2::GenderV2::Male,
+                                    ),
+                                    models::response::Attribute::Region(
+                                        models::attribute_v2::RegionV2::Seoul,
+                                    ),
+                                    models::response::Attribute::Salary(
+                                        models::attribute_v2::SalaryV2::TierOne,
+                                    ),
+                                ],
                                 org_id: 0,
                             })
                             .clone();
@@ -448,10 +461,7 @@ impl PanelController {
                                 updated_at: v.updated_at,
                                 name: d.name.clone(),
                                 user_count: v.user_count as u64,
-                                age: d.age.clone(),
-                                gender: d.gender.clone(),
-                                region: d.region.clone(),
-                                salary: d.salary.clone(),
+                                attributes: d.attributes.clone(),
                                 org_id: d.org_id,
                             },
                             v.user_count as i64,

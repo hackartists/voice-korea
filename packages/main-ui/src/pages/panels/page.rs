@@ -273,10 +273,21 @@ pub fn PanelList(
                                             .call(PanelV2CreateRequest {
                                                 name: "".to_string(),
                                                 user_count: 0,
-                                                age: models::attribute_v2::AgeV2::Teenager,
-                                                gender: models::attribute_v2::GenderV2::Male,
-                                                region: models::attribute_v2::RegionV2::Seoul,
-                                                salary: models::attribute_v2::SalaryV2::TierOne,
+                                                attributes: vec![
+                                                    models::response::Attribute::Age(models::response::AgeV3::Range {
+                                                        inclusive_min: 0,
+                                                        inclusive_max: 17,
+                                                    }),
+                                                    models::response::Attribute::Gender(
+                                                        models::attribute_v2::GenderV2::Male,
+                                                    ),
+                                                    models::response::Attribute::Region(
+                                                        models::attribute_v2::RegionV2::Seoul,
+                                                    ),
+                                                    models::response::Attribute::Salary(
+                                                        models::attribute_v2::SalaryV2::TierOne,
+                                                    ),
+                                                ],
                                             });
                                     }
                                 },
@@ -350,7 +361,12 @@ pub fn PanelList(
                                         onclick: move |_| async move {
                                             ctrl.open_setting_age_modal(lang, index).await;
                                         },
-                                        PanelLabel { label: panel.age.translate(&lang) }
+                                        PanelLabel {
+                                            label: match ctrl.convert_vec_to_attributes(panel.attributes.clone()).0 {
+                                                Some(v) => v.translate(&lang),
+                                                None => "".to_string(),
+                                            },
+                                        }
                                     }
                                 }
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
@@ -359,7 +375,12 @@ pub fn PanelList(
                                         onclick: move |_| async move {
                                             ctrl.open_setting_gender_modal(lang, index).await;
                                         },
-                                        PanelLabel { label: panel.gender.translate(&lang) }
+                                        PanelLabel {
+                                            label: match ctrl.convert_vec_to_attributes(panel.attributes.clone()).1 {
+                                                Some(v) => v.translate(&lang).to_string(),
+                                                None => "".to_string(),
+                                            },
+                                        }
                                     }
                                 }
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
@@ -368,7 +389,12 @@ pub fn PanelList(
                                         onclick: move |_| async move {
                                             ctrl.open_setting_region_modal(lang, index).await;
                                         },
-                                        PanelLabel { label: panel.region.translate(&lang) }
+                                        PanelLabel {
+                                            label: match ctrl.convert_vec_to_attributes(panel.attributes.clone()).2 {
+                                                Some(v) => v.translate(&lang).to_string(),
+                                                None => "".to_string(),
+                                            },
+                                        }
                                     }
                                 }
                                 div { class: "flex flex-row flex-1 h-full justify-center items-center",
@@ -377,7 +403,12 @@ pub fn PanelList(
                                         onclick: move |_| async move {
                                             ctrl.open_setting_salary_modal(lang, index).await;
                                         },
-                                        PanelLabel { label: panel.salary.translate(&lang) }
+                                        PanelLabel {
+                                            label: match ctrl.convert_vec_to_attributes(panel.attributes.clone()).3 {
+                                                Some(v) => v.translate(&lang).to_string(),
+                                                None => "".to_string(),
+                                            },
+                                        }
                                     }
                                 }
                                 div { class: "group relative",

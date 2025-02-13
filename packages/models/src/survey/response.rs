@@ -1,11 +1,12 @@
 #![allow(unused)]
-use std::time::SystemTime;
+use std::{str::FromStr, time::SystemTime};
 
 use crate::{attribute_v2::*, PanelV2, Result};
 #[cfg(feature = "server")]
 use by_axum::aide;
 use by_macros::api_model;
 use by_types::QueryResponse;
+use dioxus_translate::Language;
 
 use crate::attribute_v2::{GenderV2, RegionV2, SalaryV2};
 
@@ -180,7 +181,93 @@ pub enum AgeV3 {
     None,
 }
 
+impl FromStr for AgeV3 {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let s = s.trim();
+
+        //FIXME: fix to valid value return
+        if let Ok(num) = s.parse::<u8>() {
+            return Ok(AgeV3::Specific(num));
+        }
+
+        match s {
+            "Under 17" | "17세 이하" => Ok(AgeV3::Range {
+                inclusive_min: 0,
+                inclusive_max: 17,
+            }),
+            "18-29 years old" | "18~29세" => Ok(AgeV3::Range {
+                inclusive_min: 18,
+                inclusive_max: 29,
+            }),
+            "30-39 years old" | "30대" => Ok(AgeV3::Range {
+                inclusive_min: 30,
+                inclusive_max: 39,
+            }),
+            "40-49 years old" | "40대" => Ok(AgeV3::Range {
+                inclusive_min: 40,
+                inclusive_max: 49,
+            }),
+            "50-59 years old" | "50대" => Ok(AgeV3::Range {
+                inclusive_min: 50,
+                inclusive_max: 59,
+            }),
+            "60-69 years old" | "60대" => Ok(AgeV3::Range {
+                inclusive_min: 60,
+                inclusive_max: 69,
+            }),
+            "Over 70" | "70대 이상" => Ok(AgeV3::Range {
+                inclusive_min: 70,
+                inclusive_max: 100,
+            }),
+            "None" | "없음" => Ok(AgeV3::None),
+            _ => Err(format!("Invalid age value: {}", s)),
+        }
+    }
+}
+
 impl AgeV3 {
+    pub fn translate(&self, lang: &Language) -> String {
+        match lang {
+            Language::En => match self {
+                AgeV3::Specific(v) => format!("{v} years old"),
+                AgeV3::Range {
+                    inclusive_min,
+                    inclusive_max,
+                } => {
+                    if *inclusive_max == 17 {
+                        "Under 17".to_string()
+                    } else if *inclusive_min == 18 && *inclusive_max == 29 {
+                        "18-29 years old".to_string()
+                    } else if *inclusive_min == 70 {
+                        format!("Over {inclusive_min}")
+                    } else {
+                        format!("{inclusive_min}-{inclusive_max} years old")
+                    }
+                }
+                AgeV3::None => format!("None"),
+            },
+            Language::Ko => match self {
+                AgeV3::Specific(v) => format!("{v}세"),
+                AgeV3::Range {
+                    inclusive_min,
+                    inclusive_max,
+                } => {
+                    if *inclusive_max == 17 {
+                        "17세 이하".to_string()
+                    } else if *inclusive_min == 18 && *inclusive_max == 29 {
+                        "18-29세".to_string()
+                    } else if *inclusive_min == 70 {
+                        format!("{inclusive_min}대 이상")
+                    } else {
+                        format!("{inclusive_min}대")
+                    }
+                }
+                AgeV3::None => "없음".to_string(),
+            },
+        }
+    }
     pub fn to_range(&self) -> (u8, u8) {
         match self {
             AgeV3::None => (0, 100),
