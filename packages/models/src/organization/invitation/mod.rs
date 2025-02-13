@@ -21,7 +21,7 @@ pub struct Invitation {
     pub group_id: Option<i64>,
     // #[api_model(summary, many_to_one=projects)]
     // pub project_id: i64,
-    #[api_model(summary, read_action = find_invitation)] // TODO: using composite key with org_id
+    #[api_model(summary, query_action = query_by_email)] // TODO: using composite key with org_id
     #[validate(email)]
     pub email: String,
     #[api_model(summary, action = [invite])]
