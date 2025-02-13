@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+use by_components::charts::{StackBarChart, StackBarData};
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
 use models::SurveyV2;
@@ -23,6 +25,7 @@ pub fn SurveyResultPage(lang: Language, survey_id: i64) -> Element {
     let survey = survey.unwrap();
 
     rsx! {
+        document::Script { src: "https://cdn.jsdelivr.net/npm/d3@7" }
         div { class: "w-full flex flex-col gap-[40px] items-start justify-start",
             Nav {
                 lang,
@@ -50,6 +53,7 @@ pub fn SurveyResultPage(lang: Language, survey_id: i64) -> Element {
 
                 div { class: "flex flex-col gap-[20px] items-start justify-center",
                     SurveySummaryReport { lang, survey }
+                    SurveyPanelReport {}
                 }
             }
         }
@@ -84,6 +88,25 @@ pub fn Nav(lang: Language, menu: String, name: String) -> Element {
 }
 
 #[component]
+pub fn SurveyPanelReport() -> Element {
+    rsx! {
+        div { class: "w-full flex bg-white h-[100px]",
+            StackBarChart {
+                id: "survey-panel-report",
+                height: "54px",
+                data: vec![
+                    StackBarData::new("패널1".to_string(), 700),
+                    StackBarData::new("패널2".to_string(), 300),
+                    StackBarData::new("패널3".to_string(), 200),
+                    StackBarData::new("패널4".to_string(), 300),
+                    StackBarData::new("패널5".to_string(), 500),
+                ],
+            }
+        }
+    }
+}
+
+#[component]
 pub fn SurveySummaryReport(lang: Language, survey: SurveyV2) -> Element {
     let tr: SurveyResultTranslate = translate(&lang);
     rsx! {
@@ -111,6 +134,7 @@ pub fn SurveySummaryReport(lang: Language, survey: SurveyV2) -> Element {
         }
     }
 }
+
 #[component]
 pub fn SurveyResponseBox(title: String, value: String) -> Element {
     rsx! {

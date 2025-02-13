@@ -16,12 +16,9 @@ pub mod service {
     pub mod group_api;
     pub mod login_service;
     pub mod member_api;
-    pub mod metadata_api;
     pub mod opinion_api;
     pub mod organization_api;
-    pub mod panel_api;
     pub mod popup_service;
-    pub mod prev_survey_api;
     pub mod theme;
     pub mod user_api;
 }
@@ -37,11 +34,7 @@ pub mod models {
 pub mod utils {
     pub mod api;
     pub mod context;
-    #[cfg(feature = "server")]
-    pub mod db;
     pub mod hash;
-    #[cfg(feature = "server")]
-    pub mod logger;
     pub mod time;
 }
 
