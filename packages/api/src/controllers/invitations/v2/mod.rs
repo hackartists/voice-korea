@@ -54,7 +54,7 @@ impl InvitationControllerV2 {
         Extension(_auth): Extension<Option<Authorization>>,
         Path((_org_id, user_id)): Path<(i64, i64)>,
     ) -> Result<Json<InvitationGetResponse>> {
-        tracing::debug!("get_invitation {:?}", user_id);
+        tracing::debug!("list_invitation {:?}", user_id);
 
         let user = ctrl
             .user

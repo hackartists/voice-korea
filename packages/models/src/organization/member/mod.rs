@@ -25,24 +25,24 @@ pub struct ListMemberResponse {
     pub bookmark: Option<String>,
 }
 
-#[api_model(base = "/members/v2", table = organization_members, action = [create(email = String)], iter_type=QueryResponse)]
+#[api_model(base = "/organizations/v2/:org-id/members", table = organization_members, iter_type=QueryResponse)]
 pub struct OrganizationMember {
     #[api_model(summary, primary_key)]
     pub id: i64,
-    #[api_model(summary, many_to_one = users)]
+    #[api_model(summary, many_to_one = users, read_action = get_member, action = delete, unique)]
     pub user_id: i64,
-    #[api_model(summary, many_to_one = organizations, query_action = find_by_organization_id)]
+    #[api_model(summary, many_to_one = organizations)]
     pub org_id: i64,
     #[api_model(summary, auto = [insert])]
     pub created_at: i64,
     #[api_model(summary, auto = [insert, update])]
     pub updated_at: i64,
 
-    #[api_model(summary, action = [create, update], nullable)]
+    #[api_model(summary, action_by_id = [update], nullable)]
     pub name: String,
-    #[api_model(summary, type = INTEGER, nullable, action = [create, update])]
+    #[api_model(summary, type = INTEGER, nullable, action_by_id = [update])]
     pub role: Option<Role>,
-    #[api_model(summary, action = [update])]
+    #[api_model(summary, action_by_id = [update])]
     pub contact: Option<String>,
 }
 

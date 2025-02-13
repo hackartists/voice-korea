@@ -33,12 +33,11 @@ mod controllers {
     pub mod members {
         pub mod v2;
     }
-
     pub mod invitations {
         pub mod v2;
     }
     // pub mod groups {
-    //     pub mod v1;
+    //     pub mod v2;
     // }
     // pub mod attributes {
     //     pub mod v1;
@@ -152,14 +151,7 @@ async fn main() -> Result<()> {
         )
         .nest("/v2", Version2Controller::route(pool.clone())?)
         .layer(middleware::from_fn(authorization_middleware));
-    // .nest(
-    //     "/members/v1",
-    //     controllers::members::v1::MemberControllerV1::router(),
-    // )
-    // .nest(
-    //     "/groups/v1",
-    //     controllers::groups::v1::GroupControllerV1::router(),
-    // )
+
     // .nest(
     //     "/attributes/v1",
     //     controllers::attributes::v1::AttributeControllerV1::router(),
