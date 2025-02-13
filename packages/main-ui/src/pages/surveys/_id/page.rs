@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use by_components::charts::{StackBarChart, StackBarData};
+use by_components::charts::{horizontal_bar::HorizontalBar, StackBarChart, StackBarData};
 use dioxus::prelude::*;
 use dioxus_translate::{translate, Language};
 use models::SurveyV2;
@@ -89,10 +89,12 @@ pub fn Nav(lang: Language, menu: String, name: String) -> Element {
 
 #[component]
 pub fn SurveyPanelReport() -> Element {
+    // FIXME: testing code for charts
     rsx! {
-        div { class: "w-full flex bg-white h-[100px]",
+        div { class: "w-full flex flex-col bg-white gap-[10px] p-[20px]",
             StackBarChart {
                 id: "survey-panel-report",
+                class: "w-full flex flex-col gap-[10px] rounded-[8px] overflow-hidden",
                 height: "54px",
                 data: vec![
                     StackBarData::new("패널1".to_string(), 700),
@@ -101,6 +103,13 @@ pub fn SurveyPanelReport() -> Element {
                     StackBarData::new("패널4".to_string(), 300),
                     StackBarData::new("패널5".to_string(), 500),
                 ],
+            }
+            HorizontalBar {
+                id: "survey-bar",
+                height: "23px",
+                value: 300,
+                max_value: 1000,
+                class: "w-full flex flex-row bg-[#EEEEEE] rounded-[6px] overflow-hidden",
             }
         }
     }
