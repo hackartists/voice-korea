@@ -1,5 +1,8 @@
-use attribute_v2::{AgeV2, GenderV2, RegionV2, SalaryV2};
-use models::*;
+use attribute_v2::{GenderV2, RegionV2, SalaryV2};
+use models::{
+    response::{AgeV3, Attribute},
+    *,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug)]
@@ -70,50 +73,82 @@ impl From<PanelV2> for NonceLabQuota {
     fn from(
         PanelV2 {
             user_count,
-            age,
-            gender,
-            region,
-            salary,
+            attributes,
             ..
         }: PanelV2,
     ) -> Self {
+        let mut age = None;
+        let mut gender = None;
+        let mut region = None;
+        let mut salary = None;
+
+        for attribute in attributes.clone() {
+            match attribute {
+                Attribute::Age(age_v3) => {
+                    age = Some(age_v3);
+                }
+                Attribute::Gender(gender_v2) => {
+                    gender = Some(gender_v2);
+                }
+                Attribute::Region(region_v2) => {
+                    region = Some(region_v2);
+                }
+                Attribute::Salary(salary_v2) => {
+                    salary = Some(salary_v2);
+                }
+                Attribute::None => {}
+            }
+        }
+
         NonceLabQuota {
             id: None,
             attribute: Some(NonceLabAttribute {
                 salary_tier: match salary {
-                    SalaryV2::None => None,
-                    t => Some(t as SalaryTier),
+                    None => None,
+                    Some(v) => match v {
+                        SalaryV2::None => None,
+                        t => Some(t as SalaryTier),
+                    },
                 },
                 region_code: match region {
-                    RegionV2::None => None,
-                    c => match c {
-                        RegionV2::Seoul => Some(11 as RegionCode),
-                        RegionV2::Busan => Some(21 as RegionCode),
-                        RegionV2::Daegu => Some(22 as RegionCode),
-                        RegionV2::Incheon => Some(23 as RegionCode),
-                        RegionV2::Gwangju => Some(24 as RegionCode),
-                        RegionV2::Daejeon => Some(25 as RegionCode),
-                        RegionV2::Ulsan => Some(26 as RegionCode),
-                        RegionV2::Sejong => Some(29 as RegionCode),
-                        RegionV2::Gyeonggi => Some(31 as RegionCode),
-                        RegionV2::Gangwon => Some(32 as RegionCode),
-                        RegionV2::Chungbuk => Some(33 as RegionCode),
-                        RegionV2::Chungnam => Some(34 as RegionCode),
-                        RegionV2::Jeonbuk => Some(35 as RegionCode),
-                        RegionV2::Jeonnam => Some(36 as RegionCode),
-                        RegionV2::Gyeongbuk => Some(37 as RegionCode),
-                        RegionV2::Gyeongnam => Some(38 as RegionCode),
-                        RegionV2::Jeju => Some(39 as RegionCode),
-                        _ => Some(0 as RegionCode),
+                    None => None,
+                    Some(c) => match c {
+                        RegionV2::None => None,
+                        c => match c {
+                            RegionV2::Seoul => Some(11 as RegionCode),
+                            RegionV2::Busan => Some(21 as RegionCode),
+                            RegionV2::Daegu => Some(22 as RegionCode),
+                            RegionV2::Incheon => Some(23 as RegionCode),
+                            RegionV2::Gwangju => Some(24 as RegionCode),
+                            RegionV2::Daejeon => Some(25 as RegionCode),
+                            RegionV2::Ulsan => Some(26 as RegionCode),
+                            RegionV2::Sejong => Some(29 as RegionCode),
+                            RegionV2::Gyeonggi => Some(31 as RegionCode),
+                            RegionV2::Gangwon => Some(32 as RegionCode),
+                            RegionV2::Chungbuk => Some(33 as RegionCode),
+                            RegionV2::Chungnam => Some(34 as RegionCode),
+                            RegionV2::Jeonbuk => Some(35 as RegionCode),
+                            RegionV2::Jeonnam => Some(36 as RegionCode),
+                            RegionV2::Gyeongbuk => Some(37 as RegionCode),
+                            RegionV2::Gyeongnam => Some(38 as RegionCode),
+                            RegionV2::Jeju => Some(39 as RegionCode),
+                            _ => Some(0 as RegionCode),
+                        },
                     },
                 },
                 gender_code: match gender {
-                    GenderV2::None => None,
-                    c => Some(c as u8),
+                    None => None,
+                    Some(c) => match c {
+                        GenderV2::None => None,
+                        c => Some(c as u8),
+                    },
                 },
                 age: match age {
-                    AgeV2::None => None,
-                    a => Some(a.try_into().expect("Invalid Age")),
+                    None => None,
+                    Some(a) => match a {
+                        AgeV3::None => None,
+                        a => Some(a.try_into().expect("Invalid Age")),
+                    },
                 },
             }),
             panel: None,
@@ -218,39 +253,19 @@ pub enum NonceLabAge {
     },
 }
 
-impl TryFrom<AgeV2> for NonceLabAge {
+impl TryFrom<AgeV3> for NonceLabAge {
     type Error = ();
 
-    fn try_from(value: AgeV2) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: AgeV3) -> std::result::Result<Self, Self::Error> {
         match value {
-            AgeV2::None => Err(()),
-            AgeV2::Teenager => Ok(NonceLabAge::Range {
-                inclusive_min: 0,
-                inclusive_max: 17,
-            }),
-            AgeV2::Twenty => Ok(NonceLabAge::Range {
-                inclusive_min: 20,
-                inclusive_max: 29,
-            }),
-            AgeV2::Thirty => Ok(NonceLabAge::Range {
-                inclusive_min: 30,
-                inclusive_max: 39,
-            }),
-            AgeV2::Fourty => Ok(NonceLabAge::Range {
-                inclusive_min: 40,
-                inclusive_max: 49,
-            }),
-            AgeV2::Fifty => Ok(NonceLabAge::Range {
-                inclusive_min: 50,
-                inclusive_max: 59,
-            }),
-            AgeV2::Sixty => Ok(NonceLabAge::Range {
-                inclusive_min: 60,
-                inclusive_max: 69,
-            }),
-            AgeV2::Over => Ok(NonceLabAge::Range {
-                inclusive_min: 70,
-                inclusive_max: 100,
+            AgeV3::None => Err(()),
+            AgeV3::Specific(v) => Ok(NonceLabAge::Specific(v)),
+            AgeV3::Range {
+                inclusive_min,
+                inclusive_max,
+            } => Ok(NonceLabAge::Range {
+                inclusive_min,
+                inclusive_max,
             }),
         }
     }

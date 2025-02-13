@@ -258,7 +258,7 @@ pub mod tests {
             panic!("Database is not initialized. Call init() first.");
         };
 
-        sqlx::query(
+        let _ = sqlx::query(
             r#"
         CREATE OR REPLACE FUNCTION set_updated_at()
             RETURNS TRIGGER AS $$
@@ -272,7 +272,7 @@ pub mod tests {
         .execute(&pool)
         .await;
 
-        sqlx::query(
+        let _ = sqlx::query(
             r#"
         CREATE OR REPLACE FUNCTION set_created_at()
             RETURNS TRIGGER AS $$
@@ -286,7 +286,7 @@ pub mod tests {
         .execute(&pool)
         .await;
 
-        migration(&pool).await;
+        let _ = migration(&pool).await;
 
         let app = app
             .nest(

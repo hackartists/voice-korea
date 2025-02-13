@@ -174,10 +174,7 @@ impl PanelControllerV2 {
                 PanelV2RepositoryUpdateRequest {
                     name: Some(params.name),
                     user_count: Some(params.user_count),
-                    age: Some(params.age),
-                    gender: Some(params.gender),
-                    region: Some(params.region),
-                    salary: Some(params.salary),
+                    attributes: Some(params.attributes),
                     org_id: Some(org_id),
                 },
             )
@@ -199,15 +196,7 @@ impl PanelControllerV2 {
 
         let panel = self
             .repo
-            .insert(
-                params.name,
-                params.user_count,
-                params.age,
-                params.gender,
-                params.region,
-                params.salary,
-                org_id,
-            )
+            .insert(params.name, params.user_count, params.attributes, org_id)
             .await?;
         tracing::debug!("created panel: {:?}", panel);
 

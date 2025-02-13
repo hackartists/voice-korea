@@ -139,16 +139,29 @@ pub enum Attribute {
 impl Attribute {
     pub fn from_panel(panel: &PanelV2) -> Vec<Self> {
         let mut attrs = vec![];
-        let (min, max) = panel.age.to_range();
+        let attributes = panel.attributes.clone();
 
-        attrs.push(Attribute::Age(AgeV3::Range {
-            inclusive_min: min,
-            inclusive_max: max,
-        }));
-
-        attrs.push(Attribute::Gender(panel.gender));
-        attrs.push(Attribute::Region(panel.region));
-        attrs.push(Attribute::Salary(panel.salary));
+        for attribute in attributes {
+            match attribute {
+                Attribute::Age(age_v3) => {
+                    let (min, max) = age_v3.to_range();
+                    attrs.push(Attribute::Age(AgeV3::Range {
+                        inclusive_min: min,
+                        inclusive_max: max,
+                    }));
+                }
+                Attribute::Gender(gender_v2) => {
+                    attrs.push(Attribute::Gender(gender_v2));
+                }
+                Attribute::Region(region_v2) => {
+                    attrs.push(Attribute::Region(region_v2));
+                }
+                Attribute::Salary(salary_v2) => {
+                    attrs.push(Attribute::Salary(salary_v2));
+                }
+                Attribute::None => {}
+            }
+        }
 
         attrs
     }
@@ -165,4 +178,38 @@ pub enum AgeV3 {
     },
     #[default]
     None,
+}
+
+impl AgeV3 {
+    pub fn to_range(&self) -> (u8, u8) {
+        match self {
+            AgeV3::None => (0, 100),
+            AgeV3::Specific(v) => (v.clone(), v.clone()),
+            AgeV3::Range {
+                inclusive_min: 0,
+                inclusive_max: 17,
+            } => (0, 17),
+            AgeV3::Range {
+                inclusive_min: 18,
+                inclusive_max: 29,
+            } => (18, 29),
+            AgeV3::Range {
+                inclusive_min: 30,
+                inclusive_max: 39,
+            } => (30, 39),
+            AgeV3::Range {
+                inclusive_min: 40,
+                inclusive_max: 49,
+            } => (40, 49),
+            AgeV3::Range {
+                inclusive_min: 50,
+                inclusive_max: 59,
+            } => (50, 59),
+            AgeV3::Range {
+                inclusive_min: 60,
+                inclusive_max: 69,
+            } => (60, 69),
+            _ => (70, 100),
+        }
+    }
 }
