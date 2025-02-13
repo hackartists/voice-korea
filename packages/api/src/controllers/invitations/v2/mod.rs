@@ -58,13 +58,15 @@ impl InvitationControllerV2 {
         tracing::debug!("invite_member {} {:?}", org_id, req);
         let user = match self
             .user
-            .find_one(&UserReadAction::new().find_by_email(req.email))
+            .find_one(&UserReadAction::new().find_by_email(req.email.clone()))
             .await
         {
             Ok(user) => user,
             Err(_) => {
-                return Ok("user not found".to_string());
-                // self.invite.
+                self.repo
+                    .insert(org_id, req.group_id, req.email.clone(), req.name, req.role)
+                    .await?;
+                return Ok(format!("successfully invite {}", req.email));
             }
         };
 
@@ -79,7 +81,7 @@ impl InvitationControllerV2 {
             )
             .await?;
 
-        let msg = format!("member created successfully: id = {}", member.id);
+        let msg = format!("member created successfully: {}", member.id);
 
         // TODO: invite group
         // let group_members = self
