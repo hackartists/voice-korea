@@ -189,10 +189,7 @@ pub fn SettingPanel(
                                         updated_at: v.updated_at,
                                         name: v.name.clone(),
                                         user_count: user_count as u64,
-                                        age: v.age,
-                                        gender: v.gender,
-                                        region: v.region,
-                                        salary: v.salary,
+                                        attributes: v.attributes,
                                         org_id: v.org_id,
                                     }
                                 })

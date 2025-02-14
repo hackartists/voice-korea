@@ -1,4 +1,4 @@
-use excel::SurveyResponseExcel;
+use models::attribute_v2::{GenderV2, RegionV2, SalaryV2};
 
 use crate::tests::{setup, TestContext};
 
@@ -23,10 +23,15 @@ async fn test_survey_reponse() {
             org_id,
             "group 1".to_string(),
             30,
-            attribute_v2::AgeV2::Fifty,
-            attribute_v2::GenderV2::Male,
-            attribute_v2::RegionV2::Busan,
-            attribute_v2::SalaryV2::TierFive,
+            vec![
+                Attribute::Age(AgeV3::Range {
+                    inclusive_min: 50,
+                    inclusive_max: 59,
+                }),
+                Attribute::Gender(GenderV2::Male),
+                Attribute::Region(RegionV2::Busan),
+                Attribute::Salary(SalaryV2::TierFive),
+            ],
         )
         .await;
 
@@ -48,10 +53,15 @@ async fn test_survey_reponse() {
             org_id,
             "group 2".to_string(),
             50,
-            attribute_v2::AgeV2::Sixty,
-            attribute_v2::GenderV2::Female,
-            attribute_v2::RegionV2::Seoul,
-            attribute_v2::SalaryV2::TierOne,
+            vec![
+                Attribute::Age(AgeV3::Range {
+                    inclusive_min: 60,
+                    inclusive_max: 69,
+                }),
+                Attribute::Gender(GenderV2::Female),
+                Attribute::Region(RegionV2::Seoul),
+                Attribute::Salary(SalaryV2::TierOne),
+            ],
         )
         .await
         .unwrap();

@@ -1,14 +1,15 @@
-use std::str::FromStr;
+use std::{mem::discriminant, str::FromStr};
 
 use dioxus::prelude::*;
 use dioxus_logger::tracing;
 use dioxus_translate::{translate, Language};
 use models::{
-    attribute_v2::{AgeV2, GenderV2, RegionV2, SalaryV2},
+    attribute_v2::{GenderV2, RegionV2, SalaryV2},
     prelude::{
         PanelV2, PanelV2Client, PanelV2CreateRequest, PanelV2DeleteRequest, PanelV2Summary,
         PanelV2UpdateRequest,
     },
+    response::AgeV3,
     PanelV2Action, PanelV2ByIdAction, PanelV2Query, QueryResponse,
 };
 
@@ -202,11 +203,13 @@ impl Controller {
     }
 
     pub async fn open_setting_salary_modal(&self, lang: Language, index: usize) {
+        let ctrl = self.clone();
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let panels = self.get_panels();
         let panel = panels[index].clone();
-        let salary = panels[index].salary.translate(&lang);
+        let (_, _, _, salary) = self.convert_vec_to_attributes(panel.attributes.clone());
+        let salary = salary.unwrap_or_default().translate(&lang);
         let client = (self.client)().clone();
         let mut panel_resource = self.panel_resource;
 
@@ -225,6 +228,7 @@ impl Controller {
                     current_option: salary,
                     onsave: {
                         let id = panel.id.clone();
+                        let attributes = panel.attributes.clone();
                         let req = self.convert_update_request(panel);
                         let org_id = (self.org_id)();
                         move |option: String| {
@@ -232,10 +236,15 @@ impl Controller {
                             let salary = SalaryV2::from_str(&option);
                             let mut req = req.clone();
                             let id = id.clone();
+                            let attributes = attributes.clone();
                             async move {
                                 if salary.is_ok() {
                                     let salary = salary.unwrap();
-                                    req.salary = salary;
+                                    req.attributes = ctrl
+                                        .update_attribute_vec(
+                                            attributes.clone(),
+                                            models::prelude::response::Attribute::Salary(salary),
+                                        );
                                     tracing::info!("update salary clicked: {index} {:?}", req);
                                     let _ = client
                                         .act_by_id(org_id, id, PanelV2ByIdAction::Update(req))
@@ -256,11 +265,13 @@ impl Controller {
     }
 
     pub async fn open_setting_region_modal(&self, lang: Language, index: usize) {
+        let ctrl = self.clone();
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let panels = self.get_panels();
         let panel = panels[index].clone();
-        let region = panels[index].region.translate(&lang);
+        let (_, _, region, _) = self.convert_vec_to_attributes(panel.attributes.clone());
+        let region = region.unwrap_or_default().translate(&lang);
         let client = (self.client)().clone();
         let mut panel_resource = self.panel_resource;
 
@@ -291,6 +302,7 @@ impl Controller {
                     current_option: region,
                     onsave: {
                         let id = panel.id.clone();
+                        let attributes = panel.attributes.clone();
                         let req = self.convert_update_request(panel);
                         let org_id = (self.org_id)();
                         move |option: String| {
@@ -299,10 +311,15 @@ impl Controller {
                             let mut req = req.clone();
                             let id = id.clone();
                             let org_id = org_id.clone();
+                            let attributes = attributes.clone();
                             async move {
                                 if region.is_ok() {
                                     let region = region.unwrap();
-                                    req.region = region;
+                                    req.attributes = ctrl
+                                        .update_attribute_vec(
+                                            attributes.clone(),
+                                            models::prelude::response::Attribute::Region(region),
+                                        );
                                     tracing::info!("update region clicked: {index} {:?}", req);
                                     let _ = client
                                         .act_by_id(org_id, id, PanelV2ByIdAction::Update(req))
@@ -323,11 +340,13 @@ impl Controller {
     }
 
     pub async fn open_setting_gender_modal(&self, lang: Language, index: usize) {
+        let ctrl = self.clone();
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let panels = self.get_panels();
         let panel = panels[index].clone();
-        let gender = panels[index].gender.translate(&lang);
+        let (_, gender, _, _) = self.convert_vec_to_attributes(panel.attributes.clone());
+        let gender = gender.unwrap_or_default().translate(&lang);
         let client = (self.client)().clone();
         let mut panel_resource = self.panel_resource;
 
@@ -340,6 +359,7 @@ impl Controller {
                     current_option: gender,
                     onsave: {
                         let id = panel.id.clone();
+                        let attributes = panel.attributes.clone();
                         let req = self.convert_update_request(panel);
                         let org_id = (self.org_id)();
                         move |option: String| {
@@ -348,10 +368,15 @@ impl Controller {
                             let mut req = req.clone();
                             let id = id.clone();
                             let org_id = org_id.clone();
+                            let attributes = attributes.clone();
                             async move {
                                 if gender.is_ok() {
                                     let gender = gender.unwrap();
-                                    req.gender = gender;
+                                    req.attributes = ctrl
+                                        .update_attribute_vec(
+                                            attributes.clone(),
+                                            models::prelude::response::Attribute::Gender(gender),
+                                        );
                                     tracing::info!("update gender clicked: {index} {:?}", req);
                                     let _ = client
                                         .act_by_id(org_id, id, PanelV2ByIdAction::Update(req))
@@ -372,11 +397,13 @@ impl Controller {
     }
 
     pub async fn open_setting_age_modal(&self, lang: Language, index: usize) {
+        let ctrl = self.clone();
         let mut popup_service = self.popup_service.clone();
         let translate = (self.translate)().clone();
         let panels = self.get_panels();
         let panel = panels[index].clone();
-        let age = panels[index].age.translate(&lang);
+        let (age, _, _, _) = self.convert_vec_to_attributes(panel.attributes.clone());
+        let age = age.unwrap_or_default().translate(&lang);
         let client = (self.client)().clone();
         let mut panel_resource = self.panel_resource;
 
@@ -397,18 +424,26 @@ impl Controller {
                     current_option: age,
                     onsave: {
                         let id = panel.id.clone();
+                        let attributes = panel.attributes.clone();
                         let req = self.convert_update_request(panel);
                         let org_id = (self.org_id)();
                         move |option: String| {
                             let client = client.clone();
-                            let age = AgeV2::from_str(&option);
+                            tracing::info!("age option: {:?}", option);
+                            let age = AgeV3::from_str(&option);
+                            tracing::info!("age: {:?}", age);
                             let mut req = req.clone();
                             let id = id.clone();
                             let org_id = org_id.clone();
+                            let attributes = attributes.clone();
                             async move {
                                 if age.is_ok() {
                                     let age = age.unwrap();
-                                    req.age = age;
+                                    req.attributes = ctrl
+                                        .update_attribute_vec(
+                                            attributes.clone(),
+                                            models::prelude::response::Attribute::Age(age),
+                                        );
                                     tracing::debug!("update age clicked: {index} {:?}", req);
                                     let _ = client
                                         .act_by_id(org_id, id, PanelV2ByIdAction::Update(req))
@@ -489,10 +524,7 @@ impl Controller {
                         let req = PanelV2UpdateRequest {
                             name: panel.name,
                             user_count: panel.user_count,
-                            age: panel.age,
-                            gender: panel.gender,
-                            region: panel.region,
-                            salary: panel.salary,
+                            attributes: panel.attributes,
                         };
                         move |name: String| {
                             let client = client.clone();
@@ -530,10 +562,7 @@ impl Controller {
         let req = PanelV2UpdateRequest {
             name: panel.name,
             user_count: count,
-            age: panel.age,
-            gender: panel.gender,
-            region: panel.region,
-            salary: panel.salary,
+            attributes: panel.attributes,
         };
         let org_id = (self.org_id)();
 
@@ -555,10 +584,7 @@ impl Controller {
         let req = PanelV2UpdateRequest {
             name,
             user_count: panel.user_count,
-            age: panel.age,
-            gender: panel.gender,
-            region: panel.region,
-            salary: panel.salary,
+            attributes: panel.attributes,
         };
 
         let org_id = (self.org_id)();
@@ -574,10 +600,52 @@ impl Controller {
         PanelV2UpdateRequest {
             name: panel.name,
             user_count: panel.user_count,
-            age: panel.age,
-            gender: panel.gender,
-            region: panel.region,
-            salary: panel.salary,
+            attributes: panel.attributes,
         }
+    }
+
+    pub fn update_attribute_vec(
+        &self,
+        attributes: Vec<models::prelude::response::Attribute>,
+        attribute: models::prelude::response::Attribute,
+    ) -> Vec<models::prelude::response::Attribute> {
+        let mut attrs = vec![];
+
+        for attr in attributes.clone() {
+            let attribute = attribute.clone();
+            if discriminant(&attr) == discriminant(&attribute.clone()) {
+                attrs.push(attribute);
+            } else {
+                attrs.push(attr);
+            }
+        }
+        attrs
+    }
+
+    pub fn convert_vec_to_attributes(
+        &self,
+        attributes: Vec<models::prelude::response::Attribute>,
+    ) -> (
+        Option<AgeV3>,
+        Option<GenderV2>,
+        Option<RegionV2>,
+        Option<SalaryV2>,
+    ) {
+        let mut age = None;
+        let mut gender = None;
+        let mut region = None;
+        let mut salary = None;
+
+        for attribute in attributes {
+            match attribute {
+                models::response::Attribute::Age(age_v3) => age = Some(age_v3),
+                models::response::Attribute::Gender(gender_v2) => gender = Some(gender_v2),
+                models::response::Attribute::Region(region_v2) => region = Some(region_v2),
+                models::response::Attribute::Salary(salary_v2) => salary = Some(salary_v2),
+                models::response::Attribute::None => todo!(),
+            }
+        }
+
+        (age, gender, region, salary)
     }
 }

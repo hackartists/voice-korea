@@ -136,10 +136,7 @@ pub fn Setting(
                                                                 updated_at: panel.updated_at.clone(),
                                                                 name: panel.name.clone(),
                                                                 user_count: panel.user_count.clone(),
-                                                                age: panel.age.clone(),
-                                                                gender: panel.gender.clone(),
-                                                                region: panel.region.clone(),
-                                                                salary: panel.salary.clone(),
+                                                                attributes: panel.attributes.clone(),
                                                                 org_id: panel.org_id.clone(),
                                                             });
                                                         is_open.set(false);

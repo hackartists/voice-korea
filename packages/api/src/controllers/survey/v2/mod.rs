@@ -234,10 +234,11 @@ impl SurveyControllerV2 {
 impl SurveyControllerV2 {
     pub async fn find(&self, org_id: i64, q: SurveyV2Query) -> Result<Json<SurveyV2GetResponse>> {
         let mut total_count: i64 = 0;
+        let size = q.size;
         let items: Vec<SurveyV2Summary> = SurveyV2Summary::query_builder()
             .org_id_equals(org_id)
             .with_count()
-            .limit(q.size())
+            .limit(size as i32)
             .page(q.page())
             .query()
             .map(|r: sqlx::postgres::PgRow| {
@@ -399,6 +400,8 @@ pub mod tests {
             endpoint,
             ..
         } = setup().await.unwrap();
+
+        let _endpoint = endpoint.clone();
 
         let cli = SurveyV2::get_client("http://localhost:3000");
         let org_id = user.orgs[0].id;
