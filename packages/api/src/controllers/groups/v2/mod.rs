@@ -77,7 +77,7 @@ impl GroupControllerV2 {
         tracing::debug!("list_group {:?}", param);
         match param {
             GroupV2Param::Query(q) => {
-                let groups = ctrl.list_group_by_org_id(org_id, q).await?;
+                let groups = ctrl.list_group_by_id(org_id, q).await?;
                 Ok(Json(groups))
             }
             _ => Err(ApiError::InvalidAction),
@@ -113,13 +113,13 @@ impl GroupControllerV2 {
         Ok(Json(group))
     }
 
-    async fn list_group_by_org_id(
+    async fn list_group_by_id(
         &self,
         org_id: i64,
         q: GroupV2Query,
     ) -> Result<Json<GroupV2GetResponse>> {
         let query = GroupV2Summary::base_sql_with("where org_id = $1 limit $2 offset $3");
-        tracing::debug!("list_group_by_org_id query: {:?}", query);
+        tracing::debug!("list_group_by_id query: {:?}", query);
 
         let mut total_count: i64 = 0;
         let items = sqlx::query(&query)
